@@ -16,6 +16,8 @@ const READOUT_GAP = 12;
 
 export interface PadProps {
   store: SetupStore;
+  /** A pad move is done: a tap, drag or fine adjust has ended. */
+  onMove?: () => void;
   /** Shown over the pad, such as `▶ tap to play`. Buttons in it take their own taps. */
   children?: JSX.Element;
 }
@@ -59,7 +61,8 @@ export function Pad(props: PadProps) {
         return store.padTo(to.x, to.y);
       }
       case 'commit':
-        return store.padCommit();
+        store.padCommit();
+        return props.onMove?.();
       case 'revert':
         return store.padRevert();
       case 'undo':

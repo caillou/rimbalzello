@@ -1,0 +1,43 @@
+/* Help on the pad: the help box and the first-launch hint. Both let touches
+   through to the pad. */
+
+.help-box,
+.first-launch-hint {
+  position: absolute;
+  right: 8px;
+  left: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
+.help-box p,
+.first-launch-hint p {
+  margin: 0;
+}
+
+/* An item never breaks inside; a line wraps between items. */
+.hint-item {
+  white-space: nowrap;
+}
+
+/* Over the lower part of the pad (`designs/v2-06-phone-help.png`). */
+.help-box {
+  bottom: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--hairline);
+  background: rgb(26 28 27 / 90%);
+}
+
+/* Along the top of the pad; on a narrow pad it wraps between items. */
+.first-launch-hint {
+  top: 8px;
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* `// help` turns white while the help box is open. */
+.footer-item[aria-pressed='true'] {
+  color: var(--text);
+}

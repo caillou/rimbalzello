@@ -6,6 +6,7 @@ import { createScheduler, type Scheduler } from '../engine/scheduler';
 import { DRUMS, type Setup } from '../engine/setup';
 import { createSetupStore, type Mutes, type SetupSnapshot } from '../engine/setup-store';
 import { createTransport } from '../engine/transport';
+import { createFirstLaunchHint, FirstLaunchHint, HelpBox, touchScreen } from './Help';
 import { Pad } from './Pad';
 import { StepDisplay } from './StepDisplay';
 import { Strip } from './Strip';
@@ -97,6 +98,14 @@ export function App() {
     setPlaying(false);
   }
 
+  // Touch screens get the help box; laptops' keycap hints come with keyboard play.
+  const [helpOpen, setHelpOpen] = createSignal(false);
+  const firstLaunchHint = createFirstLaunchHint();
+
+  function toggleHelp() {
+    if (touchScreen()) setHelpOpen((open) => !open);
+  }
+
   function changeTempo(by: number) {
     store.change((draft) => void (draft.bpm += by));
   }
@@ -129,7 +138,14 @@ export function App() {
         </div>
       </header>
 
-      <Pad store={store}>
+      <Pad store={store} onMove={firstLaunchHint.dismiss}>
+        {/* The help box says all the hint says, so the hint steps aside while it is open. */}
+        <Show when={firstLaunchHint.shown() && !helpOpen()}>
+          <FirstLaunchHint />
+        </Show>
+        <Show when={helpOpen()}>
+          <HelpBox />
+        </Show>
         <Show when={audio() !== 'unlocked'}>
           <button type="button" class="tap-to-play" onClick={() => (audio() === 'locked' ? play() : session.unlock())}>
             <span>{audio() === 'locked' ? '▶ tap to play' : 'tap to resume'}</span>
@@ -172,7 +188,13 @@ export function App() {
       </div>
 
       <footer class="footer">
-        <button type="button" class="footer-item">
+        <button
+          type="button"
+          class="footer-item"
+          aria-label="help"
+          aria-pressed={helpOpen() ? 'true' : 'false'}
+          onClick={toggleHelp}
+        >
           {'// help'}
         </button>
         <button type="button" class="footer-item">
