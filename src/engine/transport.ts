@@ -1,6 +1,6 @@
 // Transport: what to play at time t. It owns tempo, swing, the playhead, the
-// chaos RNG, the glide and return quantisation, and reads the pattern from the
-// pattern generator at every step.
+// chaos RNG, the glide, return quantisation and the looper, and reads the
+// pattern from the pattern generator at every step.
 //
 // Pure and clock-injected: every time is passed in, in seconds on whatever
 // clock the caller runs, and nothing here touches Web Audio, the DOM or
@@ -25,6 +25,9 @@ export interface TransportOptions {
   seed: number;
 }
 
+/** A loop length in steps: the sizes 1/4, 1/8, 1/16 and 1/32 of a bar. */
+export type LoopSteps = 8 | 4 | 2 | 1;
+
 /** One drum to play, and how hard (0–1). */
 export interface Hit {
   drum: Drum;
@@ -46,7 +49,11 @@ export interface TimedStep {
   pattern: PatternInput;
   /** The drums that hit on the played step. */
   hits: Hit[];
-  /** A pending return landed on this step: from here the anchor's setup plays. */
+  /**
+   * A pending return landed on this step: from here the anchor's setup plays.
+   * False when the step is handed out again after a loop change: the return
+   * was already handed out with it the first time.
+   */
   returned: boolean;
 }
 
@@ -56,6 +63,7 @@ export interface Transport {
   readonly returnPending: boolean;
   /** Plays from step 0, with step 0 sounding at `time`. Rolls chaos. */
   start(time: number): void;
+  /** Stops, and ends a held loop: a loop size still held when play is pressed does not engage. */
   stop(): void;
   /**
    * The setup to play from the next step handed out. A new pad position
@@ -69,8 +77,30 @@ export interface Transport {
    */
   requestReturn(setup: ReturnSetup): void;
   /**
+   * Holds a loop of `steps` steps. Engaging starts it on the step heard at
+   * `now`: the last step that sounded by `heard`, the clock time reaching
+   * the speakers then (`now` minus the output latency), not the step being
+   * scheduled ahead, and not snapped to the loop length. While a loop is
+   * held, another length keeps its start and phase: only the length changes.
+   * While the loop is held the playhead runs on, and the playhead at `p`
+   * steps from play start plays step (start + ((p − start) mod length)) mod 32.
+   *
+   * Does nothing while stopped. The steps handed out that sound after `now`
+   * are handed out again with the change, so it is heard from the next step
+   * boundary: the caller cancels the hits it queued after `now`.
+   */
+  hold(steps: LoopSteps, at: { now: number; heard: number }): void;
+  /**
+   * Ends the loop: from the next step boundary after `now` the playhead step
+   * plays again, where it would have been without the loop (the slip). While
+   * playing, the steps after `now` are handed out again, as for `hold`.
+   */
+  release(now: number): void;
+  /**
    * The steps due before `until`, in time order. Each step is handed out
    * once: the next call continues after the last step already returned.
+   * After `hold` and `release` the steps after their `now` come again first,
+   * with the same playhead, time and pattern, and replace the earlier ones.
    */
   stepsBefore(until: number): TimedStep[];
 }
@@ -107,6 +137,18 @@ function swingDelay(playhead: number, swing: number, stepLength: number): number
 function glidePosition({ from, to, steps }: Glide): Position {
   const done = Math.min(1, steps / tunables.glideSteps);
   return { x: from.x + (to.x - from.x) * done, y: from.y + (to.y - from.y) * done };
+}
+
+/** A held loop: the step it started on, counted from play start without wrapping, and its length. */
+interface Loop {
+  start: number;
+  steps: LoopSteps;
+}
+
+/** A step handed out, and the playhead it belongs to counted from play start without wrapping. */
+interface Handed {
+  count: number;
+  step: TimedStep;
 }
 
 /** A position at rest: no glide under way. */
@@ -155,13 +197,52 @@ export function createTransport({ setup: initial, seed }: TransportOptions): Tra
   let sinceStep = 0;
   let sinceTime = 0;
   let stepLength = stepDuration(setup.bpm);
+  /** The loop held, or null. */
+  let loop: Loop | null = null;
+  // The last bar of steps handed out, oldest first: the heard step is looked
+  // up here, and a loop change hands steps out again from here. A bar is far
+  // more than the lookahead plus the output latency, even at 200 bpm.
+  let handed: Handed[] = [];
+  /** Steps taken out of `handed` by a loop change, to hand out again before any new step. */
+  let toHandAgain: Handed[] = [];
 
   /**
-   * The looper's seam: the step whose hits play when the playhead is at step
-   * `playhead`, counted without wrapping. No looper yet, so the playhead step.
+   * The step whose hits play when the playhead is at step `count`, counted
+   * without wrapping. `count` is past the loop's start unless a caller hears
+   * a step after `now`; the modulo stays positive even then.
    */
-  function playedStep(playhead: number): number {
-    return playhead % PATTERN_STEPS;
+  function playedStep(count: number): number {
+    if (!loop) return count % PATTERN_STEPS;
+    const { start, steps } = loop;
+    return (start + ((((count - start) % steps) + steps) % steps)) % PATTERN_STEPS;
+  }
+
+  /** What the playhead at `count` plays from `pattern`: the played step and its hits, accents louder. */
+  function playedHits(count: number, pattern: PatternInput): Pick<TimedStep, 'played' | 'hits'> {
+    const played = playedStep(count);
+    const atStep = hitsAt(pattern, played);
+    const hits = DRUMS.filter((drum) => atStep[drum].hit).map((drum) => ({
+      drum,
+      velocity: atStep[drum].accent ? velocity.accent : velocity.hit,
+    }));
+    return { played, hits };
+  }
+
+  /**
+   * The step heard at clock time `heard`, counted without wrapping: the last
+   * step handed out that sounds at or before it. Before step 0 has sounded
+   * there is none; the simplest reading takes the first step kept, which is
+   * step 0 then.
+   */
+  function heardStep(heard: number): number {
+    const sounded = handed.findLast((entry) => entry.step.time <= heard);
+    return (sounded ?? handed[0])?.count ?? next;
+  }
+
+  /** The steps handed out that sound after `now` are handed out again, before any new step. */
+  function handOutAgainAfter(now: number): void {
+    const from = handed.findIndex((entry) => entry.step.time > now);
+    if (from !== -1) toHandAgain = [...handed.splice(from), ...toHandAgain];
   }
 
   /**
@@ -184,7 +265,6 @@ export function createTransport({ setup: initial, seed }: TransportOptions): Tra
   function stepAt(count: number, time: number, returned: boolean): TimedStep {
     const position = glidePosition(glide);
     const playhead = count % PATTERN_STEPS;
-    const played = playedStep(count);
     const pattern: PatternInput = {
       x: Math.round(position.x),
       y: Math.round(position.y),
@@ -195,12 +275,7 @@ export function createTransport({ setup: initial, seed }: TransportOptions): Tra
         hh: perturbation(chaosBytes.hh, setup.chaos),
       },
     };
-    const atStep = hitsAt(pattern, played);
-    const hits = DRUMS.filter((drum) => atStep[drum].hit).map((drum) => ({
-      drum,
-      velocity: atStep[drum].accent ? velocity.accent : velocity.hit,
-    }));
-    return { playhead, played, time, pattern, hits, returned };
+    return { playhead, time, pattern, ...playedHits(count, pattern), returned };
   }
 
   return {
@@ -212,6 +287,8 @@ export function createTransport({ setup: initial, seed }: TransportOptions): Tra
     },
     start(time) {
       playing = true;
+      handed = [];
+      toHandAgain = [];
       next = 0;
       sinceStep = 0;
       sinceTime = time;
@@ -219,6 +296,7 @@ export function createTransport({ setup: initial, seed }: TransportOptions): Tra
     },
     stop() {
       playing = false;
+      loop = null;
       // Whatever is left of a glide is skipped: play starts on the target.
       glide = settledAt(glide.to);
     },
@@ -232,9 +310,30 @@ export function createTransport({ setup: initial, seed }: TransportOptions): Tra
     requestReturn(restore) {
       returnTo = copy(restore);
     },
+    hold(steps, { now, heard }) {
+      if (!playing) return;
+      // Sliding to another size keeps the start, and so the phase.
+      loop = { start: loop?.start ?? heardStep(heard), steps };
+      handOutAgainAfter(now);
+    },
+    release(now) {
+      if (!playing) return;
+      loop = null;
+      handOutAgainAfter(now);
+    },
     stepsBefore(until) {
       const steps: TimedStep[] = [];
-      while (playing) {
+      // Steps handed out again after a loop change keep their playhead, time
+      // and pattern (chaos, return and glide follow the playhead), and play
+      // the step the loop reads now.
+      while (playing && toHandAgain[0] && toHandAgain[0].step.time < until) {
+        const entry = toHandAgain.shift()!;
+        entry.step = { ...entry.step, ...playedHits(entry.count, entry.step.pattern), returned: false };
+        handed.push(entry);
+        steps.push(entry.step);
+      }
+      // New steps only once every step to hand out again is out, so the steps stay in time order.
+      while (playing && toHandAgain.length === 0) {
         const playhead = next % PATTERN_STEPS;
         retime(setup.bpm);
         const grid = sinceTime + (next - sinceStep) * stepLength;
@@ -253,7 +352,10 @@ export function createTransport({ setup: initial, seed }: TransportOptions): Tra
         }
         if (playhead === 0) chaosBytes = { bd: random(), sd: random(), hh: random() };
         glide.steps++;
-        steps.push(stepAt(next, time, landing !== null));
+        const step = stepAt(next, time, landing !== null);
+        handed.push({ count: next, step });
+        if (handed.length > PATTERN_STEPS) handed.shift();
+        steps.push(step);
         next++;
       }
       return steps;

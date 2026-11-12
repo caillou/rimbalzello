@@ -22,10 +22,9 @@ export interface VoiceHit {
   noise: number;
 }
 
-/** A started voice: its output, cut to cancel it, and when it starts and ends. */
+/** A started voice: its output, cut to cancel it, and when it ends. */
 export interface Voice {
   output: AudioNode;
-  start: number;
   end: number;
 }
 
@@ -122,7 +121,7 @@ export function createVoices(context: BaseAudioContext): Voices {
       .connect(new WaveShaperNode(context, { curve: saturation }))
       .connect(filter('lowpass', byteToRange(sound.tone, t.tone), hit.cutoff))
       .connect(output);
-    return { output, start: time, end };
+    return { output, end };
   }
 
   // sd: freq tunes the two body modes, tone moves the balance to the upper
@@ -151,7 +150,7 @@ export function createVoices(context: BaseAudioContext): Voices {
       .connect(envelope(time, noiseDecay))
       .connect(new GainNode(context, { gain: (t.noiseLevel * sound.snappy) / 255 }))
       .connect(output);
-    return { output, start: time, end };
+    return { output, end };
   }
 
   // hh: the metallic cluster of six squares, filtered to its top end.
@@ -172,7 +171,7 @@ export function createVoices(context: BaseAudioContext): Voices {
       .connect(filter('highpass', t.highpass, hit.cutoff))
       .connect(envelope(time, end - time))
       .connect(output);
-    return { output, start: time, end };
+    return { output, end };
   }
 
   return { bd, sd, hh };

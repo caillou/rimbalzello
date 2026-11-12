@@ -6,10 +6,8 @@
 // ignored except for tempo. Wiring the intents to the app happens elsewhere.
 
 import type { Drum } from '../engine/setup';
+import type { LoopSteps } from '../engine/transport';
 import { tunables } from '../engine/tunables';
-
-/** Loop sizes 1/4, 1/8, 1/16, 1/32 as lengths in steps. */
-export type LoopSteps = 8 | 4 | 2 | 1;
 
 export type KeyIntent =
   | { type: 'play-stop' }

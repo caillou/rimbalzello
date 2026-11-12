@@ -16,8 +16,14 @@ export interface Kit {
    * drift offsets.
    */
   trigger<D extends Drum>(drum: D, time: number, velocity: number, sound: Sound[D]): void;
-  /** Cancels every hit scheduled but not yet started. Hits already sounding ring out. */
-  cancelScheduled(): void;
+  /**
+   * Cancels every hit triggered for a time after `from` (seconds on the
+   * context clock; now when left out). Hits are judged by the time they were
+   * triggered for, not by their drifted start, so a caller that queues again
+   * from the same `from` neither loses nor doubles a hit. Hits already
+   * sounding ring out.
+   */
+  cancelScheduled(from?: number): void;
   /** Mutes or unmutes a drum at once: a gain on the drum's bus, so it also silences a hit already sounding. */
   setMuted(drum: Drum, muted: boolean): void;
   /** Sets drift (a byte) for the hits triggered from now on. */
@@ -104,12 +110,13 @@ export function createNativeKit(context: BaseAudioContext, options: KitOptions =
 
   const voices = createVoices(context);
   let drift = options.drift ?? 0;
-  let sounding: Voice[] = [];
+  /** Voices that have not ended, each with the time its hit was triggered for. */
+  let sounding: { voice: Voice; time: number }[] = [];
 
   return {
     trigger(drum, time, velocity, sound) {
       // Forget voices that have ended; cancelling only needs the ones still ahead.
-      sounding = sounding.filter((voice) => voice.end > context.currentTime);
+      sounding = sounding.filter(({ voice }) => voice.end > context.currentTime);
       const amount = drift / 255;
       const max = tunables.kit.drift;
       const voice = voices[drum](
@@ -124,12 +131,11 @@ export function createNativeKit(context: BaseAudioContext, options: KitOptions =
         sound,
       );
       voice.output.connect(buses[drum]);
-      sounding.push(voice);
+      sounding.push({ voice, time });
     },
-    cancelScheduled() {
-      const now = context.currentTime;
-      for (const voice of sounding) if (voice.start > now) voice.output.disconnect();
-      sounding = sounding.filter((voice) => voice.start <= now);
+    cancelScheduled(from = context.currentTime) {
+      for (const { voice, time } of sounding) if (time > from) voice.output.disconnect();
+      sounding = sounding.filter(({ time }) => time <= from);
     },
     setMuted(drum, muted) {
       const { gain } = buses[drum];

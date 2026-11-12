@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PATTERN_STEPS, hitsAt } from './pattern';
 import { DRUMS, defaultSetup } from './setup';
-import { createTransport, type TimedStep, type TransportSetup } from './transport';
+import { createTransport, type LoopSteps, type TimedStep, type TransportSetup } from './transport';
 import { tunables } from './tunables';
 
 /** Length of one step in seconds at a tempo: a beat is 8 steps. */
@@ -14,6 +14,15 @@ function plain(changes: Partial<TransportSetup> = {}): TransportSetup {
 }
 
 const position = (step: TimedStep) => ({ x: step.pattern.x, y: step.pattern.y });
+
+/** The hits the setup's pattern has on `step`, chaos aside, accents louder. */
+function hitsOn(setup: TransportSetup, step: number) {
+  const atStep = hitsAt({ x: setup.x, y: setup.y, density: setup.density, perturbation: { bd: 0, sd: 0, hh: 0 } }, step);
+  return DRUMS.filter((drum) => atStep[drum].hit).map((drum) => ({
+    drum,
+    velocity: atStep[drum].accent ? tunables.velocity.accent : tunables.velocity.hit,
+  }));
+}
 
 describe('playhead', () => {
   it('hands out every step of two bars once, on the 32nd-note grid at 128 bpm, however the timer wakes', () => {
@@ -35,14 +44,7 @@ describe('playhead', () => {
     twoBars.forEach((s, n) => expect(s.time, `step ${n}`).toBeCloseTo(origin + n * step, 9));
 
     // Each step plays the pattern at the setup's position, accents louder.
-    const input = { x: setup.x, y: setup.y, density: { ...setup.density }, perturbation: { bd: 0, sd: 0, hh: 0 } };
-    const expected = twoBars.map((s) => {
-      const atStep = hitsAt(input, s.playhead);
-      return DRUMS.filter((drum) => atStep[drum].hit).map((drum) => ({
-        drum,
-        velocity: atStep[drum].accent ? tunables.velocity.accent : tunables.velocity.hit,
-      }));
-    });
+    const expected = twoBars.map((s) => hitsOn(setup, s.playhead));
     expect(twoBars.map((s) => s.hits)).toEqual(expected);
     expect(expected.flat().some((hit) => hit.velocity === tunables.velocity.accent), 'the bar has an accent').toBe(true);
   });
@@ -206,5 +208,194 @@ describe('glide', () => {
     expect(path[0]).not.toEqual(halfway);
     expect(between(path[0]!, halfway!, d)).toBe(true);
     expect(path.at(-1)).toEqual(d);
+  });
+});
+
+describe('looper', () => {
+  /**
+   * Plays a transport the way the scheduler does, on a fake clock counted in
+   * steps from play start: a timer wakes every 25 ms and queues the steps due
+   * within the lookahead; a loop change cancels the steps queued after now,
+   * like the kit, and queues again. The player hears the steps `heard` lists.
+   */
+  function createPlayer(setup: TransportSetup, { lookahead = tunables.lookahead, latency = 0, seed = 1 } = {}) {
+    const transport = createTransport({ setup, seed });
+    const step = stepLength(setup.bpm);
+    let now = 0;
+    let queued: TimedStep[] = [];
+    const wake = () => queued.push(...transport.stepsBefore(now + lookahead));
+    const changed = () => {
+      queued = queued.filter((s) => s.time <= now);
+      wake();
+    };
+    transport.start(0);
+    wake();
+    return {
+      transport,
+      /** Runs the clock on to `steps` steps after play start. */
+      to(steps: number) {
+        while (now < steps * step) {
+          now = Math.min(steps * step, now + 0.025);
+          wake();
+        }
+      },
+      hold(steps: LoopSteps) {
+        transport.hold(steps, { now, heard: now - latency * step });
+        changed();
+      },
+      release() {
+        transport.release(now);
+        changed();
+      },
+      /** What sounds from playhead step `from` (counted from play start) to before `to`. */
+      heard(from: number, to: number) {
+        const steps = queued.slice(from, to);
+        expect(steps.map((s) => s.playhead), 'the playhead runs on').toEqual(
+          [...Array(to - from).keys()].map((n) => (from + n) % PATTERN_STEPS),
+        );
+        return steps;
+      },
+    };
+  }
+
+  const played = (steps: TimedStep[]) => steps.map((s) => s.played);
+
+  it('holding 1/8 while step 13 is heard plays 13, 14, 15, 16, 13, … and on release plays the step the playhead has reached', () => {
+    // Steps are queued about four steps ahead: engage and release are heard
+    // from the next step boundary, not a lookahead later.
+    const player = createPlayer(plain(), { lookahead: 0.25 });
+    player.to(13.5);
+    player.hold(4);
+    player.to(22.5);
+    player.release();
+    player.to(28);
+
+    expect(played(player.heard(13, 28))).toEqual([13, 14, 15, 16, 13, 14, 15, 16, 13, 14, 23, 24, 25, 26, 27]);
+  });
+
+  it('starts on the step heard, not on the step being scheduled ahead', () => {
+    // Steps are queued about four steps ahead, and the speakers lag the clock by two.
+    const player = createPlayer(plain(), { lookahead: 0.25, latency: 2 });
+    player.to(15.5);
+    expect(player.heard(0, 20).at(-1)?.playhead, 'queued ahead').toBe(19);
+    player.hold(4);
+    player.to(22);
+
+    expect(played(player.heard(13, 22))).toEqual([13, 14, 15, 16, 13, 14, 15, 16, 13]);
+  });
+
+  it('holding 1/4 from step 4, then sliding to 1/8 when the playhead is at step 10, plays 6, 7, 4, 5, 6, …', () => {
+    const player = createPlayer(plain());
+    player.to(4.5);
+    player.hold(8);
+    player.to(9.5);
+    player.hold(4);
+    player.to(15);
+
+    expect(played(player.heard(4, 15))).toEqual([4, 5, 6, 7, 8, 9, 6, 7, 4, 5, 6]);
+  });
+
+  it('holding 1/4 from step 4, then sliding to 1/32, repeats step 4', () => {
+    const player = createPlayer(plain());
+    player.to(4.5);
+    player.hold(8);
+    player.to(9.5);
+    player.hold(1);
+    player.to(15);
+
+    expect(played(player.heard(4, 15))).toEqual([4, 5, 6, 7, 8, 9, 4, 4, 4, 4, 4]);
+  });
+
+  it('a 1/8 loop started at step 30 plays 30, 31, 0, 1, and re-rolls chaos when the playhead crosses step 0, not when the loop wraps', () => {
+    const player = createPlayer(plain({ chaos: 255 }), { seed: 7 });
+    player.to(30.5);
+    player.hold(4);
+    player.to(66);
+    const steps = player.heard(30, 66);
+
+    expect(played(steps.slice(0, 8))).toEqual([30, 31, 0, 1, 30, 31, 0, 1]);
+    // The loop wraps through step 0 eight times in the second bar; chaos
+    // rolls only where the playhead crosses step 0, at the second and third bars.
+    const bars = [steps.slice(0, 2), steps.slice(2, 34), steps.slice(34)];
+    const rolls = bars.map((bar) => {
+      const first = bar[0]!.pattern.perturbation;
+      bar.forEach((s) => expect(s.pattern.perturbation, `playhead ${s.playhead}`).toEqual(first));
+      return JSON.stringify(first);
+    });
+    expect(new Set(rolls).size).toBe(3);
+  });
+
+  it('lets a pending return land on the playhead step 0, and the loop then reads the restored setup', () => {
+    const start = plain({ x: 30, y: 200 });
+    const anchor = plain({ x: 220, y: 40, density: { bd: 255, sd: 0, hh: 128 } });
+    const player = createPlayer(start);
+    player.to(13.5);
+    player.hold(4);
+    player.to(20);
+    player.transport.requestReturn(anchor);
+    player.to(40);
+
+    const before = player.heard(20, 32);
+    const after = player.heard(32, 40);
+    before.forEach((s) => expect(s.hits, `playhead ${s.playhead}`).toEqual(hitsOn(start, s.played)));
+    expect(after.map((s) => [s.playhead, s.played, s.returned])).toEqual([
+      [0, 16, true],
+      [1, 13, false],
+      [2, 14, false],
+      [3, 15, false],
+      [4, 16, false],
+      [5, 13, false],
+      [6, 14, false],
+      [7, 15, false],
+    ]);
+    after.forEach((s) => expect(s.hits, `playhead ${s.playhead}`).toEqual(hitsOn(anchor, s.played)));
+    expect(after.map((s) => s.hits), 'the anchor sounds different').not.toEqual(after.map((s) => hitsOn(start, s.played)));
+  });
+
+  it('works only while playing: holding while stopped does nothing, and stop ends a held loop', () => {
+    const transport = createTransport({ setup: plain(), seed: 1 });
+    const step = stepLength(plain().bpm);
+    const straight = [...Array(PATTERN_STEPS).keys()];
+
+    transport.hold(4, { now: 0, heard: 0 });
+    transport.start(1);
+    expect(played(transport.stepsBefore(1 + 31.5 * step))).toEqual(straight);
+
+    transport.stop();
+    transport.start(10);
+    transport.stepsBefore(10 + 13.5 * step);
+    transport.hold(1, { now: 10 + 13.5 * step, heard: 10 + 13.5 * step });
+    expect(played(transport.stepsBefore(10 + 15.5 * step))).toEqual([13, 13]);
+    transport.stop();
+    transport.start(20);
+    expect(played(transport.stepsBefore(20 + 31.5 * step))).toEqual(straight);
+  });
+
+  it('keeps an accented step accented on every 1/32 retrigger', () => {
+    const setup = plain();
+    const accented = [...Array(PATTERN_STEPS).keys()].find((n) =>
+      hitsOn(setup, n).some((hit) => hit.velocity === tunables.velocity.accent),
+    )!;
+    const player = createPlayer(setup);
+    player.to(accented + 0.5);
+    player.hold(1);
+    player.to(accented + 10);
+
+    for (const s of player.heard(accented, accented + 10)) {
+      expect(s.hits, `playhead ${s.playhead}`).toEqual(hitsOn(setup, accented));
+    }
+  });
+
+  it('lands looped steps on the swung slot of the playhead, not of the step they play', () => {
+    // Swing 56 % at 120 bpm puts the off-beat 16th 15 ms late, the 32nds beside it 7.5 ms.
+    const player = createPlayer(plain({ bpm: 120, swing: 56 }));
+    const step = stepLength(120);
+    player.to(4.5);
+    player.hold(1);
+    player.to(9);
+
+    const steps = player.heard(5, 9);
+    expect(played(steps)).toEqual([4, 4, 4, 4]);
+    expect(steps.map((s, n) => (s.time - (5 + n) * step) * 1000)).toEqual([7.5, 15, 7.5, 0].map((ms) => expect.closeTo(ms, 6)));
   });
 });

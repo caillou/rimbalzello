@@ -6,7 +6,7 @@
 
 import type { Kit } from './kit';
 import type { SetupStore } from './setup-store';
-import type { Transport } from './transport';
+import type { LoopSteps, Transport } from './transport';
 import { tunables } from './tunables';
 
 /** How often the scheduler wakes, in ms. Well under the lookahead, so one late timer leaves no gap. */
@@ -18,12 +18,43 @@ const START_DELAY = 0.05;
 export interface Scheduler {
   /** Starts playback at step 0. Does nothing while playing. */
   play(): void;
-  /** Stops playback and cancels the hits queued but not yet started. */
+  /** Stops playback, ending a held loop, and cancels the hits queued but not yet started. */
   stop(): void;
+  /**
+   * Holds a loop of `steps` steps: engages it on the step heard now, or
+   * slides a held loop to that size. Heard from the next step boundary.
+   * Does nothing while stopped.
+   */
+  hold(steps: LoopSteps): void;
+  /** Releases the loop: from the next step boundary the playhead step plays again (the slip). */
+  release(): void;
 }
 
 export function createScheduler(context: BaseAudioContext, kit: Kit, transport: Transport, store: SetupStore): Scheduler {
   let timer: ReturnType<typeof setInterval> | undefined;
+
+  /**
+   * Seconds from the context clock to the speakers: what sounds now was
+   * scheduled this long ago. Browsers without `outputLatency` (Safari) count
+   * the base latency only.
+   */
+  function latency(): number {
+    const { baseLatency = 0, outputLatency = 0 } = context as Partial<AudioContext>;
+    return baseLatency + outputLatency;
+  }
+
+  /**
+   * A loop change: the transport hands out again the steps after now with
+   * the change, so the hits queued for them are cancelled first, from the
+   * same now, so no hit is lost or doubled.
+   */
+  function changeLoop(change: (now: number) => void) {
+    if (!transport.playing) return;
+    const now = context.currentTime;
+    change(now);
+    kit.cancelScheduled(now);
+    tick();
+  }
 
   function tick() {
     for (const step of transport.stepsBefore(context.currentTime + tunables.lookahead)) {
@@ -47,6 +78,12 @@ export function createScheduler(context: BaseAudioContext, kit: Kit, transport: 
       timer = undefined;
       transport.stop();
       kit.cancelScheduled();
+    },
+    hold(steps) {
+      changeLoop((now) => transport.hold(steps, { now, heard: now - latency() }));
+    },
+    release() {
+      changeLoop((now) => transport.release(now));
     },
   };
 }
