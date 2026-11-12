@@ -1,0 +1,11 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+blob-report/
+.DS_Store
+
+# Per-issue review logs from the implementation pipeline. The other files
+# in reviews/ are tracked docs.
+docs/PRDs/2026-11-12-rimbalzello-v1/reviews/[0-9]*.md
+docs/PRDs/2026-11-12-rimbalzello-v1/reviews/final-*.md

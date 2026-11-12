@@ -1,0 +1,84 @@
+/* IBM Plex Mono, self-hosted (OFL-1.1). The weights below cover the
+   resolution-dependent normal and bold weights, upright and italic. */
+@import '@fontsource/ibm-plex-mono/200.css';
+@import '@fontsource/ibm-plex-mono/200-italic.css';
+@import '@fontsource/ibm-plex-mono/300.css';
+@import '@fontsource/ibm-plex-mono/300-italic.css';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/400-italic.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+@import '@fontsource/ibm-plex-mono/500-italic.css';
+@import '@fontsource/ibm-plex-mono/600.css';
+@import '@fontsource/ibm-plex-mono/600-italic.css';
+
+/* Colours from design.md, unchanged for v1. */
+:root {
+  color-scheme: dark;
+
+  --bg: #202322;
+  --pad: #1a1c1b;
+  --hairline: #3a3d3c;
+
+  --text: #ffffff;
+  --text-secondary: #ababab;
+  --text-tertiary: #757575;
+
+  --bd: #ffd866;
+  --sd: #ff61ef;
+  --hh: #bef289;
+  --drive: #fc618d;
+  --chaos: #ffffff;
+  --drift: #ffffff;
+  --swing: #ffffff;
+
+  /* Current step and the return button: yellow block, black text. */
+  --highlight: #ffd866;
+  --on-highlight: #000000;
+
+  --font: 'IBM Plex Mono', monospace;
+
+  /* Thinner on denser screens, like caillou.ch. */
+  --weight-normal: 400;
+  --weight-bold: 600;
+}
+
+@media (min-resolution: 2dppx) {
+  :root {
+    --weight-normal: 300;
+    --weight-bold: 500;
+  }
+}
+
+@media (min-resolution: 3dppx) {
+  :root {
+    --weight-normal: 200;
+    --weight-bold: 400;
+  }
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-weight: var(--weight-normal);
+}
+
+h1,
+h2,
+h3,
+b,
+strong {
+  font-weight: var(--weight-bold);
+}
+
+::selection {
+  background: var(--highlight);
+  color: var(--on-highlight);
+}
+
+/* The grey # and ## before titles and section headings. */
+.marker {
+  color: var(--text-tertiary);
+}
