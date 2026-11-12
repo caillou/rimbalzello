@@ -123,7 +123,7 @@ test("a drag held across a tab switch leaves the new drum's slider alone", async
 });
 
 test('the pad and the mutes still respond in sound mode; ← play brings the strips back', async ({ page }) => {
-  // `→ sound` grows the pad, and the pad learns its new size on the next frame;
+  // `→ sound` can resize the pad, and the pad learns its new size on the next frame;
   // no finger lands sooner, so the tap waits for it.
   await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
   const pad = page.locator('[data-control="pad"]');
@@ -137,18 +137,18 @@ test('the pad and the mutes still respond in sound mode; ← play brings the str
   await expect(mute).toHaveAttribute('aria-pressed', 'true');
 
   await page.getByRole('button', { name: '← play' }).click();
-  await expect(page.getByRole('tablist')).toHaveCount(0);
-  await expect(slider(page, 'chaos')).toBeVisible();
+  await expect(page.getByRole('tablist', { name: 'sound' })).toHaveCount(0);
+  await expect(slider(page, 'bd')).toBeVisible();
   await expect(page.getByRole('button', { name: '→ sound' })).toBeVisible();
 });
 
 test('the bpm readout in sound mode switches to the tempo panel; ← play brings the strips back', async ({ page }) => {
   await page.getByRole('button', { name: /^\d+ bpm$/ }).click();
   await expect(page.getByRole('region', { name: 'tempo' })).toBeVisible();
-  await expect(page.getByRole('tablist')).toHaveCount(0);
+  await expect(page.getByRole('tablist', { name: 'sound' })).toHaveCount(0);
 
   await page.getByRole('button', { name: '← play' }).click();
   await expect(page.getByRole('region', { name: 'tempo' })).toHaveCount(0);
-  await expect(slider(page, 'chaos')).toBeVisible();
+  await expect(slider(page, 'bd')).toBeVisible();
   await expect(page.getByRole('button', { name: '→ sound' })).toBeVisible();
 });

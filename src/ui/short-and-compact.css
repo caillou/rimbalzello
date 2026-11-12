@@ -1,0 +1,61 @@
+/* The short and compact layouts (`designs/v2-01-phone.png`,
+   `designs/v2-02-phone-compact.png`). App picks the layout from the play
+   screen's height and sets it as `data-layout`; layout.ts mirrors the row
+   heights set here. Both fold the six strips into `mix` and `fx` tabs. */
+
+/* Compact: a slimmer header and bottom bar, and the step display inside the
+   pad, over its lower edge. Every row is still a 44 px touch target. */
+.play-screen[data-layout='compact'] {
+  /* The step display's height inside the pad: three 24 px lines, padding and
+     the hairline. Pad.tsx reads it to keep the X/Y readout above the band. */
+  --step-overlay: 80px;
+}
+
+.play-screen[data-layout='compact'] .header {
+  height: 44px;
+}
+
+.play-screen[data-layout='compact'] .title {
+  font-size: 16px;
+}
+
+.play-screen[data-layout='compact'] .bottom-bar {
+  height: 44px;
+  padding-top: 0;
+}
+
+/* Smaller text on a see-through band, so the pad shows through. A touch
+   between the drum labels lands on the pad; the labels keep their mute toggles. */
+.play-screen[data-layout='compact'] .pad .step-display {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: var(--step-overlay);
+  padding: 4px 0 3px;
+  border-top: 1px solid var(--hairline);
+  background: rgb(26 28 27 / 80%);
+  font-size: 13px;
+}
+
+.play-screen[data-layout='compact'] .pad .step-label {
+  width: 44px;
+  margin-left: 0;
+  padding-left: 8px;
+}
+
+/* The overlays on the pad keep clear of the step display. So before the
+   first tap, a touch on the step display between its labels moves the pad
+   rather than starting the audio: the labels have to stay free to mute. */
+.play-screen[data-layout='compact'] .tap-to-play {
+  bottom: var(--step-overlay);
+}
+
+/* Smaller text, so its four lines fit between the pad's top and the step
+   display on an SE (about 120 px). */
+.play-screen[data-layout='compact'] .help-box {
+  bottom: calc(var(--step-overlay) + 8px);
+  padding: 4px 6px;
+  font-size: 11px;
+  line-height: 1.4;
+}

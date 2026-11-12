@@ -119,6 +119,27 @@ export const tunables = {
   },
 
   /**
+   * Phone layouts, picked by the play screen's height (100dvh less the bottom
+   * safe area), in CSS px. To measure on the acceptance devices: Safari
+   * leaves about 660–750 px on a current iPhone and about 553 px on an SE.
+   */
+  phoneLayouts: {
+    /** Narrower than this, the play screen is a phone layout; from here on it is the tablet's (design.md: about 700). */
+    width: 700,
+    /**
+     * The shortest the pad gets above the compact layout, and so the
+     * breakpoints: each layout starts where its rows leave the pad this much
+     * (`src/ui/layout.ts`). With 200, the phone layout (532 px of rows) starts
+     * at 732 px and the short layout (444 px) at 644 px; below that, the
+     * compact layout (352 px) takes over. About 200 px. design.md asks for
+     * about 240, which does not fit with 44 px rows: 553 px leaves the compact
+     * pad 201 px, and a 240 px pad in the short layout needs 684 px, more
+     * than 393×659 has.
+     */
+    padMinHeight: 200,
+  },
+
+  /**
    * The native kit's voices, drift and drive. Starting points for the kit
    * tuning issue, to be set by ear on the acceptance devices; the sound is
    * heading towards hard techno. Byte parameters (0–255) map onto the

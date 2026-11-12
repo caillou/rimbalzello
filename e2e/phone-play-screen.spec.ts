@@ -2,9 +2,10 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import { expectLayoutRules } from './layout-rules.ts';
 import { readout } from './pad-readout.ts';
 
-// The play screen at the phone viewport: Safari on a current iPhone in
-// portrait (design.md, `designs/v2-01-phone.png`).
-test.use({ viewport: { width: 393, height: 659 } });
+// The play screen in the phone layout, all six strips: Safari on a current
+// iPhone with room for them (design.md: about 660–750 px of height). Shorter
+// phones get the short and compact layouts (short-and-compact-layouts.spec.ts).
+test.use({ viewport: { width: 393, height: 750 } });
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');

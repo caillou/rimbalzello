@@ -82,7 +82,7 @@ Tapping the bpm readout replaces the strips with `## tempo`: bpm with − and +,
 
 ### Short and compact phones
 
-On short phones the six strips fold into **mix** (bd sd hh) and **fx** (chaos drift drive) tabs. The pad keeps at least about 240 px. Loop strip, bottom bar and footer stay visible. The compact layout covers the smallest case (iPhone SE in Safari) with tighter rows and a smaller step display. Its exact shape comes from the design pass.
+On short phones the six strips fold into **mix** (bd sd hh) and **fx** (chaos drift drive) tabs. The pad keeps at least 200 px, with 44 px rows, 240 does not fit the SE. Loop strip, bottom bar and footer stay visible. The compact layout covers the smallest case (iPhone SE in Safari) with tighter rows and a smaller step display. Its exact shape comes from the design pass.
 
 ### Landscape phones
 

@@ -20,7 +20,7 @@ test('the bpm readout opens the tempo panel in place of the strips; the readout 
   page,
 }) => {
   await page.goto('/');
-  const strips = page.getByRole('slider', { name: 'chaos' });
+  const strips = page.getByRole('slider', { name: 'bd', exact: true });
   const firstBarItem = page.locator('.bottom-bar button').first();
   await expect(firstBarItem).toHaveText('→ sound');
 

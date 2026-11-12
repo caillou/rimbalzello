@@ -6,6 +6,7 @@ import { createSignal, createUniqueId, For, Show } from 'solid-js';
 import { DRUMS, type Drum } from '../engine/setup';
 import { SoundSection, type SoundSectionProps } from './SoundSection';
 import './sound.css';
+import './tabs.css';
 
 const NAMES: Record<Drum, string> = { bd: 'bass drum', sd: 'snare drum', hh: 'hi-hat' };
 
@@ -18,15 +19,15 @@ export function DrumTabs(props: DrumTabsProps) {
 
   return (
     <div class="drum-tabs">
-      <div class="drum-tab-row">
-        <div class="drum-tab-list" role="tablist" aria-label="sound">
+      <div class="tab-row">
+        <div class="tab-list" role="tablist" aria-label="sound">
           <For each={DRUMS}>
             {(drum) => (
               <button
                 type="button"
                 role="tab"
                 id={tabId(drum)}
-                class="drum-tab"
+                class="tab"
                 aria-selected={active() === drum}
                 style={{ '--colour': `var(--${drum})` }}
                 onClick={() => setActive(drum)}

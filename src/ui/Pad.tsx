@@ -31,6 +31,8 @@ export function Pad(props: PadProps) {
   let readout!: HTMLDivElement;
   let width = 0;
   let height = 0;
+  /** How much of the pad's lower edge the step display covers: `--step-overlay` in the compact layout, else 0. */
+  let covered = 0;
   let frame = 0;
 
   // Bytes run left to right and bottom to top: a higher y is higher up the
@@ -119,9 +121,14 @@ export function Pad(props: PadProps) {
     ring.style.transform = `translate(${at.x}px, ${at.y}px)`;
     dot.style.transform = `translate(${at.x}px, ${at.y}px)`;
     readout.textContent = `x ${toDisplay(x)} · y ${toDisplay(y)}`;
-    // Below right of the position, flipped to the other side near the far edges.
+    // Below right of the position, flipped to the other side near the far
+    // edges. It keeps above the step display, even when the position is under it.
+    const floor = height - covered;
     const left = at.x + READOUT_GAP + readout.offsetWidth > width ? at.x - READOUT_GAP - readout.offsetWidth : at.x + READOUT_GAP;
-    const top = at.y + READOUT_GAP + readout.offsetHeight > height ? at.y - READOUT_GAP - readout.offsetHeight : at.y + READOUT_GAP;
+    const top =
+      at.y + READOUT_GAP + readout.offsetHeight > floor
+        ? Math.min(at.y - READOUT_GAP, floor) - readout.offsetHeight
+        : at.y + READOUT_GAP;
     readout.style.transform = `translate(${left}px, ${top}px)`;
   }
 
@@ -130,9 +137,11 @@ export function Pad(props: PadProps) {
   }
 
   onMount(() => {
+    // A change of layout resizes the pad, so the covered edge is read here too.
     const resize = new ResizeObserver(() => {
       width = pad.clientWidth;
       height = pad.clientHeight;
+      covered = parseFloat(getComputedStyle(pad).getPropertyValue('--step-overlay')) || 0;
       redraw();
     });
     resize.observe(pad);

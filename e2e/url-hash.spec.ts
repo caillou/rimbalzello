@@ -4,7 +4,8 @@ import { expect, test, type Page } from '@playwright/test';
 // every change without adding history, and the bare address brings back the
 // last setup on the device.
 
-test.use({ viewport: { width: 393, height: 659 } });
+// The phone layout, so all six strips show.
+test.use({ viewport: { width: 393, height: 750 } });
 
 /** A link to a `v1.` hash with these 21 bytes, built without the app's URL codec. */
 function link(bytes: number[]): string {

@@ -1,4 +1,4 @@
-import { createSignal, For, Match, onCleanup, Show, Switch } from 'solid-js';
+import { createSignal, For, Match, onCleanup, onMount, Show, Switch } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import { createAudioSession, type AudioSessionState } from '../engine/audio-session';
 import { createNativeKit, type Kit } from '../engine/kit';
@@ -12,34 +12,42 @@ import { About } from './About';
 import { claimLinkClick, createAboutRoute } from './about-route';
 import { DrumTabs } from './DrumTabs';
 import { createFirstLaunchHint, FirstLaunchHint, HelpBox, touchScreen } from './Help';
+import { createLayout } from './layout';
 import { LoopStrip } from './LoopStrip';
 import { Pad } from './Pad';
 import { PressButton } from './PressButton';
 import { StepDisplay } from './StepDisplay';
 import { Strip } from './Strip';
+import { StripTabs, type StripTab } from './StripTabs';
 import { TempoPanel } from './TempoPanel';
 import './play-screen.css';
+import './short-and-compact.css';
 
-/** The six strips of the phone layout, top to bottom. */
-const STRIPS: readonly {
+interface StripField {
   label: string;
   colour: string;
   get(setup: SetupSnapshot): number;
   set(setup: Setup, value: number): void;
-}[] = [
-  ...DRUMS.map((drum) => ({
+}
+
+/** The six strips by tab: `mix` the densities, `fx` chaos, drift and drive. */
+const STRIPS_BY_TAB: Readonly<Record<StripTab, readonly StripField[]>> = {
+  mix: DRUMS.map((drum) => ({
     label: drum,
     colour: `var(--${drum})`,
     get: (setup: SetupSnapshot) => setup.density[drum],
     set: (setup: Setup, value: number) => void (setup.density[drum] = value),
   })),
-  ...(['chaos', 'drift', 'drive'] as const).map((field) => ({
+  fx: (['chaos', 'drift', 'drive'] as const).map((field) => ({
     label: field,
     colour: `var(--${field})`,
     get: (setup: SetupSnapshot) => setup[field],
     set: (setup: Setup, value: number) => void (setup[field] = value),
   })),
-];
+};
+
+/** The six strips of the phone layout, top to bottom. */
+const STRIPS = [...STRIPS_BY_TAB.mix, ...STRIPS_BY_TAB.fx];
 
 /** What the kit follows from the store: drift, drive and mutes. */
 interface KitState {
@@ -146,6 +154,13 @@ export function App() {
   // sound mode, or the tempo panel.
   const [mode, setMode] = createSignal<'play' | 'sound' | 'tempo'>('play');
 
+  // The short and compact layouts fold the strips into tabs; the compact
+  // layout also moves the step display into the pad.
+  const { layout, observe } = createLayout();
+  let screen!: HTMLElement;
+  onMount(() => observe(screen));
+  const [stripTab, setStripTab] = createSignal<StripTab>('mix');
+
   function setAnchor() {
     store.setAnchor();
     // A return already pending restores the new anchor.
@@ -159,13 +174,32 @@ export function App() {
     setReturnPending(true);
   }
 
+  const stepDisplay = () => (
+    <StepDisplay
+      setup={setup}
+      mutes={mutes}
+      playing={playing}
+      heard={() => scheduler?.heard()}
+      onToggleMute={(drum) => store.toggleMute(drum)}
+    />
+  );
+
+  const stripRow = (strip: StripField) => (
+    <Strip
+      label={strip.label}
+      colour={strip.colour}
+      value={strip.get(setup())}
+      onChange={(value) => store.change((draft) => strip.set(draft, value))}
+    />
+  );
+
   // No long-press menus on the instrument; links keep theirs.
   function noContextMenu(event: MouseEvent) {
     if (!(event.target instanceof Element && event.target.closest('a'))) event.preventDefault();
   }
 
   return (
-    <main class="play-screen" inert={about.open()} onContextMenu={noContextMenu}>
+    <main ref={screen} class="play-screen" data-layout={layout()} inert={about.open()} onContextMenu={noContextMenu}>
       {/* Mounted in <body>, outside the play screen, which is inert while about is open. */}
       <Show when={about.open()}>
         <Portal>
@@ -201,6 +235,7 @@ export function App() {
       </header>
 
       <Pad store={store} onMove={firstLaunchHint.dismiss}>
+        <Show when={layout() === 'compact'}>{stepDisplay()}</Show>
         {/* The help box says all the hint says, so the hint steps aside while it is open. */}
         <Show when={firstLaunchHint.shown() && !helpOpen()}>
           <FirstLaunchHint />
@@ -215,30 +250,20 @@ export function App() {
         </Show>
       </Pad>
 
-      <StepDisplay
-        setup={setup}
-        mutes={mutes}
-        playing={playing}
-        heard={() => scheduler?.heard()}
-        onToggleMute={(drum) => store.toggleMute(drum)}
-      />
+      <Show when={layout() !== 'compact'}>{stepDisplay()}</Show>
 
       <LoopStrip held={loop} playing={playing} onHold={holdLoop} onRelease={releaseLoop} />
 
       <Switch>
-        <Match when={mode() === 'play'}>
+        <Match when={mode() === 'play' && layout() === 'phone'}>
           <div class="strips">
-            <For each={STRIPS}>
-              {(strip) => (
-                <Strip
-                  label={strip.label}
-                  colour={strip.colour}
-                  value={strip.get(setup())}
-                  onChange={(value) => store.change((draft) => strip.set(draft, value))}
-                />
-              )}
-            </For>
+            <For each={STRIPS}>{stripRow}</For>
           </div>
+        </Match>
+        <Match when={mode() === 'play'}>
+          <StripTabs active={stripTab} onSelect={setStripTab}>
+            <For each={STRIPS_BY_TAB[stripTab()]}>{stripRow}</For>
+          </StripTabs>
         </Match>
         <Match when={mode() === 'sound'}>
           <DrumTabs setup={setup} onChange={(edit) => store.change(edit)} />
