@@ -46,6 +46,14 @@ export const tunables = {
     accent: 1,
   },
 
+  /**
+   * How many steps a new pad target takes to reach. The position moves on
+   * every step, starting with the first after the jump, so 2 is the shortest
+   * glide (one point halfway) and 3 passes through two points on the way.
+   * 1 would be a hard jump, which the glide test rules out. About 2.
+   */
+  glideSteps: 2,
+
   /** Pad gesture thresholds, tuned by feel on the acceptance devices. */
   padGestures: {
     /** Finger travel in CSS px before a touch counts as moving. About 10 px. */
@@ -68,5 +76,122 @@ export const tunables = {
     fineNudgeStep: 2,
     /** Milliseconds with no arrow held after which a run of nudges ends as one pad move. About 500 ms. */
     nudgeRunGap: 500,
+  },
+
+  /**
+   * The native kit's voices, drift and drive. Starting points for the kit
+   * tuning issue, to be set by ear on the acceptance devices; the sound is
+   * heading towards hard techno. Byte parameters (0–255) map onto the
+   * `{ min, max }` ranges below exponentially: equal byte steps are equal
+   * ratios, so the middle of a range sits at its geometric middle.
+   */
+  kit: {
+    /** Gain on the sum of the drums, before drive. About 0.6: a loud default bar peaks under the drive's knee. */
+    mix: 0.6,
+
+    /** A level byte maps to gain as (level / 255) ^ levelCurve. 2 puts 50 % at about −12 dB. */
+    levelCurve: 2,
+
+    /** bd: a sine with a falling pitch, saturated and low-passed. */
+    bd: {
+      /** Gain at full level and velocity, to balance bd against sd and hh. */
+      gain: 1,
+      /** freq: the pitch the kick settles on, in Hz. About 30–90 Hz, centre about 52 Hz. */
+      freq: { min: 30, max: 90 },
+      /** punch: how far above `freq` the pitch starts, in semitones at punch 255. About 3 octaves. */
+      sweep: 36,
+      /** Time constant of the pitch fall, in seconds. About 12 ms: a click, then the body. */
+      sweepTime: 0.012,
+      /** tone: low-pass cutoff on the saturated body, in Hz. */
+      tone: { min: 80, max: 5000 },
+      /** decay: seconds until the kick is silent (−80 dB). */
+      decay: { min: 0.08, max: 1.5 },
+      /** Soft saturation inside the voice: the tanh drive at full amplitude. About 2. */
+      saturation: 2,
+    },
+
+    /** sd: two tuned body modes plus filtered noise. */
+    sd: {
+      /** Gain at full level and velocity. */
+      gain: 1,
+      /** freq: the lower body mode, in Hz. Centre about 220 Hz. */
+      freq: { min: 120, max: 400 },
+      /**
+       * The two body modes: frequency ratio to `freq`, and level at tone 0
+       * (`dark`) and tone 255 (`bright`), mixed linearly in between.
+       */
+      modes: [
+        { ratio: 1, dark: 1, bright: 0.5 },
+        { ratio: 1.62, dark: 0.2, bright: 0.7 },
+      ],
+      /** Semitones the body modes start above their pitch. About 4: a short knock. */
+      sweep: 4,
+      /** Time constant of that pitch fall, in seconds. */
+      sweepTime: 0.008,
+      /** decay: seconds until the body is silent (−80 dB). */
+      decay: { min: 0.06, max: 0.6 },
+      /** The noise lasts this many times the body decay. */
+      noiseDecay: 1.4,
+      /** High-pass on the noise, in Hz, so it never muddies the body. */
+      noiseHighpass: 1200,
+      /** tone: low-pass on the noise, in Hz. */
+      noiseTone: { min: 2500, max: 12000 },
+      /** snappy: noise level at snappy 255, relative to the body. */
+      noiseLevel: 1.6,
+    },
+
+    /** hh: six detuned square oscillators through band-pass and high-pass. */
+    hh: {
+      /** Gain at full level and velocity. The filters keep little of the squares, so it is high. */
+      gain: 3,
+      /** The six square oscillators, in Hz: inharmonic ratios, so together they ring metallic. */
+      oscillators: [205.3, 304.4, 369.6, 522.7, 540, 800],
+      /** Band-pass centre in Hz, and its Q. */
+      bandpass: 10000,
+      bandpassQ: 1,
+      /** High-pass after it, in Hz. */
+      highpass: 7000,
+      /** Seconds until the hat is silent (−80 dB). About 90 ms: a closed hat. */
+      decay: 0.09,
+    },
+
+    /**
+     * Drift: per-hit random offsets, each scaled by drift / 255. These are the
+     * offsets at drift 255; every hit draws its own, uniformly within ±max
+     * (timing: 0 to max late, so a hit is never early).
+     */
+    drift: {
+      /** Pitch, in cents. */
+      pitchCents: 35,
+      /** Decay, as a fraction of the decay time. */
+      decay: 0.25,
+      /** Level, in dB. */
+      levelDb: 2.5,
+      /** Timing, in seconds late. 2 ms. */
+      timing: 0.002,
+      /** Filter cutoffs, in cents. */
+      cutoffCents: 400,
+    },
+
+    /**
+     * Drive: the sum of the drums goes through gain, a soft clip and a gain
+     * compensation. The clip is linear up to the knee and bends smoothly to
+     * just under full scale above it, so drive 0 is clean below the knee.
+     */
+    drive: {
+      /** Gain in front of the clip at drive 255, in dB. Drive 0 is 0 dB; in between is linear in dB. */
+      maxGainDb: 24,
+      /**
+       * Gain compensation after the clip, so drive does not make the kit much
+       * louder: the cut is compensationDb × tanh(gain in dB / compensationDb),
+       * which follows the drive gain at first and levels off near this many dB.
+       * About 22 keeps the default bar within about 1 dB across the drive range.
+       */
+      compensationDb: 22,
+      /** Level where the soft clip starts to bend, 0–1. */
+      knee: 0.5,
+      /** Most a one-bar render at drive 255 may differ in RMS from drive 0, in dB (checked by the kit render test). */
+      loudnessToleranceDb: 3,
+    },
   },
 };
