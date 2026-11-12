@@ -63,6 +63,16 @@ export function createScheduler(context: BaseAudioContext, kit: Kit, transport: 
     latencyReadAt = now;
   }
 
+  // The clock time reaching the speakers: the context clock less the latency.
+  // When a fresh read of the latency is higher, it waits rather than going
+  // back, so the step display does not flick back to the step before.
+  let heardTime = -Infinity;
+
+  function heardAt(now: number): number {
+    heardTime = Math.max(heardTime, now - latency);
+    return heardTime;
+  }
+
   /**
    * A loop change: the transport hands out again the steps after now with
    * the change, so the hits queued for them are cancelled first, from the
@@ -109,13 +119,13 @@ export function createScheduler(context: BaseAudioContext, kit: Kit, transport: 
       if (returning) store.applyAnchor();
     },
     hold(steps) {
-      changeLoop((now) => transport.hold(steps, { now, heard: now - latency }));
+      changeLoop((now) => transport.hold(steps, { now, heard: heardAt(now) }));
     },
     release() {
       changeLoop((now) => transport.release(now));
     },
     heard() {
-      return transport.stepHeardAt(context.currentTime - latency);
+      return transport.stepHeardAt(heardAt(context.currentTime));
     },
   };
 }
