@@ -9,8 +9,10 @@ import { createTransport } from '../engine/transport';
 import { createFirstLaunchHint, FirstLaunchHint, HelpBox, touchScreen } from './Help';
 import { startingSetup, syncUrlHash } from '../engine/url-hash';
 import { Pad } from './Pad';
+import { PressButton } from './PressButton';
 import { StepDisplay } from './StepDisplay';
 import { Strip } from './Strip';
+import { TempoPanel } from './TempoPanel';
 import './play-screen.css';
 
 /** The six strips of the phone layout, top to bottom. */
@@ -112,6 +114,9 @@ export function App() {
     store.change((draft) => void (draft.bpm += by));
   }
 
+  // What sits in the strips' place: the strips, or the tempo panel.
+  const [mode, setMode] = createSignal<'play' | 'tempo'>('play');
+
   // No long-press menus on the instrument; links keep theirs.
   function noContextMenu(event: MouseEvent) {
     if (!(event.target instanceof Element && event.target.closest('a'))) event.preventDefault();
@@ -124,16 +129,21 @@ export function App() {
           <span class="marker">#</span> rimbalzello
         </h1>
         <div class="header-controls">
-          <button type="button" class="tempo-button" aria-label="tempo down" onClick={() => changeTempo(-1)}>
+          <PressButton class="tempo-button" label="tempo down" repeat onPress={() => changeTempo(-1)}>
             −
-          </button>
-          <span class="bpm">
-            {setup().bpm}
+          </PressButton>
+          <button
+            type="button"
+            class="bpm"
+            aria-expanded={mode() === 'tempo'}
+            onClick={() => setMode(mode() === 'tempo' ? 'play' : 'tempo')}
+          >
+            <span class="bpm-value">{setup().bpm}</span>
             <span class="bpm-unit"> bpm</span>
-          </span>
-          <button type="button" class="tempo-button" aria-label="tempo up" onClick={() => changeTempo(1)}>
-            +
           </button>
+          <PressButton class="tempo-button" label="tempo up" repeat onPress={() => changeTempo(1)}>
+            +
+          </PressButton>
           <button type="button" class="text-button play-stop" onClick={() => (playing() ? stop() : play())}>
             {playing() ? 'stop' : 'play'}
           </button>
@@ -163,23 +173,31 @@ export function App() {
         onToggleMute={(drum) => store.toggleMute(drum)}
       />
 
-      <div class="strips">
-        <For each={STRIPS}>
-          {(strip) => (
-            <Strip
-              label={strip.label}
-              colour={strip.colour}
-              value={strip.get(setup())}
-              onChange={(value) => store.change((draft) => strip.set(draft, value))}
-            />
-          )}
-        </For>
-      </div>
+      <Show
+        when={mode() === 'tempo'}
+        fallback={
+          <div class="strips">
+            <For each={STRIPS}>
+              {(strip) => (
+                <Strip
+                  label={strip.label}
+                  colour={strip.colour}
+                  value={strip.get(setup())}
+                  onChange={(value) => store.change((draft) => strip.set(draft, value))}
+                />
+              )}
+            </For>
+          </div>
+        }
+      >
+        <TempoPanel setup={setup} onChange={(edit) => store.change(edit)} />
+      </Show>
 
       {/* Placed now; set anchor, return and sound mode come with their own issues. */}
       <div class="bottom-bar">
-        <button type="button" class="bar-button">
-          <span class="marker">→</span> sound
+        {/* One button, so it keeps focus when `← play` closes the tempo panel. */}
+        <button type="button" class="bar-button" onClick={() => setMode('play')}>
+          <span class="marker">{mode() === 'play' ? '→' : '←'}</span> {mode() === 'play' ? 'sound' : 'play'}
         </button>
         <button type="button" class="bar-button text-button">
           set anchor

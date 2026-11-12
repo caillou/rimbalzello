@@ -96,6 +96,28 @@ export const tunables = {
     nudgeRunGap: 500,
   },
 
+  /** − and + for tempo and swing repeat while held, in the header and the tempo panel. Tuned by feel. */
+  repeat: {
+    /** Milliseconds from the press to the first repeat. About 400 ms, so a tap never repeats. */
+    delay: 400,
+    /** Milliseconds between repeats after that. About 80 ms: 128 to 172 bpm in about 4 s. */
+    interval: 80,
+  },
+
+  /** Tap tempo in the tempo panel, tuned by feel. */
+  tapTempo: {
+    /** The tempo is the average over this many most recent taps. About 4, one bar of beats. */
+    taps: 4,
+    /**
+     * A gap this many times longer or shorter than the running average
+     * starts a new average, so a deliberate tempo change takes at once
+     * instead of blending in over the next taps. About 1.5.
+     */
+    outlierRatio: 1.5,
+    /** A gap longer than this many ms starts over: that tap is a first tap. About 2 s, twice the beat at 60 bpm. */
+    restartGap: 2000,
+  },
+
   /**
    * The native kit's voices, drift and drive. Starting points for the kit
    * tuning issue, to be set by ear on the acceptance devices; the sound is

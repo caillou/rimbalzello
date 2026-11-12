@@ -1,0 +1,42 @@
+/* The tempo panel in the strips' place: `## tempo`, a bpm row and a swing row
+   (label, −, value, +), and the boxed `tap tempo` button. The − and + share
+   the header's `.tempo-button` look. */
+.tempo-panel {
+  flex-shrink: 0;
+  padding: 6px 16px 0;
+}
+
+.tempo-heading {
+  height: 28px;
+  margin: 0;
+  font-size: 15px;
+  line-height: 28px;
+}
+
+.tempo-row {
+  display: flex;
+  align-items: center;
+  height: 44px;
+}
+
+.tempo-label {
+  flex-shrink: 0;
+  width: 68px;
+  font-size: 15px;
+}
+
+.tempo-value {
+  flex-grow: 1;
+  font-size: 15px;
+  text-align: center;
+}
+
+.tap-tempo {
+  width: 100%;
+  height: 44px;
+  margin-top: 6px;
+  border: 1px solid var(--hairline);
+  font-size: 15px;
+  font-style: italic;
+  touch-action: none;
+}

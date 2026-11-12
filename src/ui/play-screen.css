@@ -60,11 +60,24 @@
   height: 44px;
   color: var(--text-secondary);
   font-size: 18px;
+  /* Held to repeat: a wobbling finger must not turn into a pan that cancels it. */
+  touch-action: none;
 }
 
+/* The bpm readout opens and closes the tempo panel. */
 .bpm {
+  min-height: 44px;
   font-size: 15px;
   white-space: nowrap;
+}
+
+/* Three digits wide, so the header does not shift when the tempo crosses 100. */
+.bpm-value {
+  display: inline-block;
+  min-width: 3ch;
+  text-align: right;
+  text-decoration: underline dashed var(--text-tertiary);
+  text-underline-offset: 4px;
 }
 
 .bpm-unit {
