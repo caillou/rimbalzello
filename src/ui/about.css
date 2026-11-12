@@ -1,0 +1,106 @@
+/* The about view (design.md, About; designs/08-about.png): the credits over
+   the play screen, which keeps playing underneath. Unlike the play screen,
+   it scrolls. The prerendered /about/ page uses the same markup. */
+
+.about {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 max(20px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom))
+    max(20px, env(safe-area-inset-left));
+  background: var(--bg);
+}
+
+.about,
+.about * {
+  box-sizing: border-box;
+}
+
+/* Focus lands on the view itself when it opens; only its links show a ring. */
+.about:focus {
+  outline: none;
+}
+
+.about :focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.about-nav,
+.about-credits {
+  max-width: 720px;
+  margin-inline: auto;
+}
+
+.about-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 8px;
+  font-size: 18px;
+  line-height: 1.8;
+}
+
+/* As with the blog links: a 44 px tap area that keeps the line box. */
+.about-back {
+  display: inline-block;
+  padding-block: 6px;
+  margin-block: -6px;
+  color: var(--text);
+  font-style: italic;
+  text-decoration: none;
+}
+
+.still-playing {
+  color: var(--text-tertiary);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.about-close {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--hairline);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.about-credits h1 {
+  margin-top: 26px;
+}
+
+.about-credits p + p {
+  margin-top: 12px;
+}
+
+/* `// source  // caillou.ch`: the blog's footer, small grey uppercase. */
+.about-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 24px;
+  margin-top: 18px;
+}
+
+.about-footer a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.about-note {
+  margin-top: 6px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}

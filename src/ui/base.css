@@ -35,6 +35,11 @@
   --highlight: #ffd866;
   --on-highlight: #000000;
 
+  /* Blog posts (about view, 404 page), as on caillou.ch. */
+  --blog-title: #ffd866;
+  --link: #ffd866;
+  --link-hover: #ff61ef;
+
   --font: 'IBM Plex Mono', monospace;
 
   /* Thinner on denser screens, like caillou.ch. */

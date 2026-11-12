@@ -1,0 +1,65 @@
+/* Blog-post look from caillou.ch, shared by the about view and the 404 page:
+   18 px text with line-height 1.8, an italic yellow h1 and italic h2s behind
+   grey markers, and links in grey brackets. */
+
+.blog {
+  font-size: 18px;
+  line-height: 1.8;
+}
+
+/* No bold headings. A class selector, so base.css's bold loses whatever
+   the order the stylesheets end up in. */
+.blog h1,
+.blog h2 {
+  font-style: italic;
+  font-weight: var(--weight-normal);
+}
+
+.blog h1 {
+  font-size: 32px;
+  line-height: 1.25;
+  color: var(--blog-title);
+}
+
+.blog h2 {
+  font-size: 24px;
+  line-height: 1.3;
+}
+
+/* Spacing, without specificity from `.blog`, so each page's own rules win. */
+:where(.blog) h1 {
+  margin: 0;
+}
+
+:where(.blog) h2 {
+  margin: 36px 0 10px;
+}
+
+:where(.blog) p {
+  margin: 18px 0 0;
+}
+
+:where(.blog) h2 + p {
+  margin-top: 0;
+}
+
+/* `[link]`: the brackets stay with the link at a line break. */
+.blog-link {
+  white-space: nowrap;
+}
+
+/* Yellow, dashed underline, pink on hover. As an inline-block, the padding
+   stretches the tap area to 44 px (32.4 px line + 12 px) and the negative
+   margin keeps the line box, so the text stays put. */
+.blog-link a {
+  display: inline-block;
+  padding-block: 6px;
+  margin-block: -6px;
+  color: var(--link);
+  text-decoration: underline dashed;
+  text-underline-offset: 3px;
+}
+
+.blog-link a:hover {
+  color: var(--link-hover);
+}

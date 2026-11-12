@@ -1,37 +1,12 @@
-/* The static 404 page (404.html): the app's fonts and colours, no app code. */
+/* The static 404 page (404.html): the app's fonts and colours and the blog
+   look, no app code. */
 @import './base.css';
+@import './blog.css';
 
 body {
   padding: 0 20px;
-  font-size: 18px;
-  line-height: 1.8;
 }
 
 h1 {
-  margin: 120px 0 0;
-  font-size: 32px;
-  font-style: italic;
-  font-weight: var(--weight-normal);
-  line-height: 1.25;
-  color: var(--bd);
-}
-
-p {
-  margin: 18px 0 0;
-}
-
-/* Blog-style link: yellow, dashed underline, grey brackets, pink on hover.
-   As an inline-block, the padding stretches the tap area to 44 px
-   (32.4 px line + 12 px) and the negative margin keeps the line box, so the text stays put. */
-a {
-  display: inline-block;
-  padding-block: 6px;
-  margin-block: -6px;
-  color: var(--bd);
-  text-decoration: underline dashed;
-  text-underline-offset: 3px;
-}
-
-a:hover {
-  color: var(--sd);
+  margin-top: 120px;
 }

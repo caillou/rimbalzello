@@ -1,15 +1,18 @@
 import { createSignal, For, Match, onCleanup, Show, Switch } from 'solid-js';
-import { repositoryUrl } from '../build-info';
+import { Portal } from 'solid-js/web';
 import { createAudioSession, type AudioSessionState } from '../engine/audio-session';
 import { createNativeKit, type Kit } from '../engine/kit';
 import { createScheduler, type Scheduler } from '../engine/scheduler';
 import { DRUMS, type Setup } from '../engine/setup';
 import { createSetupStore, type Mutes, type SetupSnapshot } from '../engine/setup-store';
 import { createTransport, type LoopSteps } from '../engine/transport';
+import { startingSetup, syncUrlHash } from '../engine/url-hash';
+import { repositoryUrl } from '../repository';
+import { About } from './About';
+import { claimLinkClick, createAboutRoute } from './about-route';
 import { DrumTabs } from './DrumTabs';
 import { createFirstLaunchHint, FirstLaunchHint, HelpBox, touchScreen } from './Help';
 import { LoopStrip } from './LoopStrip';
-import { startingSetup, syncUrlHash } from '../engine/url-hash';
 import { Pad } from './Pad';
 import { PressButton } from './PressButton';
 import { StepDisplay } from './StepDisplay';
@@ -90,6 +93,9 @@ export function App() {
   /** The loop held from the loop strip. */
   const [loop, setLoop] = createSignal<LoopSteps>();
 
+  // About opens over the play screen, which keeps playing underneath.
+  const about = createAboutRoute(store);
+
   // Runs inside a tap or click: browsers only let a user gesture start audio.
   function play() {
     const unlocked = session.unlock();
@@ -159,7 +165,14 @@ export function App() {
   }
 
   return (
-    <main class="play-screen" onContextMenu={noContextMenu}>
+    <main class="play-screen" inert={about.open()} onContextMenu={noContextMenu}>
+      {/* Mounted in <body>, outside the play screen, which is inert while about is open. */}
+      <Show when={about.open()}>
+        <Portal>
+          <About playing={playing()} onClose={about.close} />
+        </Portal>
+      </Show>
+
       <header class="header">
         <h1 class="title">
           <span class="marker">#</span> rimbalzello
@@ -264,9 +277,16 @@ export function App() {
         >
           {'// help'}
         </button>
-        <button type="button" class="footer-item">
+        <a
+          class="footer-item"
+          href="/about/"
+          aria-label="about"
+          onClick={(event) => {
+            if (claimLinkClick(event)) about.show();
+          }}
+        >
           {'// about'}
-        </button>
+        </a>
         <a class="footer-item" href={repositoryUrl} target="_blank" rel="noopener">
           {'// source'}
         </a>

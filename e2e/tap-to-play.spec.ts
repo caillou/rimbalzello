@@ -1,39 +1,8 @@
-import { expect, test, type Page } from '@playwright/test';
-
-// A headless browser plays to no speaker, so playback shows as drum voices
-// being started on the AudioContext. The page counts them.
-
-declare global {
-  interface Window {
-    startedVoices: number;
-  }
-}
-
-const startedVoices = (page: Page) => page.evaluate(() => window.startedVoices);
-
-/**
- * Passes once voices keep starting after a tap. The tap itself queues the
- * first window of hits, so only growth past that shows the groove running.
- */
-async function expectGrooveRunning(page: Page) {
-  const afterTap = await startedVoices(page);
-  expect(afterTap, 'voices queued by the tap').toBeGreaterThan(0);
-  await expect.poll(() => startedVoices(page)).toBeGreaterThan(afterTap);
-}
+import { expect, test } from '@playwright/test';
+import { countStartedVoices, expectGrooveRunning, startedVoices } from './started-voices.ts';
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => {
-    window.startedVoices = 0;
-    // Buffer sources define their own start; oscillators inherit it.
-    for (const prototype of [AudioScheduledSourceNode.prototype, AudioBufferSourceNode.prototype]) {
-      if (!Object.hasOwn(prototype, 'start')) continue;
-      const { start } = prototype;
-      prototype.start = function (this: AudioScheduledSourceNode, ...args: unknown[]) {
-        window.startedVoices++;
-        Reflect.apply(start, this, args);
-      };
-    }
-  });
+  await countStartedVoices(page);
   await page.goto('/');
 });
 

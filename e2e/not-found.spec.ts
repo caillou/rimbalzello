@@ -1,17 +1,14 @@
 import { expect, test } from '@playwright/test';
+import { watchForProblems } from './page-problems.ts';
 
 // GitHub Pages serves 404.html for unknown URLs. It must render on its own,
 // without the app bundle, and lead the visitor back to the app.
 test('the 404 page loads no app script and links back to the app', async ({ page }) => {
   const scripts: string[] = [];
-  const problems: string[] = [];
   page.on('request', (request) => {
     if (request.resourceType() === 'script') scripts.push(request.url());
   });
-  page.on('requestfailed', (request) => problems.push(`failed: ${request.url()}`));
-  page.on('response', (response) => {
-    if (response.status() >= 400) problems.push(`${response.status()}: ${response.url()}`);
-  });
+  const problems = watchForProblems(page);
 
   await page.goto('/404.html');
   await expect(page.getByRole('heading', { name: '# 404' })).toBeVisible();
