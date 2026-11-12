@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { expectLayoutRules } from './layout-rules.ts';
+import { readout } from './pad-readout.ts';
 
 // Help on a touch screen at the phone viewport (`designs/v2-06-phone-help.png`),
 // and the first-launch hint inside the pad. Every test starts on a fresh profile.
@@ -8,13 +9,6 @@ test.use({ viewport: { width: 393, height: 659 }, hasTouch: true });
 const FIRST_LAUNCH_HINT = 'tap · drag · two-finger tap undo · double-tap+slide fine';
 
 const pad = (page: Page) => page.locator('[data-control="pad"]');
-
-/** The X/Y readout as numbers, 0–100. */
-async function readout(page: Page): Promise<{ x: number; y: number }> {
-  const text = await page.getByText(/^x \d+ · y \d+$/).textContent();
-  const [, x, y] = /^x (\d+) · y (\d+)$/.exec(text ?? '') ?? [];
-  return { x: Number(x), y: Number(y) };
-}
 
 /** Taps the pad at this point on the page and waits for the readout to land there. */
 async function tapPad(page: Page, x: number, y: number) {

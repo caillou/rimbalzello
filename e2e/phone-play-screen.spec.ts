@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { expectLayoutRules } from './layout-rules.ts';
+import { readout } from './pad-readout.ts';
 
 // The play screen at the phone viewport: Safari on a current iPhone in
 // portrait (design.md, `designs/v2-01-phone.png`).
@@ -13,13 +14,6 @@ test.beforeEach(async ({ page }) => {
 const muteButton = (page: Page, drum: string) => page.getByRole('button', { name: `mute ${drum}`, exact: true });
 const strip = (page: Page, label: string) => page.getByRole('slider', { name: label, exact: true });
 const valueOf = async (slider: Locator) => Number(await slider.getAttribute('aria-valuenow'));
-
-/** The X/Y readout as numbers, 0–100. */
-async function readout(page: Page): Promise<{ x: number; y: number }> {
-  const text = await page.getByText(/^x \d+ · y \d+$/).textContent();
-  const [, x, y] = /^x (\d+) · y (\d+)$/.exec(text ?? '') ?? [];
-  return { x: Number(x), y: Number(y) };
-}
 
 test('the play screen keeps the layout rules at the phone viewport', async ({ page }) => {
   await page.evaluate(() => document.fonts.ready);

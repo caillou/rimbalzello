@@ -1,0 +1,84 @@
+/* A drum's sound sliders in a grid, one column unless `--sound-columns` says
+   otherwise. The rows are strips with a narrower label and value, so two fit
+   side by side on a phone with room left for the track. */
+.sound-section {
+  display: grid;
+  grid-template-columns: repeat(var(--sound-columns, 1), minmax(0, 1fr));
+  grid-auto-rows: 44px;
+  align-content: start;
+  column-gap: 16px;
+}
+
+.sound-section .strip {
+  gap: 10px;
+}
+
+.sound-section .strip-label {
+  width: 52px;
+  font-size: 14px;
+}
+
+.sound-section .strip-value {
+  width: 26px;
+}
+
+/* Sound mode on a phone, in the strips' place: drum tabs over the active
+   drum's sliders. */
+.drum-tabs {
+  flex-shrink: 0;
+  padding: 0 16px;
+}
+
+/* The tab row sits on a hairline; the active tab's underline covers it. */
+.drum-tab-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 44px;
+}
+
+.drum-tab-row::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background: var(--hairline);
+}
+
+.drum-tab-list {
+  display: flex;
+}
+
+.drum-tab {
+  position: relative;
+  z-index: 1;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 14px;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+.drum-tab[aria-selected='true'] {
+  border-bottom-color: var(--colour);
+  color: var(--colour);
+}
+
+.drum-name {
+  margin-left: auto;
+  padding: 0 14px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-style: italic;
+  white-space: nowrap;
+}
+
+/* Two columns, and room for the drum with the most sliders (five in three
+   rows), so the pad keeps its size when the tab changes. */
+.drum-tabs .sound-section {
+  --sound-columns: 2;
+  min-height: calc(3 * 44px);
+}

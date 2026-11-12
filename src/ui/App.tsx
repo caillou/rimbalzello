@@ -1,4 +1,4 @@
-import { createSignal, For, onCleanup, Show } from 'solid-js';
+import { createSignal, For, Match, onCleanup, Show, Switch } from 'solid-js';
 import { repositoryUrl } from '../build-info';
 import { createAudioSession, type AudioSessionState } from '../engine/audio-session';
 import { createNativeKit, type Kit } from '../engine/kit';
@@ -6,6 +6,7 @@ import { createScheduler, type Scheduler } from '../engine/scheduler';
 import { DRUMS, type Setup } from '../engine/setup';
 import { createSetupStore, type Mutes, type SetupSnapshot } from '../engine/setup-store';
 import { createTransport, type LoopSteps } from '../engine/transport';
+import { DrumTabs } from './DrumTabs';
 import { createFirstLaunchHint, FirstLaunchHint, HelpBox, touchScreen } from './Help';
 import { LoopStrip } from './LoopStrip';
 import { startingSetup, syncUrlHash } from '../engine/url-hash';
@@ -135,8 +136,9 @@ export function App() {
     store.change((draft) => void (draft.bpm += by));
   }
 
-  // What sits in the strips' place: the strips, or the tempo panel.
-  const [mode, setMode] = createSignal<'play' | 'tempo'>('play');
+  // What sits in the strips' place: the strips in play, the drum tabs in
+  // sound mode, or the tempo panel.
+  const [mode, setMode] = createSignal<'play' | 'sound' | 'tempo'>('play');
 
   function setAnchor() {
     store.setAnchor();
@@ -166,6 +168,7 @@ export function App() {
           <PressButton class="tempo-button" label="tempo down" repeat onPress={() => changeTempo(-1)}>
             −
           </PressButton>
+          {/* Opens the tempo panel from play or sound mode; closes it back to play. */}
           <button
             type="button"
             class="bpm"
@@ -209,9 +212,8 @@ export function App() {
 
       <LoopStrip held={loop} playing={playing} onHold={holdLoop} onRelease={releaseLoop} />
 
-      <Show
-        when={mode() === 'tempo'}
-        fallback={
+      <Switch>
+        <Match when={mode() === 'play'}>
           <div class="strips">
             <For each={STRIPS}>
               {(strip) => (
@@ -224,15 +226,18 @@ export function App() {
               )}
             </For>
           </div>
-        }
-      >
-        <TempoPanel setup={setup} onChange={(edit) => store.change(edit)} />
-      </Show>
+        </Match>
+        <Match when={mode() === 'sound'}>
+          <DrumTabs setup={setup} onChange={(edit) => store.change(edit)} />
+        </Match>
+        <Match when={mode() === 'tempo'}>
+          <TempoPanel setup={setup} onChange={(edit) => store.change(edit)} />
+        </Match>
+      </Switch>
 
-      {/* Placed now; sound mode comes with its own issue. */}
       <div class="bottom-bar">
-        {/* One button, so it keeps focus when `← play` closes the tempo panel. */}
-        <button type="button" class="bar-button" onClick={() => setMode('play')}>
+        {/* One button, so it keeps focus when `→ sound` or `← play` swaps what sits above it. */}
+        <button type="button" class="bar-button" onClick={() => setMode(mode() === 'play' ? 'sound' : 'play')}>
           <span class="marker">{mode() === 'play' ? '→' : '←'}</span> {mode() === 'play' ? 'sound' : 'play'}
         </button>
         <button type="button" class="bar-button text-button" onClick={setAnchor}>

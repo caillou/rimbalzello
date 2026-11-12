@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { readout } from './pad-readout.ts';
 
 // Set anchor and return on bar, on the phone play screen.
 
@@ -13,13 +14,6 @@ const strip = (page: Page, label: string) => page.getByRole('slider', { name: la
 const valueOf = async (slider: Locator) => Number(await slider.getAttribute('aria-valuenow'));
 const muteButton = (page: Page, drum: string) => page.getByRole('button', { name: `mute ${drum}`, exact: true });
 const returnButton = (page: Page) => page.getByRole('button', { name: '↺ return on bar' });
-
-/** The X/Y readout as numbers, 0–100. */
-async function readout(page: Page): Promise<{ x: number; y: number }> {
-  const text = await page.getByText(/^x \d+ · y \d+$/).textContent();
-  const [, x, y] = /^x (\d+) · y (\d+)$/.exec(text ?? '') ?? [];
-  return { x: Number(x), y: Number(y) };
-}
 
 /**
  * A tap on the pad at a fraction of its width and height from the top left,
