@@ -20,7 +20,7 @@ Name things with the terms in `CONTEXT.md` (setup, anchor, return, looper, slip,
 
 ## Licence and naming
 
-GPL-3.0-or-later for everything, because the Grids drum map is GPL. Dependencies must be permissive, LGPL or GPL-3-compatible: no GPL-2.0-only, no unlicensed or non-commercial code or assets. The product is called rimbalzello; Grids, Peaks and Émilie Gillet appear only as credits (about page, README). Hardware products that inspired features are never named anywhere in the repo, `reviews/` included; describe the behaviour instead.
+GPL-3.0-or-later for everything, because the Grids drum map is GPL. Dependencies must be permissive, LGPL or GPL-3-compatible: no GPL-2.0-only, no unlicensed or non-commercial code or assets. The product is called rimbalzello; Grids, Peaks and Émilie Gillet appear as credits (about page, README, source file headers).
 
 ## Tests
 
