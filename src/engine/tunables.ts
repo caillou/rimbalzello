@@ -37,4 +37,18 @@ export const tunables = {
 
   /** How far ahead the scheduler queues hits on the AudioContext, in seconds. About 100 ms. */
   lookahead: 0.1,
+
+  /** Pad gesture thresholds, tuned by feel on the acceptance devices. */
+  padGestures: {
+    /** Finger travel in CSS px before a touch counts as moving. About 10 px. */
+    movementThreshold: 10,
+    /** Longest gap in ms from a tap's lift to the next touch-down for a double-tap. About 300 ms. */
+    doubleTapWindow: 300,
+    /** Furthest a double-tap's second touch may land from the tap, in CSS px. About 40 px. */
+    doubleTapDistance: 40,
+    /** Longest gap in ms between the first and second finger landing for a two-finger tap. About 150 ms. */
+    twoFingerWindow: 150,
+    /** Fine adjust moves the position by this fraction of finger travel. About ¼. */
+    fineSpeed: 0.25,
+  },
 };
