@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { resolve } from 'node:path';
 import solid from 'vite-plugin-solid';
 import { defineConfig } from 'vitest/config';
 
@@ -16,6 +17,15 @@ export default defineConfig({
   plugins: [solid()],
   define: {
     __COMMIT_HASH__: JSON.stringify(commitHash()),
+  },
+  build: {
+    rolldownOptions: {
+      input: {
+        main: resolve(import.meta.dirname, 'index.html'),
+        // Static page with the shared stylesheet only, served by GitHub Pages for unknown URLs.
+        notFound: resolve(import.meta.dirname, '404.html'),
+      },
+    },
   },
   test: {
     include: ['src/**/*.test.ts'],
