@@ -1,0 +1,144 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="common.css">
+<style>
+.kc{display:inline-flex;align-items:center;justify-content:center;margin-left:8px;min-width:18px;height:18px;padding:0 5px;border:1px solid #757575;border-radius:3px;font-size:11px;font-style:normal;font-weight:400;color:#ababab;vertical-align:middle;position:relative;top:-1px}
+.kc.dark{border-color:#000;color:#000}
+.hdr-ctl{display:flex;align-items:center;gap:8px;font-size:15px}
+.hdr-ctl .pm{color:#ababab;font-size:18px;padding:0 6px}
+.stop{font-style:italic;text-decoration:underline;text-underline-offset:4px}
+.steps{padding:10px 16px 4px}
+.sub{font-size:13px;color:#ababab;font-style:italic;margin-left:auto;align-self:center}
+h2{font-size:15px;font-weight:600;height:30px}
+.drow{height:30px;display:flex;align-items:center;gap:10px}
+.drow span{width:52px;font-size:13px}
+.ref{padding:40px 48px;width:1280px;display:grid;grid-template-columns:1fr 1fr;gap:40px 56px;font-size:15px;line-height:1.6}
+.ref h1{font-size:22px;grid-column:1/-1}
+.ref h3{font-size:16px;font-weight:600;margin-bottom:8px}
+.ref table{border-collapse:collapse;width:100%}
+.ref td{padding:5px 0;vertical-align:top;border-bottom:1px solid #2e3130}
+.ref td:first-child{width:46%;color:#ababab}
+</style></head><body>
+<div id="root"></div>
+<script src="common.js"></script>
+<script>
+const q = new URLSearchParams(location.search);
+const v = q.get('v');
+const W = +q.get('w'), H = +q.get('h');
+const kc = (k, dark) => q.get('keys') === '1' ? `<span class="kc${dark ? ' dark' : ''}">${k}</span>` : '';
+const AB = q.get('about');
+const navAbout = `<span style="font-style:italic;font-weight:300;font-size:15px;margin-left:18px"><span style="color:#757575"># </span>about</span>`;
+const hdr = (pm = true) => `<div class="header"><div class="title" style="display:flex;align-items:baseline"><span><span class="dim">#</span> rimbalzello</span>${AB === 'nav' || AB === 'navphone' ? navAbout : ''}</div>
+  <div class="hdr-ctl">${AB === 'navphone' ? (pm = false, '') : ''}${pm ?`<span class="pm">−</span>${kc('-')}` : ''}<span>120<span class="dim"> bpm</span></span>${pm ? `<span class="pm">+</span>${kc('=')}` : ''}<span class="stop" style="margin-left:6px">stop</span>${kc('space')}</div></div>`;
+const pad = (ov, big) => `<div class="pad"${big ? ' style="flex-grow:0;width:' + big + 'px"' : ''}>
+  ${big ? '<div style="position:absolute;inset:32px;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(5,1fr);color:#757575;font-size:13px">' + '<div style="display:flex;align-items:center;justify-content:center">+</div>'.repeat(25) + '</div>' : ''}
+  <div class="vx"></div><div class="hz"></div><div class="ring"></div><div class="dot"></div>
+  ${big ? '<div style="position:absolute;left:34%;top:55%;margin:14px 0 0 14px;font-size:13px;color:#ababab">x 087 · y 148</div>' : ''}
+  ${q.get('keys') === '1' && big ? `<div style="position:absolute;right:14px;bottom:12px;font-size:13px;color:#ababab">nudge${kc('←↑↓→')}${kc('shift')} fine</div>` : ''}
+  ${ov ? '<div class="steps-ov" id="st"></div>' : ''}</div>`;
+const loop = () => `<div class="loop"><span class="lbl">loop</span><div class="boxes"><span>1/4${kc('1')}</span><span class="on">1/8${kc('2', true)}</span><span>1/16${kc('3')}</span><span>1/32${kc('4')}</span></div></div>`;
+const bottom = (first) => `<div class="bottom"><span><span style="color:#757575">${first === 'play' ? '← ' : '→ '}</span>${first}</span><span class="anc">set anchor</span><span class="ret">↺ return on bar</span></div>`;
+const R = document.getElementById('root');
+
+function rowsHtml(list) { const d = document.createElement('div'); rows(d, list); return d.innerHTML; }
+
+if (v === 'mobile' || v === 'sound' || v === 'short') {
+  let mid = '';
+  if (v === 'mobile') mid = loop() + rowsHtml(MIX.concat(FX));
+  if (v === 'sound') mid = loop() + `<div class="tabs"><span class="on" style="color:#ffd866;border-color:#ffd866">bd</span><span>sd</span><span>hh</span><span class="sub">bass drum</span></div>` + rowsHtml([['freq', 50, C.bd], ['punch', 61, C.bd], ['tone', 46, C.bd], ['decay', 58, C.bd], ['level', 70, C.bd]]);
+  if (v === 'short') mid = loop() + `<div class="tabs"><span class="on">mix</span><span>fx</span></div>` + rowsHtml(MIX);
+  const hint = (AB === 'hint' || AB === 'footer-help') ? `<div style="position:absolute;left:12px;right:12px;bottom:10px;font-size:12px;line-height:1.5;color:#ababab;background:rgba(26,28,27,.85);padding:6px 8px;border:1px solid #3a3d3c">tap · drag · double-tap undo · double-tap+slide fine${AB === 'footer-help' ? '<br>anchor: set, noodle, return on bar · loop: hold a size<br>tap a drum name to mute · sound: drum tabs' : '<br>tap <span style="color:#fff"># rimbalzello</span> for about'}</div>` : '';
+  const foot = (AB === 'footer' || AB === 'footer-help') ? `<div style="padding:0 16px 10px;margin-top:-6px;text-align:center;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#757575">${AB === 'footer-help' ? '<span style="color:#fff">// help</span>' : '// help'} &nbsp;&nbsp; // about &nbsp;&nbsp; // source</div>` : '';
+  R.innerHTML = `<div class="screen" style="width:${W}px;height:${H}px">${hdr()}${pad(false).replace('</div>`', '')}<div class="steps" id="st"></div><div style="padding:0 16px">${mid}</div>${bottom(v === 'sound' ? 'play' : 'sound')}${foot}</div>`;
+  if (hint) document.querySelector('.pad').insertAdjacentHTML('beforeend', hint);
+  steps(document.getElementById('st'), 15);
+}
+
+if (v === 'landscape') {
+  R.innerHTML = `<div class="screen" style="width:${W}px;height:${H}px;flex-direction:row">${pad(true).replace('class="pad"', 'class="pad" style="flex-grow:0;width:420px"')}
+  <div style="flex-grow:1;display:flex;flex-direction:column;min-width:0">${hdr(false)}<div style="padding:0 16px">
+  <div class="tabs" style="height:36px"><span class="on">mix</span><span>fx</span><span>sound</span></div>${rowsHtml(MIX)}${loop()}</div>
+  <div class="bottom" style="margin-top:auto;padding-bottom:10px"><span class="anc">set anchor</span><span class="ret">↺ return on bar</span></div></div></div>`;
+  steps(document.getElementById('st'), 14);
+}
+
+if (v === 'desktop') {
+  const keys = q.get('keys') === '1';
+  const mk = (list, ks) => { const d = document.createElement('div'); rows(d, list); if (keys) [...d.querySelectorAll('.lbl')].forEach((l, i) => { if (ks[i]) l.insertAdjacentHTML('beforeend', kc(ks[i])); }); return d.innerHTML; };
+  const drum = (n, list) => `<div><h2 style="color:${C[n]}"><span class="dim">## </span>${n}</h2>${list.map(([p, x]) => `<div class="drow"><span>${p}</span><div class="track"><div class="fill" style="width:${x}%;background:${C[n]}"></div><div class="thumb" style="left:${x}%;background:${C[n]};width:10px;height:10px;top:-4px;margin-left:-5px"></div></div></div>`).join('')}</div>`;
+  R.innerHTML = `<div class="screen" style="width:${W}px;height:${H}px">
+  <div style="padding:6px 12px 0">${hdr()}</div>
+  <div style="flex-grow:1;display:flex;gap:28px;padding:0 28px;min-height:0">${pad(false, 560)}
+   <div style="flex-grow:1;min-width:0;display:flex;flex-direction:column;gap:12px">
+    <div id="st"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;column-gap:28px"><div>${mk(MIX, ['q', 'w', 'e'])}</div><div>${mk(FX, [])}</div></div>
+    ${loop()}
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);column-gap:24px;padding-top:10px;border-top:1px solid #3a3d3c">
+     ${drum('bd', [['freq', 50], ['punch', 61], ['tone', 46], ['decay', 58], ['level', 70]])}${drum('sd', [['freq', 50], ['tone', 50], ['snappy', 55], ['decay', 46], ['level', 56]])}${drum('hh', [['level', 44]])}
+    </div></div></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 28px 16px">
+   ${AB === 'footer' ? `<span style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#757575">// help${kc('?')} &nbsp;&nbsp; // about &nbsp;&nbsp; // source</span>` : `<span style="font-size:13px;color:#ababab">? ${keys ? 'hide' : 'show'} shortcuts</span>`}
+   <div style="display:flex;gap:24px;align-items:center;font-size:15px;font-style:italic"><span><span class="anc">set anchor</span>${kc('a')}</span><span class="ret" style="padding:8px 12px;background:#ffd866;color:#000">↺ return on bar${kc('r', true)}</span></div>
+  </div></div>`;
+  const st = document.getElementById('st'); steps(st, 17);
+  st.querySelectorAll('.lane').forEach(l => l.style.lineHeight = '1.45');
+}
+
+if (v === 'about') {
+  const a = (t, h) => `<span style="color:#757575">[</span><span style="color:#ffd866;text-decoration:underline dashed;text-underline-offset:3px">${t}</span><span style="color:#757575">]</span>`;
+  const h2 = t => `<h2 style="margin-top:36px;margin-bottom:10px;height:auto;font-size:24px;font-weight:300;font-style:italic;line-height:1.3"><span style="color:#757575">## </span>${t}</h2>`;
+  R.innerHTML = `<div class="screen" style="width:${W}px;height:${H}px;padding:0 20px;font-size:18px;font-weight:300;line-height:1.8">
+  ${q.get('close') === '1'
+    ? `<div style="display:flex;justify-content:space-between;align-items:center;padding-top:8px;font-style:italic;font-size:18px"><span><span style="color:#757575">← </span>back to play <span style="color:#757575;font-style:normal;font-size:14px">· still playing</span></span><span style="width:44px;height:44px;border:1px solid #3a3d3c;display:flex;align-items:center;justify-content:center;font-style:normal">×</span></div>`
+    : `<div style="padding:18px 0 0;font-style:italic;font-size:18px"><span style="color:#757575">← </span>play</div>`}
+  <h1 style="margin-top:26px;font-size:32px;font-weight:300;font-style:italic;color:#ffd866;line-height:1.25"><span style="color:#757575"># </span>rimbalzello</h1>
+  <p style="margin-top:18px">a drum machine you play by moving through a map. skip a stone, watch it bounce.</p>
+  ${h2('made from')}
+  <p>the pattern generator is based on ${a('Grids')}, the topographic drum sequencer by ${a('Émilie Gillet')}.</p>
+  <p style="margin-top:12px">the drum voices follow ${a('Peaks')}, also by Émilie.</p>
+  ${h2('made by')}
+  <p>Pierre Spring ${a('caillou.ch')}</p>
+  ${h2('licence')}
+  <p>GPL-3.0-or-later, like Grids.</p>
+  <p style="margin-top:28px;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:#757575">// source &nbsp; // caillou.ch</p>
+  <p style="margin-top:16px;color:#ababab;font-size:13px">not affiliated with Mutable Instruments. "Mutable Instruments" is a registered trademark.</p>
+  </div>`;
+}
+
+if (v === 'notfound') {
+  R.innerHTML = `<div class="screen" style="width:${W}px;height:${H}px;padding:0 20px;font-size:18px;font-weight:300;line-height:1.8">
+  <h1 style="margin-top:120px;font-size:32px;font-weight:300;font-style:italic;color:#ffd866;line-height:1.25"><span style="color:#757575"># </span>404</h1>
+  <p style="margin-top:18px">this stone sank.</p>
+  <p style="margin-top:18px"><span style="color:#757575">[</span><span style="color:#ffd866;text-decoration:underline dashed;text-underline-offset:3px">back to rimbalzello</span><span style="color:#757575">]</span></p>
+  </div>`;
+}
+
+if (v === 'reference') {
+  const t = rows => '<table>' + rows.map(([a, b]) => `<tr><td>${a}</td><td>${b}</td></tr>`).join('') + '</table>';
+  R.innerHTML = `<div class="ref">
+  <h1><span class="dim">#</span> rimbalzello · interaction reference (v1)</h1>
+  <div><h3><span class="dim">## </span>pad gestures</h3>${t([
+    ['tap', 'jump, absolute, with glide; glide starts after the double-tap window (~250 ms, ≥ 1 step)'],
+    ['touch + drag', 'glide to finger, then follow it'],
+    ['double-tap', 'undo, one step, flip/flop between two spots'],
+    ['double-tap + slide', 'fine adjust, relative, ~¼ speed (tune by feel)'],
+    ['first launch', 'one-line hint: tap · drag · double-tap undo · double-tap+slide fine']])}</div>
+  <div><h3><span class="dim">## </span>keyboard (laptop)</h3>${t([
+    ['space', 'play / stop'], ['- =', 'tempo down / up'], ['1 2 3 4 (hold)', 'loop 1/4 · 1/8 · 1/16 · 1/32'],
+    ['a', 'set anchor'], ['r', 'return on next bar'], ['q w e', 'mute bd · sd · hh'],
+    ['← ↑ ↓ →', 'nudge pad'], ['shift + arrows', 'fine nudge'], ['?', 'show / hide keycap hints (hidden by default, remembered)']])}</div>
+  <div><h3><span class="dim">## </span>performance</h3>${t([
+    ['anchor', 'snapshot of pattern + sound + drift + drive; not tempo, not mutes'],
+    ['return', 'lands on the next bar (16 steps); button pulses until then'],
+    ['looper', 'hold 1/4 · 1/8 · 1/16 · 1/32; start = touch; slide changes size; release jumps to where it would have been (slip)'],
+    ['mute', 'tap a drum name (bd sd hh); struck through when muted'],
+    ['url', 'hash = current setup (pattern, sound, drift, drive, bpm); live, shareable']])}</div>
+  <div><h3><span class="dim">## </span>layout rules</h3>${t([
+    ['phone portrait', 'pad on top, steps, loop, strips, bottom bar; sound in drum tabs'],
+    ['short phone (< ~760 px)', 'strips fold into mix | fx tabs; pad ≥ ~240 px'],
+    ['landscape phone', 'pad left; mix | fx | sound tabs right'],
+    ['wide / laptop', 'pad left; strips, loop, bd · sd · hh side by side right'],
+    ['always', 'never scroll the play screen; loop + bottom bar always visible'],
+    ['about', 'tap "# rimbalzello" in the header; credits Grids, Peaks, Émilie Gillet, caillou.ch'],
+    ['style', 'IBM Plex Mono · #202322 · bd #ffd866 · sd #ff61ef · hh #bef289 · drive #fc618d · lowercase, # markers']])}</div>
+  </div>`;
+}
+</script></body></html>
