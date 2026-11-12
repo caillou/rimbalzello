@@ -153,6 +153,17 @@
   color: var(--on-highlight);
 }
 
+/* It pulses while a return is pending, until the return lands at the bar. */
+.return-button.pending span {
+  animation: return-pending 0.8s ease-in-out infinite;
+}
+
+@keyframes return-pending {
+  50% {
+    opacity: 0.35;
+  }
+}
+
 .footer {
   display: flex;
   flex-shrink: 0;

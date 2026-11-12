@@ -56,7 +56,9 @@ export interface SetupStore {
   returnSetup(): SetupSnapshot;
   /**
    * A return lands: the anchor replaces pattern, sound, swing, drift and
-   * drive. Tempo and mutes stay. When it lands is the transport's job.
+   * drive. Tempo and mutes stay. When it lands is the transport's job. It
+   * empties the pad undo slot, so an undo right after a return does not
+   * jump to a spot the player left before it.
    */
   applyAnchor(): void;
 
@@ -174,6 +176,7 @@ export function createSetupStore({
     returnSetup,
 
     applyAnchor() {
+      undoSlot = null;
       replace(returnSetup());
     },
 

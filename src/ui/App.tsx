@@ -58,6 +58,9 @@ export function App() {
 
   // A fresh chaos seed per session, so each visit's bars vary differently.
   const transport = createTransport({ setup: store.setup(), seed: Math.floor(Math.random() * 2 ** 32) });
+  // Whether a return is pending, for the button's pulse. A return lands, at
+  // the bar or on stop, with a store change, so every store change reads it again.
+  const [returnPending, setReturnPending] = createSignal(false);
 
   let kit: Kit | undefined;
   let scheduler: Scheduler | undefined;
@@ -73,6 +76,7 @@ export function App() {
       before = after;
       setSetup(next);
       setMutes(nextMutes);
+      setReturnPending(transport.returnPending);
     }),
   );
 
@@ -116,6 +120,19 @@ export function App() {
 
   // What sits in the strips' place: the strips, or the tempo panel.
   const [mode, setMode] = createSignal<'play' | 'tempo'>('play');
+
+  function setAnchor() {
+    store.setAnchor();
+    // A return already pending restores the new anchor.
+    if (transport.returnPending) transport.requestReturn(store.returnSetup());
+  }
+
+  // While playing, the anchor comes back at the next bar; while stopped, at once.
+  function returnOnBar() {
+    if (!transport.playing) return store.applyAnchor();
+    transport.requestReturn(store.returnSetup());
+    setReturnPending(true);
+  }
 
   // No long-press menus on the instrument; links keep theirs.
   function noContextMenu(event: MouseEvent) {
@@ -193,16 +210,22 @@ export function App() {
         <TempoPanel setup={setup} onChange={(edit) => store.change(edit)} />
       </Show>
 
-      {/* Placed now; set anchor, return and sound mode come with their own issues. */}
+      {/* Placed now; sound mode comes with its own issue. */}
       <div class="bottom-bar">
         {/* One button, so it keeps focus when `← play` closes the tempo panel. */}
         <button type="button" class="bar-button" onClick={() => setMode('play')}>
           <span class="marker">{mode() === 'play' ? '→' : '←'}</span> {mode() === 'play' ? 'sound' : 'play'}
         </button>
-        <button type="button" class="bar-button text-button">
+        <button type="button" class="bar-button text-button" onClick={setAnchor}>
           set anchor
         </button>
-        <button type="button" class="bar-button return-button">
+        <button
+          type="button"
+          class="bar-button return-button"
+          classList={{ pending: returnPending() }}
+          aria-description={returnPending() ? 'pending' : undefined}
+          onClick={returnOnBar}
+        >
           <span>↺ return on bar</span>
         </button>
       </div>

@@ -63,7 +63,11 @@ export interface Transport {
   readonly returnPending: boolean;
   /** Plays from step 0, with step 0 sounding at `time`. Rolls chaos. */
   start(time: number): void;
-  /** Stops, and ends a held loop: a loop size still held when play is pressed does not engage. */
+  /**
+   * Stops, and ends a held loop: a loop size still held when play is pressed
+   * does not engage. Drops a pending return: with no bar to wait for, the
+   * caller lands it at once.
+   */
   stop(): void;
   /**
    * The setup to play from the next step handed out. A new pad position
@@ -306,6 +310,7 @@ export function createTransport({ setup: initial, seed }: TransportOptions): Tra
     stop() {
       playing = false;
       loop = null;
+      returnTo = null;
       // Whatever is left of a glide is skipped: play starts on the target.
       glide = settledAt(glide.to);
     },

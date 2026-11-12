@@ -103,6 +103,18 @@ describe('pad undo', () => {
     expect(position(s)).toEqual([10, 20]);
   });
 
+  test('a return empties the slot, so an undo right after it stays on the anchor', () => {
+    const s = store();
+    s.padTo(10, 20);
+    s.setAnchor();
+    padMove(s, [70, 80]);
+    padMove(s, [200, 210]);
+
+    s.applyAnchor();
+    s.padUndo();
+    expect(position(s)).toEqual([10, 20]);
+  });
+
   test('the position stays on the pad', () => {
     const s = store();
     padMove(s, [-30, 300]);

@@ -21,7 +21,11 @@ const LATENCY_REFRESH = 1;
 export interface Scheduler {
   /** Starts playback at step 0. Does nothing while playing. */
   play(): void;
-  /** Stops playback, ending a held loop, and cancels the hits queued but not yet started. */
+  /**
+   * Stops playback, ending a held loop, and cancels the hits queued but not
+   * yet started. A pending return lands at once: with nothing playing there
+   * is no bar to wait for.
+   */
   stop(): void;
   /**
    * Holds a loop of `steps` steps: engages it on the step heard now, or
@@ -76,8 +80,14 @@ export function createScheduler(context: BaseAudioContext, kit: Kit, transport: 
     readLatency();
     for (const step of transport.stepsBefore(context.currentTime + tunables.lookahead)) {
       // The transport plays the anchor's pattern from this step on; the store
-      // follows, so sound, drift and drive come back with it.
-      if (step.returned) store.applyAnchor();
+      // follows, so sound, drift and drive come back with it. Drive is on the
+      // bus, so the kit switches it on this step, not a lookahead early. It is
+      // set before the store changes, so the drive change the store reports
+      // next asks the kit for the drive it already has.
+      if (step.returned) {
+        kit.setDrive(store.returnSetup().drive, step.time);
+        store.applyAnchor();
+      }
       const { sound } = store.setup();
       for (const hit of step.hits) kit.trigger(hit.drum, step.time, hit.velocity, sound[hit.drum]);
     }
@@ -93,8 +103,10 @@ export function createScheduler(context: BaseAudioContext, kit: Kit, transport: 
     stop() {
       clearInterval(timer);
       timer = undefined;
+      const returning = transport.returnPending;
       transport.stop();
       kit.cancelScheduled();
+      if (returning) store.applyAnchor();
     },
     hold(steps) {
       changeLoop((now) => transport.hold(steps, { now, heard: now - latency }));

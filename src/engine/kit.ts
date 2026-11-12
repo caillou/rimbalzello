@@ -28,8 +28,13 @@ export interface Kit {
   setMuted(drum: Drum, muted: boolean): void;
   /** Sets drift (a byte) for the hits triggered from now on. */
   setDrift(drift: number): void;
-  /** Sets the master drive (a byte) at once, hits already sounding included. */
-  setDrive(drive: number): void;
+  /**
+   * Sets the master drive (a byte) from `time` (seconds on the context
+   * clock; now when left out), hits already sounding included, and cancels
+   * any drive change set for after it. Asking for the drive the kit already
+   * has, or is set to reach, changes nothing.
+   */
+  setDrive(drive: number, time?: number): void;
 }
 
 /** Drift and drive the kit starts with, bytes. Both default to 0. */
@@ -110,6 +115,7 @@ export function createNativeKit(context: BaseAudioContext, options: KitOptions =
 
   const voices = createVoices(context);
   let drift = options.drift ?? 0;
+  let drive = options.drive ?? 0;
   /** Voices that have not ended, each with the time its hit was triggered for. */
   let sounding: { voice: Voice; time: number }[] = [];
 
@@ -146,11 +152,14 @@ export function createNativeKit(context: BaseAudioContext, options: KitOptions =
     setDrift(value) {
       drift = value;
     },
-    setDrive(drive) {
-      const { input, output } = driveGains(drive);
-      const now = context.currentTime;
-      driveInput.gain.setTargetAtTime(input, now, DRIVE_TIME_CONSTANT);
-      driveOutput.gain.setTargetAtTime(output, now, DRIVE_TIME_CONSTANT);
+    setDrive(value, time = context.currentTime) {
+      if (value === drive) return;
+      drive = value;
+      const { input, output } = driveGains(value);
+      driveInput.gain.cancelScheduledValues(time);
+      driveOutput.gain.cancelScheduledValues(time);
+      driveInput.gain.setTargetAtTime(input, time, DRIVE_TIME_CONSTANT);
+      driveOutput.gain.setTargetAtTime(output, time, DRIVE_TIME_CONSTANT);
     },
   };
 }
