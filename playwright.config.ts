@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const port = 4173;
+const port = Number(process.env.PW_PORT) || 4173;
 const ci = !!process.env.CI;
 
 // Browser checks run against the built site on the preview server.
