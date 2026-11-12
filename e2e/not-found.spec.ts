@@ -26,6 +26,6 @@ test('the 404 page loads no app script and links back to the app', async ({ page
   expect((await back.boundingBox())?.height).toBeGreaterThanOrEqual(44);
 
   await back.click();
-  await expect(page).toHaveURL('/');
+  await expect(page).toHaveURL((url) => url.pathname === '/');
   await expect(page.getByRole('heading', { name: '# rimbalzello' })).toBeVisible();
 });

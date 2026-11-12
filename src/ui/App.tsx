@@ -7,6 +7,7 @@ import { DRUMS, type Setup } from '../engine/setup';
 import { createSetupStore, type Mutes, type SetupSnapshot } from '../engine/setup-store';
 import { createTransport } from '../engine/transport';
 import { createFirstLaunchHint, FirstLaunchHint, HelpBox, touchScreen } from './Help';
+import { startingSetup, syncUrlHash } from '../engine/url-hash';
 import { Pad } from './Pad';
 import { StepDisplay } from './StepDisplay';
 import { Strip } from './Strip';
@@ -48,7 +49,8 @@ function updateKit(kit: Kit, before: KitState, after: KitState) {
 }
 
 export function App() {
-  const store = createSetupStore();
+  const store = createSetupStore({ setup: startingSetup(location.hash) });
+  onCleanup(syncUrlHash(store));
   const [setup, setSetup] = createSignal(store.setup());
   const [mutes, setMutes] = createSignal(store.mutes());
 
