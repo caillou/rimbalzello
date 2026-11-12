@@ -51,4 +51,14 @@ export const tunables = {
     /** Fine adjust moves the position by this fraction of finger travel. About ¼. */
     fineSpeed: 0.25,
   },
+
+  /** Arrow-key nudges on the pad, tuned by feel on the laptop. */
+  keyboard: {
+    /** Pad bytes per arrow press: 1/8 of the gap between map nodes, about 3 on the 0–100 readout. */
+    nudgeStep: 8,
+    /** Pad bytes per shift + arrow press: about ¼ of a nudge, like fine adjust on the pad. */
+    fineNudgeStep: 2,
+    /** Milliseconds with no arrow held after which a run of nudges ends as one pad move. About 500 ms. */
+    nudgeRunGap: 500,
+  },
 };
