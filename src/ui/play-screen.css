@@ -1,0 +1,78 @@
+/* The play screen: header over the pad, filling the viewport. The phone
+   play screen issue adds the step display, strips and bottom bar. */
+
+.play-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  padding: 0 16px;
+}
+
+.title {
+  margin: 0;
+  font-size: 17px;
+}
+
+/* Text buttons: italic, underlined, with a 44 px touch target. */
+.text-button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 15px;
+  font-style: italic;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+.pad {
+  position: relative;
+  flex-grow: 1;
+  min-height: 0;
+  background: var(--pad);
+}
+
+/* One tap anywhere on the pad unlocks audio and starts the groove. */
+.tap-to-play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.tap-to-play span {
+  padding: 14px 22px;
+  background: var(--highlight);
+  color: var(--on-highlight);
+  font-size: 20px;
+  font-style: italic;
+}
+
+.text-button:focus-visible,
+.tap-to-play:focus-visible span {
+  outline: 2px solid var(--text);
+  outline-offset: 4px;
+}
+
+.tap-to-play:focus-visible {
+  outline: none;
+}

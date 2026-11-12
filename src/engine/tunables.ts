@@ -38,6 +38,14 @@ export const tunables = {
   /** How far ahead the scheduler queues hits on the AudioContext, in seconds. About 100 ms. */
   lookahead: 0.1,
 
+  /** How hard the transport triggers a drum, 0–1, tuned by ear with the kit. */
+  velocity: {
+    /** A plain hit: about 0.7, so accents stand out. */
+    hit: 0.7,
+    /** An accent (map level above 192): full velocity. */
+    accent: 1,
+  },
+
   /** Pad gesture thresholds, tuned by feel on the acceptance devices. */
   padGestures: {
     /** Finger travel in CSS px before a touch counts as moving. About 10 px. */
