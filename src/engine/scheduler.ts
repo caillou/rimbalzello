@@ -1,10 +1,11 @@
 // The scheduler: the thin real-time wrapper that runs the transport from the
 // AudioContext clock. A timer wakes it often; each time it asks the
-// transport for the hits due within the lookahead and queues them on the
-// kit. All musical timing stays in the transport.
+// transport for the steps due within the lookahead and queues their hits on
+// the kit, with the sound the setup store holds at that moment. All musical
+// timing stays in the transport.
 
 import type { Kit } from './kit';
-import type { Sound } from './setup';
+import type { SetupStore } from './setup-store';
 import type { Transport } from './transport';
 import { tunables } from './tunables';
 
@@ -21,12 +22,16 @@ export interface Scheduler {
   stop(): void;
 }
 
-export function createScheduler(context: BaseAudioContext, kit: Kit, transport: Transport, sound: Sound): Scheduler {
+export function createScheduler(context: BaseAudioContext, kit: Kit, transport: Transport, store: SetupStore): Scheduler {
   let timer: ReturnType<typeof setInterval> | undefined;
 
   function tick() {
-    for (const hit of transport.hitsBefore(context.currentTime + tunables.lookahead)) {
-      kit.trigger(hit.drum, hit.time, hit.velocity, sound[hit.drum]);
+    for (const step of transport.stepsBefore(context.currentTime + tunables.lookahead)) {
+      // The transport plays the anchor's pattern from this step on; the store
+      // follows, so sound, drift and drive come back with it.
+      if (step.returned) store.applyAnchor();
+      const { sound } = store.setup();
+      for (const hit of step.hits) kit.trigger(hit.drum, step.time, hit.velocity, sound[hit.drum]);
     }
   }
 
