@@ -38,6 +38,14 @@ export const tunables = {
   /** How far ahead the scheduler queues hits on the AudioContext, in seconds. About 100 ms. */
   lookahead: 0.1,
 
+  /**
+   * How long a resume after an interruption may stay pending before the pad
+   * asks for `tap to resume`, in ms. Some browsers leave a refused resume
+   * pending instead of rejecting it. About 1 s: a resume that works is done
+   * well before, and the player is not left long with silent controls.
+   */
+  resumeWait: 1000,
+
   /** How hard the transport triggers a drum, 0–1, tuned by ear with the kit. */
   velocity: {
     /** A plain hit: about 0.7, so accents stand out. */

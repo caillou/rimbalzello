@@ -1,4 +1,5 @@
 import { createSignal, onCleanup, Show } from 'solid-js';
+import { createAudioSession, type AudioSessionState } from '../engine/audio-session';
 import { createNativeKit } from '../engine/kit';
 import { createScheduler, type Scheduler } from '../engine/scheduler';
 import { createSetupStore } from '../engine/setup-store';
@@ -11,25 +12,25 @@ export function App() {
   const transport = createTransport({ setup: store.setup(), seed: Math.floor(Math.random() * 2 ** 32) });
   onCleanup(store.subscribe(() => transport.update(store.setup())));
 
-  // Audio is locked until the first tap; the `▶ tap to play` overlay stays until then.
-  const [unlocked, setUnlocked] = createSignal(false);
+  // Audio is locked until the first tap; the pad shows `▶ tap to play` until
+  // then, and `tap to resume` when the browser refuses to resume audio while playing.
+  const [audio, setAudio] = createSignal<AudioSessionState>('locked');
+  const session = createAudioSession({ onChange: setAudio });
   const [playing, setPlaying] = createSignal(false);
   let scheduler: Scheduler | undefined;
 
   // Runs inside a tap or click: browsers only let a user gesture start audio.
   function play() {
-    if (!scheduler) {
-      const context = new AudioContext();
-      void context.resume();
-      scheduler = createScheduler(context, createNativeKit(context), transport, store);
-      setUnlocked(true);
-    }
+    const context = session.unlock();
+    scheduler ??= createScheduler(context, createNativeKit(context), transport, store);
     scheduler.play();
+    session.setPlaying(true);
     setPlaying(true);
   }
 
   function stop() {
     scheduler?.stop();
+    session.setPlaying(false);
     setPlaying(false);
   }
 
@@ -44,9 +45,9 @@ export function App() {
         </button>
       </header>
       <div class="pad">
-        <Show when={!unlocked()}>
-          <button type="button" class="tap-to-play" onClick={play}>
-            <span>▶ tap to play</span>
+        <Show when={audio() !== 'unlocked'}>
+          <button type="button" class="tap-to-play" onClick={() => (audio() === 'locked' ? play() : session.unlock())}>
+            <span>{audio() === 'locked' ? '▶ tap to play' : 'tap to resume'}</span>
           </button>
         </Show>
       </div>
