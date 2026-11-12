@@ -1,6 +1,7 @@
 // The step display: one bar as text, `x` for a hit and `·` for a rest, one
-// line per drum, the played step highlighted. While playing it follows the
-// step heard now, written straight to the DOM every animation frame, outside
+// line per drum, the played step highlighted. While a loop is held, the
+// playhead step is also shown, dimmed. While playing it follows the step
+// heard now, written straight to the DOM every animation frame, outside
 // Solid's update cycle. The drum labels are the mute toggles.
 
 import { createEffect, For, onCleanup, type Accessor } from 'solid-js';
@@ -33,6 +34,7 @@ export function StepDisplay(props: StepDisplayProps) {
   const cells: Record<Drum, HTMLSpanElement[]> = { bd: [], sd: [], hh: [] };
   let shown: PatternInput | undefined;
   let highlighted = -1;
+  let dimmed = -1;
   // While stopped the display shows the setup's pattern with the chaos last
   // heard, none before the first play.
   let perturbation = NO_CHAOS;
@@ -56,13 +58,21 @@ export function StepDisplay(props: StepDisplayProps) {
     }
   }
 
-  function highlight(step: number) {
-    if (step === highlighted) return;
+  /** Moves the class `name` from step `from` to step `to` on every line; -1 is none. */
+  function mark(name: string, from: number, to: number) {
     for (const drum of DRUMS) {
-      cells[drum][highlighted]?.classList.remove('now');
-      cells[drum][step]?.classList.add('now');
+      cells[drum][from]?.classList.remove(name);
+      cells[drum][to]?.classList.add(name);
     }
-    highlighted = step;
+  }
+
+  /** Highlights the played step, and dims the playhead step where a held loop plays another. */
+  function highlight(played: number, playhead = played) {
+    const toDim = playhead === played ? -1 : playhead;
+    if (played !== highlighted) mark('now', highlighted, played);
+    if (toDim !== dimmed) mark('playhead', dimmed, toDim);
+    highlighted = played;
+    dimmed = toDim;
   }
 
   // Stopped: the setup's pattern, nothing highlighted.
@@ -81,7 +91,7 @@ export function StepDisplay(props: StepDisplayProps) {
       if (step) {
         perturbation = step.pattern.perturbation;
         render(step.pattern);
-        highlight(step.played);
+        highlight(step.played, step.playhead);
       }
       frame = requestAnimationFrame(follow);
     });

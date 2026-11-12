@@ -58,3 +58,8 @@
   background: var(--highlight);
   color: var(--on-highlight);
 }
+
+/* While a loop is held, the playhead step: the highlight, dimmed. */
+.step-display .step-line .playhead {
+  background: color-mix(in srgb, var(--highlight) 30%, transparent);
+}

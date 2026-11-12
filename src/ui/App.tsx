@@ -5,8 +5,9 @@ import { createNativeKit, type Kit } from '../engine/kit';
 import { createScheduler, type Scheduler } from '../engine/scheduler';
 import { DRUMS, type Setup } from '../engine/setup';
 import { createSetupStore, type Mutes, type SetupSnapshot } from '../engine/setup-store';
-import { createTransport } from '../engine/transport';
+import { createTransport, type LoopSteps } from '../engine/transport';
 import { createFirstLaunchHint, FirstLaunchHint, HelpBox, touchScreen } from './Help';
+import { LoopStrip } from './LoopStrip';
 import { startingSetup, syncUrlHash } from '../engine/url-hash';
 import { Pad } from './Pad';
 import { PressButton } from './PressButton';
@@ -85,6 +86,8 @@ export function App() {
   const [audio, setAudio] = createSignal<AudioSessionState>('locked');
   const session = createAudioSession({ onChange: setAudio });
   const [playing, setPlaying] = createSignal(false);
+  /** The loop held from the loop strip. */
+  const [loop, setLoop] = createSignal<LoopSteps>();
 
   // Runs inside a tap or click: browsers only let a user gesture start audio.
   function play() {
@@ -104,6 +107,20 @@ export function App() {
     scheduler?.stop();
     session.setPlaying(false);
     setPlaying(false);
+    setLoop(undefined);
+  }
+
+  // The looper works only while playing, and stop ends the loop.
+  function holdLoop(steps: LoopSteps) {
+    if (!playing()) return;
+    scheduler?.hold(steps);
+    setLoop(steps);
+  }
+
+  function releaseLoop() {
+    if (loop() === undefined) return;
+    scheduler?.release();
+    setLoop(undefined);
   }
 
   // Touch screens get the help box; laptops' keycap hints come with keyboard play.
@@ -189,6 +206,8 @@ export function App() {
         heard={() => scheduler?.heard()}
         onToggleMute={(drum) => store.toggleMute(drum)}
       />
+
+      <LoopStrip held={loop} playing={playing} onHold={holdLoop} onRelease={releaseLoop} />
 
       <Show
         when={mode() === 'tempo'}

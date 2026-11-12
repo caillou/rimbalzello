@@ -1,0 +1,41 @@
+/* The loop strip: the `loop` label, then four boxed zones with hairline
+   borders, starting where the strip tracks start. The held zone is white
+   with black text. Each zone is a 44 px touch target, borders included. */
+.loop-strip {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 12px;
+  height: 44px;
+  padding: 0 16px;
+  touch-action: none;
+}
+
+.loop-label {
+  flex-shrink: 0;
+  width: 56px;
+  font-size: 15px;
+}
+
+.loop-zones {
+  display: flex;
+  flex-grow: 1;
+}
+
+.loop-zone {
+  flex: 1 1 0;
+  height: 44px;
+  border: 1px solid var(--hairline);
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* Neighbours share one hairline. */
+.loop-zone + .loop-zone {
+  border-left: 0;
+}
+
+.loop-zone[aria-pressed='true'] {
+  background: var(--text);
+  color: var(--on-highlight);
+}

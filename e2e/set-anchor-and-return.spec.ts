@@ -21,10 +21,14 @@ async function readout(page: Page): Promise<{ x: number; y: number }> {
   return { x: Number(x), y: Number(y) };
 }
 
-/** A tap on the pad at a fraction of its width and height from the top left. */
+/**
+ * A tap on the pad at a fraction of its width and height from the top left,
+ * on a whole pixel: WebKit and Firefox drop the fraction of a pointer's
+ * coordinates and Chromium keeps it, which on a short pad moves the readout.
+ */
 async function tapPad(page: Page, fx: number, fy: number) {
   const box = (await page.locator('[data-control="pad"]').boundingBox())!;
-  await page.mouse.click(box.x + box.width * fx, box.y + box.height * fy);
+  await page.mouse.click(Math.round(box.x + box.width * fx), Math.round(box.y + box.height * fy));
 }
 
 /** Waits for a step early in the bar, so the bar line is more than a second away. */
