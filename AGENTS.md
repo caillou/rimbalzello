@@ -6,6 +6,10 @@ A Grids-style drum machine for the browser: a live instrument, phone first, stat
 
 Commit straight to `main`. Every push to `main` deploys once CI is green, so keep `main` green. Use a worktree only when trying alternative approaches side by side.
 
+## Tooling
+
+Node comes from asdf in legacy mode: the version lives in `.nvmrc` (asdf reads it via `legacy_version_file`); keep `.tool-versions` out of the repo. pnpm is the package manager, pinned in `package.json` `packageManager` (`pnpm@12.15.0`, as in caillou.ch); use `pnpm` for every install and script, in CI too.
+
 ## Vocabulary
 
 Name things with the terms in `CONTEXT.md` (setup, anchor, return, looper, slip, drift, drive, map, strips, …). Read it before naming a module, type, test or UI label.
