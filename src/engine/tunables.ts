@@ -119,22 +119,44 @@ export const tunables = {
   },
 
   /**
-   * Phone layouts, picked by the play screen's height (100dvh less the bottom
-   * safe area), in CSS px. To measure on the acceptance devices: Safari
-   * leaves about 660–750 px on a current iPhone and about 553 px on an SE.
+   * The play screen's layouts (`src/ui/layout.ts`), picked by its size: the
+   * browser viewport less the bottom safe area (100dvh less the home
+   * indicator), in CSS px, not the device screen. At least `wideMinWidth`
+   * wide and `wideMinHeight` tall, it has two columns: the tablet layout in
+   * portrait, the laptop layout in landscape (tablets in landscape too).
+   * Short of either, a portrait screen gets a phone layout by its height and
+   * a landscape one the rotate hint. Starting points until the design pass
+   * measures the acceptance devices: Safari leaves about 660–750 px on a
+   * current iPhone and about 553 px on an SE.
    */
-  phoneLayouts: {
-    /** Narrower than this, the play screen is a phone layout; from here on it is the tablet's (design.md: about 700). */
-    width: 700,
+  layouts: {
     /**
-     * The shortest the pad gets above the compact layout, and so the
-     * breakpoints: each layout starts where its rows leave the pad this much
-     * (`src/ui/layout.ts`). With 200, the phone layout (532 px of rows) starts
-     * at 732 px and the short layout (444 px) at 644 px; below that, the
-     * compact layout (352 px) takes over. About 200 px. design.md asks for
-     * about 240, which does not fit with 44 px rows: 553 px leaves the compact
-     * pad 201 px, and a 240 px pad in the short layout needs 684 px, more
-     * than 393×659 has.
+     * About 700 px wide (design.md): iPads in portrait (744–1024) get two
+     * columns; phones, in portrait or landscape, do not.
+     */
+    wideMinWidth: 700,
+    /**
+     * About 580 px tall: what the laptop layout's right column needs with the
+     * sound folded into the drum tabs and no gaps between its rows. Phones in
+     * landscape (320–430 px tall) stay under it and get the rotate hint;
+     * laptop windows under a taskbar or at 150 % scaling stay above it.
+     */
+    wideMinHeight: 580,
+    /**
+     * About 700 px tall: what the laptop layout's right column needs for the
+     * three sound sections side by side (step display, strips, swing, loop
+     * strip and the sound sections, in 44 px rows) under the header and over
+     * the bottom row. A shorter laptop window folds them into the drum tabs.
+     */
+    soundSectionsMinHeight: 700,
+    /**
+     * The shortest the pad gets above the compact layout, and so the phone
+     * breakpoints: each phone layout starts where its rows leave the pad this
+     * much. With 200, the phone layout (532 px of rows) starts at 732 px and
+     * the short layout (444 px) at 644 px; below that, the compact layout
+     * (352 px) takes over. About 200 px. design.md asks for about 240, which
+     * does not fit with 44 px rows: 553 px leaves the compact pad 201 px, and
+     * a 240 px pad in the short layout needs 684 px, more than 393×659 has.
      */
     padMinHeight: 200,
   },

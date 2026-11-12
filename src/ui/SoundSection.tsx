@@ -29,6 +29,9 @@ export interface SoundSectionProps<D extends Drum> {
   onChange(edit: (setup: Setup) => void): void;
 }
 
+/** Props of a view of all three drums' sound: the drum tabs or the laptop's sound sections. */
+export type DrumsSoundProps = Omit<SoundSectionProps<Drum>, 'drum'>;
+
 export function SoundSection<D extends Drum>(props: SoundSectionProps<D>) {
   function value(param: Param<D>): number {
     const sound: Readonly<Bytes> = props.setup().sound;

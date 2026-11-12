@@ -12,16 +12,19 @@ import { About } from './About';
 import { claimLinkClick, createAboutRoute } from './about-route';
 import { DrumTabs } from './DrumTabs';
 import { createFirstLaunchHint, FirstLaunchHint, HelpBox, touchScreen } from './Help';
-import { createLayout } from './layout';
+import { createLayout, isWide } from './layout';
 import { LoopStrip } from './LoopStrip';
 import { Pad } from './Pad';
 import { PressButton } from './PressButton';
+import { RotateHint } from './RotateHint';
+import { SoundSections } from './SoundSections';
 import { StepDisplay } from './StepDisplay';
 import { Strip } from './Strip';
 import { StripTabs, type StripTab } from './StripTabs';
-import { TempoPanel } from './TempoPanel';
+import { SwingRow, TapTempo, TempoPanel } from './TempoPanel';
 import './play-screen.css';
 import './short-and-compact.css';
+import './wide-layouts.css';
 
 interface StripField {
   label: string;
@@ -46,7 +49,7 @@ const STRIPS_BY_TAB: Readonly<Record<StripTab, readonly StripField[]>> = {
   })),
 };
 
-/** The six strips of the phone layout, top to bottom. */
+/** The six strips of the phone, tablet and laptop layouts, top to bottom (the laptop's in two columns). */
 const STRIPS = [...STRIPS_BY_TAB.mix, ...STRIPS_BY_TAB.fx];
 
 /** What the kit follows from the store: drift, drive and mutes. */
@@ -154,12 +157,20 @@ export function App() {
   // sound mode, or the tempo panel.
   const [mode, setMode] = createSignal<'play' | 'sound' | 'tempo'>('play');
 
-  // The short and compact layouts fold the strips into tabs; the compact
-  // layout also moves the step display into the pad.
-  const { layout, observe } = createLayout();
+  // The play screen's layout, from its size. The short and compact layouts
+  // fold the strips into tabs, and the compact layout also moves the step
+  // display into the pad.
+  const { layout, soundFolded, observe } = createLayout();
   let screen!: HTMLElement;
   onMount(() => observe(screen));
   const [stripTab, setStripTab] = createSignal<StripTab>('mix');
+  const stripsInTabs = () => layout() === 'short' || layout() === 'compact';
+  const wide = () => isWide(layout());
+  // The mode, as the strips' place shows it. Wide layouts show the sound
+  // beside the strips, so sound mode is for phones only. The laptop keeps
+  // its strips when the tempo panel opens: swing is inline there, so the
+  // panel only adds tap tempo next to it.
+  const stripsPlace = () => (layout() === 'laptop' || (wide() && mode() === 'sound') ? 'play' : mode());
 
   function setAnchor() {
     store.setAnchor();
@@ -199,11 +210,24 @@ export function App() {
   }
 
   return (
-    <main ref={screen} class="play-screen" data-layout={layout()} inert={about.open()} onContextMenu={noContextMenu}>
-      {/* Mounted in <body>, outside the play screen, which is inert while about is open. */}
+    <main
+      ref={screen}
+      class="play-screen"
+      data-layout={layout()}
+      data-sound-folded={soundFolded() ? '' : undefined}
+      inert={about.open() || layout() === 'rotate'}
+      onContextMenu={noContextMenu}
+    >
+      {/* Both mounted in <body>, outside the play screen, which is inert under
+          them. About covers the rotate hint, so it reads on a phone held sideways. */}
       <Show when={about.open()}>
         <Portal>
           <About playing={playing()} onClose={about.close} />
+        </Portal>
+      </Show>
+      <Show when={layout() === 'rotate'}>
+        <Portal>
+          <RotateHint />
         </Portal>
       </Show>
 
@@ -234,7 +258,7 @@ export function App() {
         </div>
       </header>
 
-      <Pad store={store} onMove={firstLaunchHint.dismiss}>
+      <Pad store={store} mapNodes={layout() === 'laptop'} onMove={firstLaunchHint.dismiss}>
         <Show when={layout() === 'compact'}>{stepDisplay()}</Show>
         {/* The help box says all the hint says, so the hint steps aside while it is open. */}
         <Show when={firstLaunchHint.shown() && !helpOpen()}>
@@ -255,29 +279,50 @@ export function App() {
       <LoopStrip held={loop} playing={playing} onHold={holdLoop} onRelease={releaseLoop} />
 
       <Switch>
-        <Match when={mode() === 'play' && layout() === 'phone'}>
+        <Match when={stripsPlace() === 'play' && !stripsInTabs()}>
           <div class="strips">
             <For each={STRIPS}>{stripRow}</For>
           </div>
         </Match>
-        <Match when={mode() === 'play'}>
+        <Match when={stripsPlace() === 'play'}>
           <StripTabs active={stripTab} onSelect={setStripTab}>
             <For each={STRIPS_BY_TAB[stripTab()]}>{stripRow}</For>
           </StripTabs>
         </Match>
-        <Match when={mode() === 'sound'}>
+        <Match when={stripsPlace() === 'sound'}>
           <DrumTabs setup={setup} onChange={(edit) => store.change(edit)} />
         </Match>
-        <Match when={mode() === 'tempo'}>
+        <Match when={stripsPlace() === 'tempo'}>
           <TempoPanel setup={setup} onChange={(edit) => store.change(edit)} />
         </Match>
       </Switch>
 
+      <Switch>
+        <Match when={layout() === 'tablet'}>
+          <DrumTabs setup={setup} onChange={(edit) => store.change(edit)} />
+        </Match>
+        <Match when={layout() === 'laptop'}>
+          <div class="inline-tempo">
+            <SwingRow setup={setup} onChange={(edit) => store.change(edit)} />
+            <Show when={mode() === 'tempo'}>
+              <TapTempo onChange={(edit) => store.change(edit)} />
+            </Show>
+          </div>
+          {/* A window too short for the three sound sections folds them into the drum tabs. */}
+          <Show when={soundFolded()} fallback={<SoundSections setup={setup} onChange={(edit) => store.change(edit)} />}>
+            <DrumTabs setup={setup} onChange={(edit) => store.change(edit)} />
+          </Show>
+        </Match>
+      </Switch>
+
       <div class="bottom-bar">
-        {/* One button, so it keeps focus when `→ sound` or `← play` swaps what sits above it. */}
-        <button type="button" class="bar-button" onClick={() => setMode(mode() === 'play' ? 'sound' : 'play')}>
-          <span class="marker">{mode() === 'play' ? '→' : '←'}</span> {mode() === 'play' ? 'sound' : 'play'}
-        </button>
+        {/* One button, so it keeps focus when `→ sound` or `← play` swaps what sits above it.
+            Wide layouts have no sound mode: there it only closes the tempo panel. */}
+        <Show when={!wide() || mode() === 'tempo'}>
+          <button type="button" class="bar-button" onClick={() => setMode(mode() === 'play' ? 'sound' : 'play')}>
+            <span class="marker">{mode() === 'play' ? '→' : '←'}</span> {mode() === 'play' ? 'sound' : 'play'}
+          </button>
+        </Show>
         <button type="button" class="bar-button text-button" onClick={setAnchor}>
           set anchor
         </button>

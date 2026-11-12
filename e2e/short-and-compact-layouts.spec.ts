@@ -9,7 +9,7 @@ test.use({ hasTouch: true });
 
 /**
  * The shortest the pad gets above the compact layout. A copy of
- * `tunables.phoneLayouts.padMinHeight`, which sets the breakpoints: change
+ * `tunables.layouts.padMinHeight`, which sets the breakpoints: change
  * both together. (The spec cannot import tunables: its extensionless imports
  * do not resolve under the e2e tsconfig.)
  */

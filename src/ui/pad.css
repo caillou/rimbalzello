@@ -61,3 +61,34 @@
   line-height: 1;
   white-space: nowrap;
 }
+
+/* A map node: a faint `+` centred on its point. The outer nodes lie on the
+   pad edges, so the pad cuts their marks in half. */
+.map-node {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.map-node::before,
+.map-node::after {
+  content: '';
+  position: absolute;
+  background: rgb(255 255 255 / 22%);
+}
+
+.map-node::before {
+  top: 5px;
+  left: 0;
+  width: 11px;
+  height: 1px;
+}
+
+.map-node::after {
+  top: 0;
+  left: 5px;
+  width: 1px;
+  height: 11px;
+}

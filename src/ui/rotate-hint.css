@@ -1,0 +1,29 @@
+/* Over the whole viewport, in place of the play screen. */
+.rotate-hint {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg);
+  color: var(--text-secondary);
+  font-size: 15px;
+  font-style: italic;
+  text-align: center;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.rotate-hint p {
+  margin: 0;
+}
+
+.rotate-hint-title {
+  color: var(--text);
+  font-size: 17px;
+  font-style: normal;
+  font-weight: var(--weight-bold);
+}

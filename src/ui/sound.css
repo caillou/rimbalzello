@@ -44,3 +44,21 @@
   --sound-columns: 2;
   min-height: calc(3 * 44px);
 }
+
+/* The laptop's sound: `## bd`, `## sd` and `## hh` side by side under a
+   hairline, one column of sliders each. */
+.sound-sections {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 24px;
+  margin: 0 16px;
+  padding-top: 8px;
+  border-top: 1px solid var(--hairline);
+}
+
+.sound-heading {
+  height: 28px;
+  margin: 0;
+  font-size: 15px;
+  line-height: 28px;
+}

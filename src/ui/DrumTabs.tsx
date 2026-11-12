@@ -1,18 +1,18 @@
 // Sound mode's drum tabs: `bd` `sd` `hh`, the active tab in its drum's colour
 // and underlined, the drum's full name on the right, and below them that
-// drum's sound in two columns, so it fits under the pad on a phone.
+// drum's sound in two columns, so it fits under the pad on a phone. The
+// tablet layout shows them all the time, beside the strips, in one column;
+// a laptop window too short for the three sound sections, in two.
 
 import { createSignal, createUniqueId, For, Show } from 'solid-js';
 import { DRUMS, type Drum } from '../engine/setup';
-import { SoundSection, type SoundSectionProps } from './SoundSection';
+import { SoundSection, type DrumsSoundProps } from './SoundSection';
 import './sound.css';
 import './tabs.css';
 
 const NAMES: Record<Drum, string> = { bd: 'bass drum', sd: 'snare drum', hh: 'hi-hat' };
 
-export type DrumTabsProps = Omit<SoundSectionProps<Drum>, 'drum'>;
-
-export function DrumTabs(props: DrumTabsProps) {
+export function DrumTabs(props: DrumsSoundProps) {
   const [active, setActive] = createSignal<Drum>('bd');
   const id = createUniqueId();
   const tabId = (drum: Drum) => `${id}-${drum}`;

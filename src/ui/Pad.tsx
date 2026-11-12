@@ -2,9 +2,10 @@
 // Pointer events go through the pad gesture interpreter, whose intents move
 // the setup store's position and open and close pad moves for pad undo. The
 // drawing (crosshair, ring, position, X/Y readout) is written straight to the
-// DOM once per frame, outside Solid's update cycle.
+// DOM once per frame, outside Solid's update cycle. The laptop layout also
+// marks the 25 map nodes.
 
-import { onCleanup, onMount, type JSX } from 'solid-js';
+import { For, onCleanup, onMount, Show, type JSX } from 'solid-js';
 import { BYTE_RANGE } from '../engine/setup';
 import type { SetupStore } from '../engine/setup-store';
 import { toDisplay } from './display';
@@ -14,10 +15,20 @@ import './pad.css';
 /** Gap between the position and the X/Y readout, in px. */
 const READOUT_GAP = 12;
 
+/**
+ * Where the map nodes sit along each axis, as a percentage of the pad: bytes
+ * 0, 64, 128, 192 and 256, drawn where the position would be at that byte.
+ * 256 is past the last byte (255), so the outer nodes lie on the pad edges.
+ */
+const NODE_AT = [0, 64, 128, 192, 256].map((byte) => (Math.min(byte, BYTE_RANGE.max) / BYTE_RANGE.max) * 100);
+const MAP_NODES = NODE_AT.flatMap((x) => NODE_AT.map((y) => ({ x, y })));
+
 export interface PadProps {
   store: SetupStore;
   /** A pad move is done: a tap, drag or fine adjust has ended. */
   onMove?: () => void;
+  /** Mark the 25 map nodes as faint `+`. */
+  mapNodes?: boolean;
   /** Shown over the pad, such as `▶ tap to play`. Buttons in it take their own taps. */
   children?: JSX.Element;
 }
@@ -163,6 +174,11 @@ export function Pad(props: PadProps) {
       onPointerUp={up}
       on:pointercancel={cancel}
     >
+      <Show when={props.mapNodes}>
+        <For each={MAP_NODES}>
+          {(node) => <div class="map-node" style={{ left: `${node.x}%`, top: `${100 - node.y}%` }} />}
+        </For>
+      </Show>
       <div ref={vertical} class="pad-line pad-line-vertical" />
       <div ref={horizontal} class="pad-line pad-line-horizontal" />
       <div ref={ring} class="pad-ring" />

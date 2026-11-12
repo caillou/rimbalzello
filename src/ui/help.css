@@ -22,6 +22,16 @@
   white-space: nowrap;
 }
 
+/* Unless the pad is narrower than the longest item, `double-tap+slide fine`
+   (151 px) and the hint's 8 px insets: then the item breaks rather than
+   being cut off at the pad's edge. Only a laptop window just over 700 px
+   wide has such a pad. */
+@container (width < 167px) {
+  .first-launch-hint .hint-item {
+    white-space: normal;
+  }
+}
+
 /* Over the lower part of the pad (`designs/v2-06-phone-help.png`). */
 .help-box {
   bottom: 8px;

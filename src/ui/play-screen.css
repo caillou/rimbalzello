@@ -183,4 +183,9 @@
   letter-spacing: 0.1em;
   text-decoration: none;
   text-transform: uppercase;
+  /* In a narrow laptop window the footer outgrows the pad column: it runs
+     on into the bottom bar's empty left side instead of wrapping or
+     squeezing its items into each other. */
+  flex-shrink: 0;
+  white-space: nowrap;
 }
