@@ -103,6 +103,12 @@ export interface Transport {
    * with the same playhead, time and pattern, and replace the earlier ones.
    */
   stepsBefore(until: number): TimedStep[];
+  /**
+   * The step heard at clock time `heard`: the last step handed out that
+   * sounds at or before it, as handed out again after a loop change.
+   * Undefined while stopped and before step 0 has sounded.
+   */
+  stepHeardAt(heard: number): TimedStep | undefined;
 }
 
 interface Position {
@@ -228,15 +234,18 @@ export function createTransport({ setup: initial, seed }: TransportOptions): Tra
     return { played, hits };
   }
 
+  /** The last step handed out that sounds at or before clock time `heard`. */
+  function heardEntry(heard: number): Handed | undefined {
+    return handed.findLast((entry) => entry.step.time <= heard);
+  }
+
   /**
-   * The step heard at clock time `heard`, counted without wrapping: the last
-   * step handed out that sounds at or before it. Before step 0 has sounded
-   * there is none; the simplest reading takes the first step kept, which is
-   * step 0 then.
+   * The step heard at clock time `heard`, counted without wrapping. Before
+   * step 0 has sounded there is none; the simplest reading takes the first
+   * step kept, which is step 0 then.
    */
   function heardStep(heard: number): number {
-    const sounded = handed.findLast((entry) => entry.step.time <= heard);
-    return (sounded ?? handed[0])?.count ?? next;
+    return (heardEntry(heard) ?? handed[0])?.count ?? next;
   }
 
   /** The steps handed out that sound after `now` are handed out again, before any new step. */
@@ -359,6 +368,9 @@ export function createTransport({ setup: initial, seed }: TransportOptions): Tra
         next++;
       }
       return steps;
+    },
+    stepHeardAt(heard) {
+      return playing ? heardEntry(heard)?.step : undefined;
     },
   };
 }

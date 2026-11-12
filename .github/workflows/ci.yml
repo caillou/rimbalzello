@@ -65,6 +65,16 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium webkit firefox
 
+      # The runner has no sound card, and Firefox keeps an AudioContext
+      # suspended while there is no audio device: a PulseAudio server playing
+      # into a null sink stands in for speakers.
+      - name: Start a virtual audio device
+        run: |
+          sudo apt-get install --yes --no-install-recommends pulseaudio
+          pulseaudio --start --exit-idle-time=-1
+          pactl load-module module-null-sink sink_name=speakers
+          pactl set-default-sink speakers
+
       # Runs against the build above on the preview server.
       - name: Browser checks
         run: pnpm test:e2e

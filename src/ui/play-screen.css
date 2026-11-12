@@ -1,11 +1,38 @@
-/* The play screen: header over the pad, filling the viewport. The phone
-   play screen issue adds the step display, strips and bottom bar. */
+/* The play screen, phone layout: header, pad, step display, strips, bottom
+   bar and footer in one column filling the viewport. It never scrolls. */
 
 .play-screen {
   display: flex;
   flex-direction: column;
   height: 100dvh;
   overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom);
+  /* An instrument, not a page: no text selection, callouts or double-tap zoom. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.play-screen,
+.play-screen * {
+  box-sizing: border-box;
+}
+
+/* Zero specificity, so every component's own button rules win. */
+:where(.play-screen button) {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+:where(.play-screen) :focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
 }
 
 .header {
@@ -20,29 +47,42 @@
 .title {
   margin: 0;
   font-size: 17px;
+  white-space: nowrap;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+}
+
+.tempo-button {
+  width: 44px;
+  height: 44px;
+  color: var(--text-secondary);
+  font-size: 18px;
+}
+
+.bpm {
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.bpm-unit {
+  color: var(--text-secondary);
 }
 
 /* Text buttons: italic, underlined, with a 44 px touch target. */
 .text-button {
   min-width: 44px;
   min-height: 44px;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--text);
-  font: inherit;
   font-size: 15px;
   font-style: italic;
   text-decoration: underline;
   text-underline-offset: 4px;
-  cursor: pointer;
 }
 
-.pad {
-  position: relative;
-  flex-grow: 1;
-  min-height: 0;
-  background: var(--pad);
+.play-stop {
+  margin-left: 4px;
 }
 
 /* One tap anywhere on the pad unlocks audio and starts the groove. */
@@ -52,11 +92,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
-  border: 0;
-  background: none;
-  font: inherit;
-  cursor: pointer;
+  background: rgb(26 28 27 / 55%);
 }
 
 .tap-to-play span {
@@ -67,12 +103,60 @@
   font-style: italic;
 }
 
-.text-button:focus-visible,
+.tap-to-play:focus-visible {
+  outline: none;
+}
+
 .tap-to-play:focus-visible span {
   outline: 2px solid var(--text);
   outline-offset: 4px;
 }
 
-.tap-to-play:focus-visible {
-  outline: none;
+.strips {
+  flex-shrink: 0;
+  padding: 0 16px;
+}
+
+.bottom-bar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 4px 16px 0;
+}
+
+.bar-button {
+  height: 44px;
+  font-size: 15px;
+  font-style: italic;
+}
+
+/* `↺ return on bar` is the one solid block: yellow, black text. */
+.return-button span {
+  display: block;
+  padding: 8px 10px;
+  background: var(--highlight);
+  color: var(--on-highlight);
+}
+
+.footer {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: center;
+  gap: 20px;
+  height: 44px;
+}
+
+.footer-item {
+  display: flex;
+  align-items: center;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 4px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  text-transform: uppercase;
 }

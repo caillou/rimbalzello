@@ -76,6 +76,16 @@ export const tunables = {
     fineSpeed: 0.25,
   },
 
+  /** Strips: sliders that move relative to the touch, tuned by feel on the acceptance devices. */
+  strips: {
+    /**
+     * Finger travel in CSS px before a touch on a strip moves its value, so a
+     * tap never changes it. About 4 px: under a thumb's wobble, too little to
+     * notice when dragging.
+     */
+    dragThreshold: 4,
+  },
+
   /** Arrow-key nudges on the pad, tuned by feel on the laptop. */
   keyboard: {
     /** Pad bytes per arrow press: 1/8 of the gap between map nodes, about 3 on the 0–100 readout. */

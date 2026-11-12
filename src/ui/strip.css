@@ -1,0 +1,53 @@
+/* A strip row: label, 2 px track with the filled part and a square thumb in
+   the control's colour, the value right-aligned in grey. The whole row is
+   the slider. */
+.strip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 44px;
+  touch-action: none;
+  cursor: ew-resize;
+}
+
+.strip-label {
+  flex-shrink: 0;
+  width: 56px;
+  font-size: 15px;
+}
+
+.strip-track {
+  position: relative;
+  flex-grow: 1;
+  height: 2px;
+  background: var(--hairline);
+}
+
+.strip-fill,
+.strip-thumb {
+  position: absolute;
+  background: var(--colour);
+}
+
+.strip-fill {
+  top: 0;
+  left: 0;
+  width: var(--value);
+  height: 2px;
+}
+
+.strip-thumb {
+  top: -5px;
+  left: var(--value);
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+}
+
+.strip-value {
+  flex-shrink: 0;
+  width: 36px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  text-align: right;
+}

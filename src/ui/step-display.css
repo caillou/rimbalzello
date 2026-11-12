@@ -1,0 +1,60 @@
+/* Three text lines of 32 steps under the pad. Each drum label is a mute
+   toggle reaching from the screen's left edge: 60 px wide and one line tall. */
+.step-display {
+  flex-shrink: 0;
+  padding: 6px 16px 2px;
+  font-size: 15px;
+  line-height: 24px;
+}
+
+.step-row {
+  display: flex;
+  align-items: center;
+  height: 24px;
+}
+
+.step-label {
+  width: 60px;
+  height: 24px;
+  margin-left: -16px;
+  padding-left: 16px;
+  text-align: left;
+}
+
+/* Rests are grey; hits are `x` in the drum's colour. */
+.step-line {
+  color: var(--text-tertiary);
+  white-space: pre;
+}
+
+.step-row[data-drum='bd'] .hit {
+  color: var(--bd);
+}
+
+.step-row[data-drum='sd'] .hit {
+  color: var(--sd);
+}
+
+.step-row[data-drum='hh'] .hit {
+  color: var(--hh);
+}
+
+/* A muted drum: grey line, label struck through. */
+.step-row.muted .step-label {
+  color: var(--text-tertiary);
+  text-decoration: line-through;
+}
+
+.step-row.muted .step-line {
+  color: var(--hairline);
+}
+
+.step-row.muted .hit {
+  color: var(--text-tertiary);
+}
+
+/* The played step: yellow block, black text, across all three lines. */
+.step-display .step-line .now {
+  background: var(--highlight);
+  color: var(--on-highlight);
+}

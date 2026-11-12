@@ -6,7 +6,7 @@
 
 import type { Kit } from './kit';
 import type { SetupStore } from './setup-store';
-import type { LoopSteps, Transport } from './transport';
+import type { LoopSteps, TimedStep, Transport } from './transport';
 import { tunables } from './tunables';
 
 /** How often the scheduler wakes, in ms. Well under the lookahead, so one late timer leaves no gap. */
@@ -14,6 +14,9 @@ const TICK_MS = 25;
 
 /** How far after the play tap step 0 sounds, in seconds: room to queue it before it is due. */
 const START_DELAY = 0.05;
+
+/** How often the output latency is read again, in seconds of context time. */
+const LATENCY_REFRESH = 1;
 
 export interface Scheduler {
   /** Starts playback at step 0. Does nothing while playing. */
@@ -28,19 +31,32 @@ export interface Scheduler {
   hold(steps: LoopSteps): void;
   /** Releases the loop: from the next step boundary the playhead step plays again (the slip). */
   release(): void;
+  /**
+   * The step reaching the speakers now, by the same latency a loop engages
+   * from, so a loop starts on the step shown. Undefined while stopped and
+   * before step 0 sounds. Cheap enough to read every frame.
+   */
+  heard(): TimedStep | undefined;
 }
 
 export function createScheduler(context: BaseAudioContext, kit: Kit, transport: Transport, store: SetupStore): Scheduler {
   let timer: ReturnType<typeof setInterval> | undefined;
 
-  /**
-   * Seconds from the context clock to the speakers: what sounds now was
-   * scheduled this long ago. Browsers without `outputLatency` (Safari) count
-   * the base latency only.
-   */
-  function latency(): number {
+  // Seconds from the context clock to the speakers: what sounds now was
+  // scheduled this long ago. Browsers without `outputLatency` (Safari) count
+  // the base latency only. Browsers report the output latency as 0 until the
+  // context runs, so it is read again every second of context time, from the
+  // timer: in Firefox the getters can stall the page while the audio device
+  // is busy, so never every frame.
+  let latency = 0;
+  let latencyReadAt = -Infinity;
+
+  function readLatency() {
+    const now = context.currentTime;
+    if (now - latencyReadAt < LATENCY_REFRESH) return;
     const { baseLatency = 0, outputLatency = 0 } = context as Partial<AudioContext>;
-    return baseLatency + outputLatency;
+    latency = baseLatency + outputLatency;
+    latencyReadAt = now;
   }
 
   /**
@@ -57,6 +73,7 @@ export function createScheduler(context: BaseAudioContext, kit: Kit, transport: 
   }
 
   function tick() {
+    readLatency();
     for (const step of transport.stepsBefore(context.currentTime + tunables.lookahead)) {
       // The transport plays the anchor's pattern from this step on; the store
       // follows, so sound, drift and drive come back with it.
@@ -80,10 +97,13 @@ export function createScheduler(context: BaseAudioContext, kit: Kit, transport: 
       kit.cancelScheduled();
     },
     hold(steps) {
-      changeLoop((now) => transport.hold(steps, { now, heard: now - latency() }));
+      changeLoop((now) => transport.hold(steps, { now, heard: now - latency }));
     },
     release() {
       changeLoop((now) => transport.release(now));
+    },
+    heard() {
+      return transport.stepHeardAt(context.currentTime - latency);
     },
   };
 }

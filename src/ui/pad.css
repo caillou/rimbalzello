@@ -1,0 +1,63 @@
+/* The pad takes all the height the rest of the play screen leaves. It keeps
+   clear of the left 16 px, where the iOS edge swipe navigates back. */
+.pad {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  margin: 0 16px;
+  overflow: hidden;
+  background: var(--pad);
+  touch-action: none;
+  cursor: crosshair;
+  container-type: size;
+}
+
+/* Drawn at the pad's top-left corner and moved by transforms from Pad.tsx. */
+.pad-line,
+.pad-ring,
+.pad-position,
+.pad-readout {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.pad-line {
+  background: rgb(255 255 255 / 12%);
+}
+
+.pad-line-vertical {
+  width: 1px;
+  height: 100%;
+}
+
+.pad-line-horizontal {
+  width: 100%;
+  height: 1px;
+}
+
+.pad-ring {
+  /* Smaller on a short pad, so it stays a ring around the position. */
+  --ring: min(110px, 50cqmin);
+
+  width: var(--ring);
+  height: var(--ring);
+  margin: calc(var(--ring) / -2) 0 0 calc(var(--ring) / -2);
+  border: 1px solid rgb(255 216 102 / 22%);
+  border-radius: 50%;
+}
+
+.pad-position {
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  background: var(--highlight);
+}
+
+.pad-readout {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+}

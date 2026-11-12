@@ -81,6 +81,20 @@ describe('playhead', () => {
       [1, expect.closeTo(20 + step, 9)],
     ]);
   });
+
+  it('reports the step heard at a time: the last one sounding by then, not the steps handed out ahead of it', () => {
+    const transport = createTransport({ setup: plain(), seed: 1 });
+    const step = stepLength(plain().bpm);
+    transport.start(1);
+    transport.stepsBefore(1 + 2.5 * step);
+    const heardAt = (time: number) => transport.stepHeardAt(time)?.playhead;
+
+    expect(heardAt(0.9)).toBeUndefined();
+    expect(heardAt(1 + 0.5 * step)).toBe(0);
+    expect(heardAt(1 + 1.5 * step)).toBe(1);
+    // Past the last step handed out, the last one stays heard until more come.
+    expect(heardAt(1 + 5 * step)).toBe(2);
+  });
 });
 
 describe('swing', () => {
@@ -282,6 +296,16 @@ describe('looper', () => {
     player.to(22);
 
     expect(played(player.heard(13, 22))).toEqual([13, 14, 15, 16, 13, 14, 15, 16, 13]);
+  });
+
+  it('reports the steps handed out again after a loop change as heard, not the ones they replaced', () => {
+    // Steps are queued about four steps ahead; a 1/32 loop engaged on step 12 hands them out again, all playing 12.
+    const player = createPlayer(plain(), { lookahead: 0.25 });
+    const step = stepLength(plain().bpm);
+    player.to(12.5);
+    player.hold(1);
+
+    expect([12.5, 13.5, 14.5, 15.5].map((n) => player.transport.stepHeardAt(n * step)?.played)).toEqual([12, 12, 12, 12]);
   });
 
   it('holding 1/4 from step 4, then sliding to 1/8 when the playhead is at step 10, plays 6, 7, 4, 5, 6, …', () => {
