@@ -2,7 +2,8 @@
 // 100dvh tall, so its size, less the bottom safe area, is what the rows have
 // to share. The breakpoints live in `tunables.layouts`; App sets the result
 // on the play screen as `data-layout` and `data-sound-folded`, and the layout
-// stylesheets key on them.
+// stylesheets key on them. It also sets the laptop layout's zoom as `--zoom`,
+// which the stylesheets multiply their px sizes by.
 
 import { createMemo, createSignal, onCleanup, type Accessor } from 'solid-js';
 import { tunables } from '../engine/tunables';
@@ -38,6 +39,17 @@ function layoutFor(width: number, height: number): Layout {
   return height >= PHONE_ROWS + padMinHeight ? 'phone' : 'compact';
 }
 
+/**
+ * How much the laptop layout grows in a window larger than it was designed
+ * for (`tunables.layouts.laptopZoom`); 1 in every other layout, and in a
+ * laptop window with the sound folded.
+ */
+function zoomFor(layout: Layout, soundFolded: boolean, width: number, height: number): number {
+  if (layout !== 'laptop' || soundFolded) return 1;
+  const { designSize, maxZoom } = tunables.layouts.laptopZoom;
+  return Math.min(maxZoom, Math.max(1, Math.min(width / designSize.width, height / designSize.height)));
+}
+
 /** Whether a layout has two columns. */
 export const isWide = (layout: Layout) => layout === 'tablet' || layout === 'laptop';
 
@@ -49,6 +61,8 @@ export interface PlayScreenLayout {
    * side by side: the sound folds into the drum tabs and the rows close up.
    */
   soundFolded: Accessor<boolean>;
+  /** The factor every size of the laptop layout grows by on a large window: 1 to 2, 1 elsewhere. */
+  zoom: Accessor<number>;
   /** Follow the play screen's element. Until it is laid out, the window's size stands in. */
   observe(element: HTMLElement): void;
 }
@@ -64,5 +78,6 @@ export function createLayout(): PlayScreenLayout {
   const soundFolded = createMemo(
     () => layout() === 'laptop' && size().height < tunables.layouts.soundSectionsMinHeight,
   );
-  return { layout, soundFolded, observe: (element) => resize.observe(element) };
+  const zoom = createMemo(() => zoomFor(layout(), soundFolded(), size().width, size().height));
+  return { layout, soundFolded, zoom, observe: (element) => resize.observe(element) };
 }

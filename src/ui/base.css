@@ -46,6 +46,11 @@
   /* Thinner on denser screens, like caillou.ch. */
   --weight-normal: 400;
   --weight-bold: 600;
+
+  /* What the play screen's stylesheets multiply their px sizes by. App sets
+     it on the play screen from layout.ts: above 1 only in the laptop layout
+     on a window larger than 1280×800. */
+  --zoom: 1;
 }
 
 @media (min-resolution: 2dppx) {

@@ -5,7 +5,7 @@ import { expect, type Page } from '@playwright/test';
 // 44 px, and no two controls overlap. Reused at every layout's viewports.
 
 /** Controls: buttons, links, inputs and sliders, plus touch surfaces marked `data-control` (the pad). */
-const CONTROLS = 'button, a[href], input, select, textarea, [role="slider"], [data-control]';
+export const CONTROLS = 'button, a[href], input, select, textarea, [role="slider"], [data-control]';
 
 /**
  * The step display's drum labels (the mute toggles) sit one per text line,

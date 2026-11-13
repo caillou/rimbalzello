@@ -4,7 +4,7 @@
   position: relative;
   flex: 1 1 0;
   min-height: 0;
-  margin: 0 16px;
+  margin: 0 calc(16px * var(--zoom));
   overflow: hidden;
   background: var(--pad);
   touch-action: none;
@@ -39,7 +39,7 @@
 
 .pad-ring {
   /* Smaller on a short pad, so it stays a ring around the position. */
-  --ring: min(110px, 50cqmin);
+  --ring: min(calc(110px * var(--zoom)), 50cqmin);
 
   width: var(--ring);
   height: var(--ring);
@@ -48,26 +48,39 @@
   border-radius: 50%;
 }
 
+/* 12 px square at zoom 1. Half its side is whole px at any zoom, so it is
+   centred on the position without half-pixel margins. */
 .pad-position {
-  width: 12px;
-  height: 12px;
-  margin: -6px 0 0 -6px;
+  --half: round(6px * var(--zoom), 1px);
+
+  width: calc(2 * var(--half));
+  height: calc(2 * var(--half));
+  margin: calc(-1 * var(--half)) 0 0 calc(-1 * var(--half));
   background: var(--highlight);
 }
 
+/* Without round(): unrounded, as the strip thumb (strip.css). */
+@supports not (width: round(1px, 1px)) {
+  .pad-position {
+    --half: calc(6px * var(--zoom));
+  }
+}
+
+/* One line, as tall as its text: Pad.tsx keeps it that far from the position. */
 .pad-readout {
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: calc(12px * var(--zoom));
   line-height: 1;
   white-space: nowrap;
 }
 
 /* A map node: a faint `+` centred on its point. The outer nodes lie on the
-   pad edges, so the pad cuts their marks in half. */
+   pad edges, so the pad cuts their marks in half. The strokes stay 1 px, as
+   the hairlines, centred at any zoom. */
 .map-node {
   position: absolute;
-  width: 11px;
-  height: 11px;
+  width: calc(11px * var(--zoom));
+  height: calc(11px * var(--zoom));
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
@@ -80,15 +93,15 @@
 }
 
 .map-node::before {
-  top: 5px;
+  top: calc(50% - 0.5px);
   left: 0;
-  width: 11px;
+  width: 100%;
   height: 1px;
 }
 
 .map-node::after {
   top: 0;
-  left: 5px;
+  left: calc(50% - 0.5px);
   width: 1px;
-  height: 11px;
+  height: 100%;
 }

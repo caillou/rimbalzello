@@ -4,10 +4,10 @@
 .help-box,
 .first-launch-hint {
   position: absolute;
-  right: 8px;
-  left: 8px;
+  right: calc(8px * var(--zoom));
+  left: calc(8px * var(--zoom));
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: calc(12px * var(--zoom));
   line-height: 1.5;
   pointer-events: none;
 }
@@ -34,15 +34,15 @@
 
 /* Over the lower part of the pad (`designs/v2-06-phone-help.png`). */
 .help-box {
-  bottom: 8px;
-  padding: 6px 8px;
+  bottom: calc(8px * var(--zoom));
+  padding: calc(6px * var(--zoom)) calc(8px * var(--zoom));
   border: 1px solid var(--hairline);
   background: rgb(26 28 27 / 90%);
 }
 
 /* Along the top of the pad; on a narrow pad it wraps between items. */
 .first-launch-hint {
-  top: 8px;
+  top: calc(8px * var(--zoom));
   text-align: center;
   text-wrap: balance;
 }

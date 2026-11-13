@@ -6,7 +6,7 @@
 
 .play-screen:is([data-layout='tablet'], [data-layout='laptop']) {
   display: grid;
-  row-gap: 6px;
+  row-gap: calc(6px * var(--zoom));
 
   & > .header {
     grid-area: header;
@@ -26,7 +26,7 @@
 
   & > .strips {
     grid-area: strips;
-    padding: 0 16px;
+    padding: 0 calc(16px * var(--zoom));
   }
 
   /* Room for the longest full name, `snare drum` (drum-names.ts). All six
@@ -43,8 +43,8 @@
     display: flex;
     grid-area: tempo;
     align-items: center;
-    gap: 12px;
-    padding: 0 16px;
+    gap: calc(12px * var(--zoom));
+    padding: 0 calc(16px * var(--zoom));
 
     & .strip {
       flex: 1 1 0;
@@ -58,7 +58,7 @@
     & .tap-tempo {
       flex: none;
       width: auto;
-      padding: 0 12px;
+      padding: 0 calc(12px * var(--zoom));
     }
   }
 
@@ -71,20 +71,20 @@
      layout.ts measures the play screen inside its padding, which has to be
      the same in every layout. */
   & > :is(.footer, .bottom-bar) {
-    margin-bottom: 8px;
+    margin-bottom: calc(8px * var(--zoom));
   }
 
   & > .footer {
     grid-area: footer;
     justify-content: flex-start;
-    padding: 0 12px;
+    padding: 0 calc(12px * var(--zoom));
   }
 
   & > .bottom-bar {
     grid-area: bar;
     justify-content: flex-end;
-    gap: 24px;
-    height: 44px;
+    gap: calc(24px * var(--zoom));
+    height: calc(44px * var(--zoom));
     padding-top: 0;
   }
 }
@@ -110,7 +110,7 @@
 }
 
 /* One column, and room for the drum with the most sliders, so the tab
-   change never moves the pad. */
+   change never moves the pad. The tablet layout never zooms: plain px. */
 .play-screen[data-layout='tablet'] .drum-tabs .sound-section {
   --sound-columns: 1;
   min-height: calc(5 * 44px);
@@ -120,7 +120,7 @@
    on the right the step display, the strips in two columns, tempo, the loop
    strip, and the three sound sections side by side. */
 .play-screen[data-layout='laptop'] {
-  grid-template-columns: minmax(0, 1fr) clamp(520px, 50%, 680px);
+  grid-template-columns: minmax(0, 1fr) clamp(calc(520px * var(--zoom)), 50%, calc(680px * var(--zoom)));
   grid-template-rows: auto auto auto auto auto 1fr auto;
   grid-template-areas:
     'header header'
@@ -145,7 +145,7 @@
   grid-template-rows: repeat(3, auto);
   grid-auto-columns: minmax(0, 1fr);
   grid-auto-flow: column;
-  column-gap: 32px;
+  column-gap: calc(32px * var(--zoom));
 }
 
 .play-screen[data-layout='laptop'] > :is(.drum-tabs, .sound-sections) {

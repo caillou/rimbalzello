@@ -162,6 +162,21 @@ export const tunables = {
      */
     soundSectionsMinHeight: 700,
     /**
+     * The laptop layout in a window larger than it was designed for: every
+     * size in the layout grows by min(width / designSize.width, height /
+     * designSize.height), never below 1 and at most maxZoom, so a large
+     * screen reads from a distance. A window with the sound folded never
+     * zooms. The layout must fit unzoomed at designSize (the 1280×800 e2e
+     * test); then it fits at any zoom. When the right column grows, raise
+     * designSize.height with soundSectionsMinHeight.
+     */
+    laptopZoom: {
+      /** The design.md laptop, 1280×800. */
+      designSize: { width: 1280, height: 800 },
+      /** About 2: a 4K window does not get giant text. */
+      maxZoom: 2,
+    },
+    /**
      * The shortest the pad gets above the compact layout, and so the phone
      * breakpoint: the phone layout starts where its rows leave the pad this
      * much. With 200, the phone layout (444 px of rows) starts at 644 px;

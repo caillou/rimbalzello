@@ -31,9 +31,11 @@
   cursor: pointer;
 }
 
+/* In whole px at any zoom, so the ring is equally thick on every side and
+   in every engine. */
 :where(.play-screen) :focus-visible {
-  outline: 2px solid var(--text);
-  outline-offset: 2px;
+  outline: round(2px * var(--zoom), 1px) solid var(--text);
+  outline-offset: round(2px * var(--zoom), 1px);
 }
 
 .header {
@@ -41,13 +43,13 @@
   flex-shrink: 0;
   align-items: center;
   justify-content: space-between;
-  height: 52px;
-  padding: 0 16px;
+  height: calc(52px * var(--zoom));
+  padding: 0 calc(16px * var(--zoom));
 }
 
 .title {
   margin: 0;
-  font-size: 17px;
+  font-size: calc(17px * var(--zoom));
   white-space: nowrap;
 }
 
@@ -57,18 +59,18 @@
 }
 
 .tempo-button {
-  width: 44px;
-  height: 44px;
+  width: calc(44px * var(--zoom));
+  height: calc(44px * var(--zoom));
   color: var(--text-secondary);
-  font-size: 18px;
+  font-size: calc(18px * var(--zoom));
   /* Held to repeat: a wobbling finger must not turn into a pan that cancels it. */
   touch-action: none;
 }
 
 /* The bpm readout; on a phone it opens the tempo tab. */
 .bpm {
-  min-height: 44px;
-  font-size: 15px;
+  min-height: calc(44px * var(--zoom));
+  font-size: calc(15px * var(--zoom));
   white-space: nowrap;
 }
 
@@ -81,13 +83,13 @@
 
 /* Only a readout on the wide layouts: centred on the − and + as the button is. */
 span.bpm {
-  line-height: 44px;
+  line-height: calc(44px * var(--zoom));
 }
 
 /* Underlined where a tap opens the tempo tab. */
 button.bpm .bpm-value {
   text-decoration: underline dashed var(--text-tertiary);
-  text-underline-offset: 4px;
+  text-underline-offset: calc(4px * var(--zoom));
 }
 
 .bpm-unit {
@@ -96,16 +98,16 @@ button.bpm .bpm-value {
 
 /* Text buttons: italic, underlined, with a 44 px touch target. */
 .text-button {
-  min-width: 44px;
-  min-height: 44px;
-  font-size: 15px;
+  min-width: calc(44px * var(--zoom));
+  min-height: calc(44px * var(--zoom));
+  font-size: calc(15px * var(--zoom));
   font-style: italic;
   text-decoration: underline;
-  text-underline-offset: 4px;
+  text-underline-offset: calc(4px * var(--zoom));
 }
 
 .play-stop {
-  margin-left: 4px;
+  margin-left: calc(4px * var(--zoom));
 }
 
 /* One tap anywhere on the pad unlocks audio and starts the groove. */
@@ -119,10 +121,10 @@ button.bpm .bpm-value {
 }
 
 .tap-to-play span {
-  padding: 14px 22px;
+  padding: calc(14px * var(--zoom)) calc(22px * var(--zoom));
   background: var(--highlight);
   color: var(--on-highlight);
-  font-size: 20px;
+  font-size: calc(20px * var(--zoom));
   font-style: italic;
 }
 
@@ -131,8 +133,24 @@ button.bpm .bpm-value {
 }
 
 .tap-to-play:focus-visible span {
-  outline: 2px solid var(--text);
-  outline-offset: 4px;
+  outline: round(2px * var(--zoom), 1px) solid var(--text);
+  outline-offset: round(4px * var(--zoom), 1px);
+}
+
+/* Without round() (before Chrome 125, Firefox 118), the same outlines
+   unrounded. Not fallback declarations before the rounded ones: a value with
+   var() in it fails only once the variables are in, too late to fall back,
+   and leaves no outline at all. */
+@supports not (width: round(1px, 1px)) {
+  :where(.play-screen) :focus-visible {
+    outline: calc(2px * var(--zoom)) solid var(--text);
+    outline-offset: calc(2px * var(--zoom));
+  }
+
+  .tap-to-play:focus-visible span {
+    outline: calc(2px * var(--zoom)) solid var(--text);
+    outline-offset: calc(4px * var(--zoom));
+  }
 }
 
 .bottom-bar {
@@ -140,20 +158,20 @@ button.bpm .bpm-value {
   flex-shrink: 0;
   align-items: center;
   justify-content: space-between;
-  height: 48px;
-  padding: 4px 16px 0;
+  height: calc(48px * var(--zoom));
+  padding: calc(4px * var(--zoom)) calc(16px * var(--zoom)) 0;
 }
 
 .bar-button {
-  height: 44px;
-  font-size: 15px;
+  height: calc(44px * var(--zoom));
+  font-size: calc(15px * var(--zoom));
   font-style: italic;
 }
 
 /* `↺ return on bar` is the one solid block: yellow, black text. */
 .return-button span {
   display: block;
-  padding: 8px 10px;
+  padding: calc(8px * var(--zoom)) calc(10px * var(--zoom));
   background: var(--highlight);
   color: var(--on-highlight);
 }
@@ -173,18 +191,18 @@ button.bpm .bpm-value {
   display: flex;
   flex-shrink: 0;
   justify-content: center;
-  gap: 20px;
-  height: 44px;
+  gap: calc(20px * var(--zoom));
+  height: calc(44px * var(--zoom));
 }
 
 .footer-item {
   display: flex;
   align-items: center;
-  min-width: 44px;
-  height: 44px;
-  padding: 0 4px;
+  min-width: calc(44px * var(--zoom));
+  height: calc(44px * var(--zoom));
+  padding: 0 calc(4px * var(--zoom));
   color: var(--text-tertiary);
-  font-size: 12px;
+  font-size: calc(12px * var(--zoom));
   letter-spacing: 0.1em;
   text-decoration: none;
   text-transform: uppercase;

@@ -12,9 +12,6 @@ import { toDisplay } from './display';
 import { createPadGestures, type PadIntent, type PadPoint, type PadPointerEvent } from './pad-gestures';
 import './pad.css';
 
-/** Gap between the position and the X/Y readout, in px. */
-const READOUT_GAP = 12;
-
 /**
  * Where the map nodes sit along each axis, as a percentage of the pad: bytes
  * 0, 64, 128, 192 and 256, drawn where the position would be at that byte.
@@ -134,12 +131,13 @@ export function Pad(props: PadProps) {
     readout.textContent = `x ${toDisplay(x)} · y ${toDisplay(y)}`;
     // Below right of the position, flipped to the other side near the far
     // edges. It keeps above the step display, even when the position is under it.
+    // The gap is the readout's own height, one line of its text: 12 px, and
+    // more where the laptop layout zooms.
     const floor = height - covered;
-    const left = at.x + READOUT_GAP + readout.offsetWidth > width ? at.x - READOUT_GAP - readout.offsetWidth : at.x + READOUT_GAP;
+    const gap = readout.offsetHeight;
+    const left = at.x + gap + readout.offsetWidth > width ? at.x - gap - readout.offsetWidth : at.x + gap;
     const top =
-      at.y + READOUT_GAP + readout.offsetHeight > floor
-        ? Math.min(at.y - READOUT_GAP, floor) - readout.offsetHeight
-        : at.y + READOUT_GAP;
+      at.y + gap + readout.offsetHeight > floor ? Math.min(at.y - gap, floor) - readout.offsetHeight : at.y + gap;
     readout.style.transform = `translate(${left}px, ${top}px)`;
   }
 

@@ -2,29 +2,29 @@
    toggle reaching from the screen's left edge: 60 px wide and one line tall. */
 .step-display {
   flex-shrink: 0;
-  padding: 6px 16px 2px;
-  font-size: 15px;
-  line-height: 24px;
+  padding: calc(6px * var(--zoom)) calc(16px * var(--zoom)) calc(2px * var(--zoom));
+  font-size: calc(15px * var(--zoom));
+  line-height: calc(24px * var(--zoom));
 }
 
 .step-row {
   display: flex;
   align-items: center;
-  height: 24px;
+  height: calc(24px * var(--zoom));
 }
 
 .step-label {
-  width: 60px;
-  height: 24px;
-  margin-left: -16px;
-  padding-left: 16px;
+  width: calc(60px * var(--zoom));
+  height: calc(24px * var(--zoom));
+  margin-left: calc(-16px * var(--zoom));
+  padding-left: calc(16px * var(--zoom));
   text-align: left;
 }
 
 /* Full names (drum-names.ts): room for the longest, `snare drum` (10
    characters), and a 12 px gap before the step line. */
 .step-display[data-names='full'] .step-label {
-  width: calc(10ch + 28px);
+  width: calc(10ch + 28px * var(--zoom));
 }
 
 /* Rests are grey; hits are `x` in the drum's colour. */

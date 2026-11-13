@@ -217,8 +217,9 @@ export function App() {
   // The play screen's layout, from its size. The phone layouts fold the
   // strips and tempo into the `mix`, `fx` and `tempo` tabs, and the compact
   // layout also moves the step display into the pad. The wide layouts show
-  // the strips and tempo side by side, without tabs.
-  const { layout, soundFolded, observe } = createLayout();
+  // the strips and tempo side by side, without tabs. A large window zooms
+  // the laptop layout: the stylesheets multiply their sizes by `--zoom`.
+  const { layout, soundFolded, zoom, observe } = createLayout();
   let screen!: HTMLElement;
   onMount(() => observe(screen));
   const wide = () => isWide(layout());
@@ -352,6 +353,7 @@ export function App() {
       class="play-screen"
       data-layout={layout()}
       data-sound-folded={soundFolded() ? '' : undefined}
+      style={{ '--zoom': String(zoom()) }}
       data-keycaps={keycaps() ? (hintsShown() ? 'shown' : 'hidden') : undefined}
       inert={about.open() || layout() === 'rotate'}
       onContextMenu={noContextMenu}

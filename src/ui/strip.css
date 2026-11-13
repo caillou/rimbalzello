@@ -2,24 +2,39 @@
    the control's colour, the value right-aligned in grey. The whole row is
    the slider. */
 .strip {
+  /* The track's height and how far the thumb overhangs it, in whole px at
+     any zoom, so the track stays sharp and the thumb centred on it. */
+  --track: round(2px * var(--zoom), 1px);
+  --overhang: round(5px * var(--zoom), 1px);
+
   display: flex;
   align-items: center;
-  gap: 12px;
-  height: 44px;
+  gap: calc(12px * var(--zoom));
+  height: calc(44px * var(--zoom));
   touch-action: none;
   cursor: ew-resize;
 }
 
+/* Without round() (before Chrome 125, Firefox 118), the same sizes unrounded.
+   Not a fallback declaration before the rounded one: a value with var() in it
+   fails only once the variables are in, too late to fall back. */
+@supports not (width: round(1px, 1px)) {
+  .strip {
+    --track: calc(2px * var(--zoom));
+    --overhang: calc(5px * var(--zoom));
+  }
+}
+
 .strip-label {
   flex-shrink: 0;
-  width: 56px;
-  font-size: 15px;
+  width: calc(56px * var(--zoom));
+  font-size: calc(15px * var(--zoom));
 }
 
 .strip-track {
   position: relative;
   flex-grow: 1;
-  height: 2px;
+  height: var(--track);
   background: var(--hairline);
 }
 
@@ -33,21 +48,22 @@
   top: 0;
   left: 0;
   width: var(--value);
-  height: 2px;
+  height: var(--track);
 }
 
+/* 12 px square at zoom 1, centred on the track and on the value. */
 .strip-thumb {
-  top: -5px;
+  top: calc(-1 * var(--overhang));
   left: var(--value);
-  width: 12px;
-  height: 12px;
-  margin-left: -6px;
+  width: calc(var(--track) + 2 * var(--overhang));
+  height: calc(var(--track) + 2 * var(--overhang));
+  margin-left: calc(var(--track) / -2 - var(--overhang));
 }
 
 .strip-value {
   flex-shrink: 0;
-  width: 36px;
+  width: calc(36px * var(--zoom));
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: calc(14px * var(--zoom));
   text-align: right;
 }

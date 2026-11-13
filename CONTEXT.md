@@ -58,5 +58,5 @@ Use these words, with these meanings, in code, tests, issues and docs. Don't inv
 - **Phone layout**: one column, pad on top, the strips and tempo folded into mix / fx / tempo tabs below.
 - **Compact layout**: the smallest phone case (iPhone SE in Safari), tighter than the phone layout.
 - **Tablet layout**: about 700 px wide or more; two columns like the laptop, tabs only for sound.
-- **Laptop layout**: two columns, all sound sections side by side, no tabs.
+- **Laptop layout**: two columns, all sound sections side by side, no tabs; on a window larger than 1280×800 every size in it grows with the window, up to twice.
 - **Rotate hint**: what a landscape phone shows when it is too short for the tablet layout.

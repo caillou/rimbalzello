@@ -1,6 +1,6 @@
 import { DRUM_NAMES, DRUMS, type Drum } from './drums.ts';
 import { expect, test, type Locator, type Page } from './fixtures.ts';
-import { expectLayoutRules } from './layout-rules.ts';
+import { CONTROLS, expectLayoutRules } from './layout-rules.ts';
 
 // The wide layouts (design.md, "Tablets" and "Laptops"): the tablet layout
 // in portrait (`designs/v2-07-tablet.png`), the laptop layout on laptops and
@@ -34,9 +34,11 @@ async function start(page: Page) {
 }
 
 // 1024×768, an iPad in landscape, has the narrowest right column (520 px).
+// 1440×900 and 1920×1080 zoom the layout, by 1.125 and 1.35.
 for (const viewport of [
   { width: 1280, height: 800 },
   { width: 1440, height: 900 },
+  { width: 1920, height: 1080 },
   { width: 1106, height: 820 },
   { width: 1024, height: 768 },
 ]) {
@@ -163,6 +165,211 @@ test.describe('laptop layout at 1280×800', () => {
     expect(Math.max(...xs)).toBeCloseTo(pad.right, 0);
     expect(Math.min(...ys)).toBeCloseTo(pad.y, 0);
     expect(Math.max(...ys)).toBeCloseTo(pad.bottom, 0);
+  });
+});
+
+// A window larger than 1280×800 zooms the laptop layout: every size in it
+// grows by the smaller of width ÷ 1280 and height ÷ 800, from 1 up to 2
+// (tunables.layouts.laptopZoom). Hairlines stay 1 px.
+
+const chaos = (page: Page) => page.getByRole('slider', { name: 'chaos', exact: true });
+/** The chaos strip's label: 15 px unzoomed. */
+const chaosLabel = (page: Page) => chaos(page).getByText('chaos', { exact: true });
+
+/**
+ * What the zoom tests compare: the boxes of every control the layout
+ * rules check, the step display, the keycaps, the help box and the footer,
+ * and the font size of every text shown on the play screen.
+ */
+async function sizes(page: Page) {
+  return page.evaluate((boxed) => {
+    const shown = (element: Element) => {
+      const { width, height } = element.getBoundingClientRect();
+      return width > 0 && height > 0 && getComputedStyle(element).visibility !== 'hidden';
+    };
+    const name = (element: Element) =>
+      `${element.tagName.toLowerCase()} "${element.getAttribute('aria-label') ?? element.textContent?.replace(/\s+/g, ' ').trim()}"`;
+    const boxes = [...document.querySelectorAll(boxed)].filter(shown).map((element) => {
+      const { x, y, width, height } = element.getBoundingClientRect();
+      return { name: name(element), x, y, width, height };
+    });
+    const texts = [...document.querySelectorAll('main *')]
+      .filter(
+        (element) =>
+          shown(element) && [...element.childNodes].some((node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim()),
+      )
+      .map((element) => ({ name: name(element), fontSize: parseFloat(getComputedStyle(element).fontSize) }));
+    return { boxes, texts };
+  }, `${CONTROLS}, [aria-label="step display"], .keycap, .help-box, .footer`);
+}
+
+type Sizes = Awaited<ReturnType<typeof sizes>>;
+
+/** The play screen before the first tap, its fonts in and its pad drawn. */
+async function load(page: Page) {
+  await page.goto('./');
+  await page.evaluate(() => document.fonts.ready);
+  // The pad writes its readout on its first frame; until then `sizes` misses that text.
+  await expect(page.getByText(/^x \d+ · y \d+$/)).toBeVisible();
+}
+
+/** Every text whose font size is not `factor` times what it was: none if the layout zoomed by `factor`. */
+function textsNotZoomed(unzoomed: Sizes, zoomed: Sizes, factor: number): string[] {
+  if (zoomed.texts.length !== unzoomed.texts.length) return ['other texts shown'];
+  return unzoomed.texts.flatMap((before, i) => {
+    const after = zoomed.texts[i]!;
+    return Math.abs(after.fontSize - factor * before.fontSize) > 0.1
+      ? [`${before.name} font size ${before.fontSize} → ${after.fontSize}`]
+      : [];
+  });
+}
+
+/**
+ * Every box and font size that is not twice what it was: none if the layout
+ * doubled. A box may be 3 px off. Borders stay 1 px, so a bordered box sized
+ * by its content, `tap tempo` or the help box, comes out 2 px short of
+ * double, and what follows it 2 px off. The help box's `→` is not in the
+ * self-hosted font, and the fallback's line box need not double.
+ */
+function notDoubled(unzoomed: Sizes, zoomed: Sizes): string[] {
+  if (zoomed.boxes.length !== unzoomed.boxes.length) return ['other parts shown'];
+  const tenth = (value: number) => Math.round(value * 10) / 10;
+  const off: string[] = [];
+  unzoomed.boxes.forEach((before, i) => {
+    const after = zoomed.boxes[i]!;
+    for (const key of ['x', 'y', 'width', 'height'] as const) {
+      if (Math.abs(after[key] - 2 * before[key]) > 3) {
+        off.push(`${before.name} ${key} ${tenth(before[key])} → ${tenth(after[key])}`);
+      }
+    }
+  });
+  return [...off, ...textsNotZoomed(unzoomed, zoomed, 2)];
+}
+
+// Twice 1280×800 zooms by exactly 2, so every position, size and font size
+// doubles. A px size the stylesheets missed shows as a part that does not.
+// The help box shows on a touch screen, the keycaps without one.
+for (const touch of [false, true]) {
+  test.describe(`a laptop window resized from 1280×800 to 2560×1600${touch ? ', on a touch screen' : ''}`, () => {
+    test.use({ viewport: { width: 1280, height: 800 }, hasTouch: touch });
+
+    test(`zooms by 2: every control, ${touch ? 'the help box' : 'the footer keycap'}, gap and text twice the size`, async ({
+      page,
+    }) => {
+      await load(page);
+      if (touch) {
+        await page.getByRole('button', { name: 'help', exact: true }).click();
+        await expect(page.getByRole('note', { name: 'gestures and controls' })).toBeVisible();
+      }
+      const unzoomed = await sizes(page);
+      await page.setViewportSize({ width: 2560, height: 1600 });
+      await expect.poll(async () => notDoubled(unzoomed, await sizes(page))).toEqual([]);
+    });
+  });
+}
+
+// 1600×1200: width ÷ 1280 is 1.25, height ÷ 800 is 1.5, so the width sets the zoom.
+test.describe('a laptop window resized from 1280×800 to 1600×1200', () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test('zooms by the width, 1.25: every text 1.25 times the size, within the layout rules', async ({ page }) => {
+    await load(page);
+    const unzoomed = await sizes(page);
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await expect.poll(async () => textsNotZoomed(unzoomed, await sizes(page), 1.25)).toEqual([]);
+    await expectLayoutRules(page);
+  });
+});
+
+// 1920×1080: height ÷ 800 is 1.35, width ÷ 1280 is 1.5, so the height sets the zoom.
+test.describe('a laptop window resized from 1280×800 to 1920×1080', () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test('zooms by the height, 1.35, with the strip track, its thumb and the pad position on whole px, the thumb centred', async ({
+    page,
+  }) => {
+    await load(page);
+    const parts = async () => ({
+      track: await box(chaos(page).locator('.strip-track')),
+      thumb: await box(chaos(page).locator('.strip-thumb')),
+      position: await box(page.locator('[data-control="pad"] .pad-position')),
+    });
+    const unzoomed = { sizes: await sizes(page), parts: await parts() };
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await expect.poll(async () => textsNotZoomed(unzoomed.sizes, await sizes(page), 1.35)).toEqual([]);
+
+    // Whole px, and within half a px of 1.35 times the size at 1280×800 for
+    // each length rounded in it: the track is one, the position two halves,
+    // the thumb the track and an overhang on either side.
+    const zoomed = await parts();
+    const expectRounded = (after: number, before: number, roundings: number) => {
+      expect(Number.isInteger(after), `${after} px is whole`).toBe(true);
+      expect(Math.abs(after - 1.35 * before)).toBeLessThanOrEqual(roundings / 2);
+    };
+    expectRounded(zoomed.track.height, unzoomed.parts.track.height, 1);
+    expectRounded(zoomed.position.width, unzoomed.parts.position.width, 2);
+    expect(zoomed.position.height).toBe(zoomed.position.width);
+    expectRounded(zoomed.thumb.width, unzoomed.parts.thumb.width, 3);
+    expect(zoomed.thumb.height).toBe(zoomed.thumb.width);
+    expect(zoomed.thumb.y + zoomed.thumb.height / 2).toBeCloseTo(zoomed.track.y + zoomed.track.height / 2, 1);
+  });
+});
+
+test.describe('a laptop window at 2800×1760', () => {
+  test.use({ viewport: { width: 2800, height: 1760 } });
+
+  test('zooms by 2 at most, within the layout rules', async ({ page }) => {
+    await start(page);
+    await expect(chaosLabel(page)).toHaveCSS('font-size', '30px');
+    expect((await box(chaos(page))).height).toBe(88);
+    await expectLayoutRules(page);
+  });
+});
+
+// Short and wide: the height keeps the zoom at 1, so the right column stays
+// at its widest, 680 px, and the pad takes the extra width.
+for (const viewport of [
+  { width: 2560, height: 800 },
+  { width: 1920, height: 720 },
+]) {
+  test.describe(`a laptop window at ${viewport.width}×${viewport.height}`, () => {
+    test.use({ viewport });
+
+    test('does not zoom: the pad takes the extra width, within the layout rules', async ({ page }) => {
+      await start(page);
+      await expect(chaosLabel(page)).toHaveCSS('font-size', '15px');
+      expect((await box(chaos(page))).height).toBe(44);
+      expect((await box(page.getByRole('group', { name: 'step display' }))).width).toBe(680);
+      expect((await box(page.locator('[data-control="pad"]'))).width).toBeGreaterThan(viewport.width / 2);
+      await expectLayoutRules(page);
+    });
+  });
+}
+
+test.describe('a laptop window made larger, then smaller again', () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test('zooms with it, within the layout rules, and back', async ({ page }) => {
+    await start(page);
+    await expect(chaosLabel(page)).toHaveCSS('font-size', '15px');
+
+    // 2560×1440 zooms by 1.8: 15 px × 1.8.
+    await page.setViewportSize({ width: 2560, height: 1440 });
+    await expect(chaosLabel(page)).toHaveCSS('font-size', '27px');
+    await expectLayoutRules(page);
+
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await expect(chaosLabel(page)).toHaveCSS('font-size', '15px');
+  });
+});
+
+test.describe('a portrait monitor at 1440×2560', () => {
+  test.use({ viewport: { width: 1440, height: 2560 } });
+
+  test('keeps the tablet layout, unzoomed', async ({ page }) => {
+    await start(page);
+    await expect(page.getByRole('tablist', { name: 'sound' })).toBeVisible();
+    await expect(chaosLabel(page)).toHaveCSS('font-size', '15px');
   });
 });
 

@@ -4,9 +4,9 @@
    wide-layouts.css sets them in one row. */
 .tap-tempo {
   width: 100%;
-  height: 44px;
+  height: calc(44px * var(--zoom));
   border: 1px solid var(--hairline);
-  font-size: 15px;
+  font-size: calc(15px * var(--zoom));
   font-style: italic;
   touch-action: none;
 }

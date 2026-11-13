@@ -8,15 +8,15 @@
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  margin-left: 8px;
-  padding: 0 4px;
+  min-width: calc(18px * var(--zoom));
+  height: calc(18px * var(--zoom));
+  margin-left: calc(8px * var(--zoom));
+  padding: 0 calc(4px * var(--zoom));
   border: 1px solid var(--text-tertiary);
-  border-radius: 3px;
+  border-radius: calc(3px * var(--zoom));
   color: var(--text-secondary);
   font-family: var(--font);
-  font-size: 11px;
+  font-size: calc(11px * var(--zoom));
   font-style: normal;
   font-weight: var(--weight-normal);
   letter-spacing: 0;
@@ -32,12 +32,12 @@
 
 /* Room for the keycap between a mute label and its step line. */
 .play-screen[data-keycaps='shown'] .step-label {
-  width: 72px;
+  width: calc(72px * var(--zoom));
 }
 
 /* And after a full name: its 8 px margin and 18 px key. */
 .play-screen[data-keycaps='shown'] .step-display[data-names='full'] .step-label {
-  width: calc(10ch + 54px);
+  width: calc(10ch + 54px * var(--zoom));
 }
 
 /* A step display too narrow for a label with its keycap (44 px past the
@@ -58,7 +58,7 @@
 /* The header's − and + grow around their keycaps, apart from the bpm readout. */
 .play-screen[data-keycaps='shown'] .header .tempo-button {
   width: auto;
-  padding: 0 10px;
+  padding: 0 calc(10px * var(--zoom));
 }
 
 /* `set anchor` and `↺ return on bar` keep their keycap on their line, and
@@ -80,12 +80,12 @@
 /* The pad's corner: `nudge ←↑↓→  shift fine`. */
 .pad-keys {
   position: absolute;
-  right: 14px;
-  bottom: 12px;
+  right: calc(14px * var(--zoom));
+  bottom: calc(12px * var(--zoom));
   display: none;
   align-items: center;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: calc(13px * var(--zoom));
   white-space: pre;
   pointer-events: none;
 }

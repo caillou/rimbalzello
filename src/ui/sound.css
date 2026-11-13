@@ -4,26 +4,27 @@
 .sound-section {
   display: grid;
   grid-template-columns: repeat(var(--sound-columns, 1), minmax(0, 1fr));
-  grid-auto-rows: 44px;
+  grid-auto-rows: calc(44px * var(--zoom));
   align-content: start;
-  column-gap: 16px;
+  column-gap: calc(16px * var(--zoom));
 }
 
 .sound-section .strip {
-  gap: 10px;
+  gap: calc(10px * var(--zoom));
 }
 
 .sound-section .strip-label {
-  width: 52px;
-  font-size: 14px;
+  width: calc(52px * var(--zoom));
+  font-size: calc(14px * var(--zoom));
 }
 
 .sound-section .strip-value {
-  width: 26px;
+  width: calc(26px * var(--zoom));
 }
 
 /* Sound mode on a phone, in the strips' place: drum tabs over the active
-   drum's sliders. */
+   drum's sliders. The drum tabs only show at zoom 1 (zoomFor in layout.ts),
+   so their sizes stay plain px. */
 .drum-tabs {
   flex-shrink: 0;
   padding: 0 16px;
@@ -50,15 +51,15 @@
 .sound-sections {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  column-gap: 24px;
-  margin: 0 16px;
-  padding-top: 8px;
+  column-gap: calc(24px * var(--zoom));
+  margin: 0 calc(16px * var(--zoom));
+  padding-top: calc(8px * var(--zoom));
   border-top: 1px solid var(--hairline);
 }
 
 .sound-heading {
-  height: 28px;
+  height: calc(28px * var(--zoom));
   margin: 0;
-  font-size: 15px;
-  line-height: 28px;
+  font-size: calc(15px * var(--zoom));
+  line-height: calc(28px * var(--zoom));
 }

@@ -289,8 +289,11 @@ test.describe('keycap hints', () => {
   // 700 and 727 px: the narrowest tablet layouts, where the mute labels have
   // the least room for their keycaps beside the step line. 1024×768: the
   // narrowest laptop column, with the drums' full names before their keycaps.
+  // 2560×1440: the laptop layout zoomed by 1.8, where the keycaps grow with
+  // the labels they sit beside.
   for (const viewport of [
     { width: 1280, height: 800 },
+    { width: 2560, height: 1440 },
     { width: 1024, height: 768 },
     { width: 820, height: 1106 },
     { width: 727, height: 900 },
