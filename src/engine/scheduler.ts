@@ -1,11 +1,16 @@
 // The scheduler: the thin real-time wrapper that runs the transport from the
-// AudioContext clock. A timer wakes it often; each time it asks the
-// transport for the steps due within the lookahead and queues their hits on
-// the kit, with the sound the setup store holds at that moment. All musical
-// timing stays in the transport.
+// AudioContext clock. Timers wake it often; each time it asks the transport
+// for the steps due within the lookahead and queues their hits on the kit,
+// with the sound the setup store holds at that moment. All musical timing
+// stays in the transport.
+//
+// Two timers wake it: the page's, and one in a worker (tick-worker.ts),
+// because Safari runs a hidden page's timers only once a second. A wake hands
+// out only the steps not handed out yet, so a second timer never doubles a hit.
 
 import type { Kit } from './kit';
 import type { SetupStore } from './setup-store';
+import type { TickWorker } from './tick-worker';
 import type { LoopSteps, TimedStep, Transport } from './transport';
 import { tunables } from './tunables';
 
@@ -51,7 +56,37 @@ export interface Scheduler {
   heard(): TimedStep | undefined;
 }
 
-export function createScheduler(context: BaseAudioContext, kit: Kit, transport: Transport, store: SetupStore): Scheduler {
+/** What woke the scheduler: the page's timer, the worker's, the play tap, or a loop change. */
+export type WakeSource = 'page' | 'worker' | 'play' | 'loop';
+
+/** What one wake of the scheduler saw, for the debug readout (`?debug`). */
+export interface WakeReport {
+  source: WakeSource;
+  /** `performance.now()` once the wake has handed out its steps, in ms. */
+  wall: number;
+  /** The context clock at the wake, in seconds. */
+  now: number;
+  state: AudioContextState;
+  /** Steps handed out after their time had passed: their hits sound late. */
+  overdue: number;
+  /** How late the most overdue of them was, in seconds; 0 without any. */
+  maxLate: number;
+}
+
+export interface SchedulerOptions {
+  /** The worker timer that wakes the scheduler beside the page's (tick-worker.ts). */
+  worker?: TickWorker;
+  /** Hears every wake, for the debug readout. */
+  probe?: (report: WakeReport) => void;
+}
+
+export function createScheduler(
+  context: BaseAudioContext,
+  kit: Kit,
+  transport: Transport,
+  store: SetupStore,
+  { worker, probe }: SchedulerOptions = {},
+): Scheduler {
   let timer: ReturnType<typeof setInterval> | undefined;
 
   // Seconds from the context clock to the speakers: what sounds now was
@@ -93,12 +128,19 @@ export function createScheduler(context: BaseAudioContext, kit: Kit, transport: 
     const now = context.currentTime;
     change(now);
     kit.cancelScheduled(now);
-    tick();
+    tick('loop');
   }
 
-  function tick() {
+  function tick(source: WakeSource) {
     readLatency();
-    for (const step of transport.stepsBefore(context.currentTime + tunables.lookahead)) {
+    const now = context.currentTime;
+    let overdue = 0;
+    let maxLate = 0;
+    for (const step of transport.stepsBefore(now + tunables.lookahead)) {
+      if (step.time < now) {
+        overdue++;
+        maxLate = Math.max(maxLate, now - step.time);
+      }
       // The transport plays the anchor's pattern from this step on; the store
       // follows, so sound, drift and drive come back with it. Drive is on the
       // bus, so the kit switches it on this step, not a lookahead early. It is
@@ -111,18 +153,21 @@ export function createScheduler(context: BaseAudioContext, kit: Kit, transport: 
       const { sound } = store.setup();
       for (const hit of step.hits) kit.trigger(hit.drum, step.time, hit.velocity, sound[hit.drum], hit.accent);
     }
+    probe?.({ source, wall: performance.now(), now, state: context.state, overdue, maxLate });
   }
 
   return {
     play() {
       if (transport.playing) return;
       transport.start(context.currentTime + START_DELAY);
-      tick();
-      timer = setInterval(tick, TICK_MS);
+      tick('play');
+      timer = setInterval(() => tick('page'), TICK_MS);
+      worker?.start(TICK_MS, () => tick('worker'));
     },
     stop() {
       clearInterval(timer);
       timer = undefined;
+      worker?.stop();
       const returning = transport.returnPending;
       transport.stop();
       kit.cancelScheduled();

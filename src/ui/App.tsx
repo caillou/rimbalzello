@@ -5,12 +5,15 @@ import { createNativeKit, type Kit } from '../engine/kit';
 import { createScheduler, type Scheduler } from '../engine/scheduler';
 import { DRUMS, type Setup } from '../engine/setup';
 import { createSetupStore, type Mutes, type SetupSnapshot } from '../engine/setup-store';
+import { createTickWorker } from '../engine/tick-worker';
 import { createTransport, type LoopSteps } from '../engine/transport';
 import { decodeSetup } from '../engine/url-codec';
 import { syncUrlHash } from '../engine/url-hash';
 import { repositoryUrl } from '../repository';
 import { About } from './About';
 import { ABOUT_PATH, claimLinkClick, createAboutRoute } from './about-route';
+import { readDebugFlags } from './debug-flags';
+import type { DebugReadout } from './debug-readout';
 import { DRUM_NAMES } from './drum-names';
 import { DrumTabs } from './DrumTabs';
 import { createFirstLaunchHint, createTouchScreen, FirstLaunchHint, HelpBox } from './Help';
@@ -90,6 +93,20 @@ export function App() {
   let kit: Kit | undefined;
   let scheduler: Scheduler | undefined;
 
+  // The scheduler's worker timer starts with the page, so the play tap does
+  // not wait for it to load. `?clock=interval` leaves it out (debug-flags.ts).
+  const flags = readDebugFlags(location.search);
+  const tickWorker = flags.worker ? createTickWorker() : undefined;
+  onCleanup(() => tickWorker?.terminate());
+
+  // The debug readout loads only under `?debug`.
+  let readout: DebugReadout | undefined;
+  if (flags.debug) {
+    const clock = tickWorker ? 'worker + page' : flags.worker ? 'page (no worker)' : 'page (?clock=interval)';
+    const shown = import('./debug-readout').then((module) => (readout = module.showDebugReadout(clock)));
+    onCleanup(() => void shown.then((shownReadout) => shownReadout.remove()));
+  }
+
   let before: KitState = { ...store.setup(), mutes: store.mutes() };
   onCleanup(
     store.subscribe(() => {
@@ -133,7 +150,10 @@ export function App() {
       const { drift, drive } = store.setup();
       kit = createNativeKit(unlocked, { drift, drive });
       for (const drum of DRUMS) kit.setMuted(drum, store.mutes()[drum]);
-      scheduler = createScheduler(unlocked, kit, transport, store);
+      scheduler = createScheduler(unlocked, kit, transport, store, {
+        worker: tickWorker,
+        probe: flags.debug ? (report) => readout?.record(report) : undefined,
+      });
     }
     scheduler.play();
     session.setPlaying(true);

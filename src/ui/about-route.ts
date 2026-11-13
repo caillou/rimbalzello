@@ -1,7 +1,8 @@
 // About as an app state with its own URL (design.md, About). Opening it from
 // the play screen pushes /about/; `← back to play`, `×`, `esc` and the
 // browser's back button return to /. Both URLs carry the setup hash, so the
-// music never changes on the way in or out. Both paths sit under the site's
+// music never changes on the way in or out. They keep the query too, which
+// holds the debug flags (debug-flags.ts). Both paths sit under the site's
 // base (/rimbalzello/about/ on GitHub's project page).
 
 import { createSignal, onCleanup, type Accessor } from 'solid-js';
@@ -57,7 +58,7 @@ export function createAboutRoute(store: SetupStore): AboutRoute {
     open,
     show() {
       if (open()) return;
-      history.pushState(OPENED_FROM_PLAY, '', ABOUT_PATH + setupHash());
+      history.pushState(OPENED_FROM_PLAY, '', ABOUT_PATH + location.search + setupHash());
       setOpen(true);
     },
     close() {
@@ -69,7 +70,7 @@ export function createAboutRoute(store: SetupStore): AboutRoute {
         history.back();
       } else {
         // Visited directly: go on to the play screen, as the link does without JavaScript.
-        history.pushState(null, '', PLAY_PATH + setupHash());
+        history.pushState(null, '', PLAY_PATH + location.search + setupHash());
         setOpen(false);
       }
     },
