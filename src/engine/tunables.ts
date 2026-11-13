@@ -88,12 +88,17 @@ export const tunables = {
     fineSpeed: 0.25,
   },
 
-  /** Strips: sliders that move relative to the touch, tuned by feel on the acceptance devices. */
+  /**
+   * Strips: sliders that move relative to a touch; a mouse click on the track
+   * sets the value there. Tuned by feel on the acceptance devices.
+   */
   strips: {
     /**
-     * Finger travel in CSS px before a touch on a strip moves its value, so a
-     * tap never changes it. About 4 px: under a thumb's wobble, too little to
-     * notice when dragging.
+     * Travel in CSS px before a relative drag moves a strip's value, so a tap
+     * never changes it: a touch or pen anywhere, a mouse on the thumb, the
+     * label or the value. About 4 px: under a thumb's wobble, too little to
+     * notice when dragging. A mouse press on the track off the thumb sets
+     * the value at once, with no threshold.
      */
     dragThreshold: 4,
   },

@@ -1,3 +1,4 @@
+import { finger } from './finger.ts';
 import { expect, test, type Locator, type Page } from './fixtures.ts';
 import { expectLayoutRules } from './layout-rules.ts';
 import { readout } from './pad-readout.ts';
@@ -48,34 +49,31 @@ test('a drum label in the step display toggles its mute; strip labels do not', a
   expect(await valueOf(bdStrip)).toBe(before);
 });
 
-test('a strip moves by the drag, wherever it starts; a tap does not change it', async ({ page }) => {
+test('touched, a strip moves by the drag, wherever it starts; a tap does not change it', async ({ page }) => {
   await page.getByRole('tab', { name: 'fx', exact: true }).click();
   const chaos = strip(page, 'chaos');
   const start = await valueOf(chaos);
-  const row = (await chaos.boundingBox())!;
-  const y = row.y + row.height / 2;
-  // On the track: well right of the label, well left of the value.
-  const nearLeft = row.x + 90;
-  const nearRight = row.x + row.width - 70;
 
-  // A tap far from the thumb leaves the value alone.
-  await page.mouse.click(nearRight, y);
-  expect(await valueOf(chaos)).toBe(start);
+  // A tap on the track, far from the thumb, leaves the value alone.
+  for (const at of [0.25, 0.75]) {
+    await finger(chaos, 'pointerdown', { at });
+    await finger(chaos, 'pointerup', { at });
+    expect(await valueOf(chaos)).toBe(start);
+  }
 
-  async function drag(from: number, by: number) {
-    await page.mouse.move(from, y);
-    await page.mouse.down();
-    await page.mouse.move(from + by, y, { steps: 8 });
-    await page.mouse.up();
+  async function drag(at: number, by: number) {
+    await finger(chaos, 'pointerdown', { at });
+    for (let step = 1; step <= 8; step++) await finger(chaos, 'pointermove', { at, dx: (by * step) / 8 });
+    await finger(chaos, 'pointerup', { at, dx: by });
   }
 
   // Started far left of the thumb, a drag to the right still raises the value from where it was.
-  await drag(nearLeft, 60);
+  await drag(0.05, 60);
   const raised = await valueOf(chaos);
   expect(raised).toBeGreaterThan(start + 10);
 
   // The same drag back, started at the far right, lands where the value began.
-  await drag(nearRight, -60);
+  await drag(0.95, -60);
   expect(Math.abs((await valueOf(chaos)) - start)).toBeLessThanOrEqual(1);
 });
 

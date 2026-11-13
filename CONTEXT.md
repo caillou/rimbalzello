@@ -43,7 +43,7 @@ Use these words, with these meanings, in code, tests, issues and docs. Don't inv
 ## Screen
 
 - **Play screen**: the main screen. Never scrolls.
-- **Strips**: the horizontal slider rows (densities, chaos, drift, drive, bpm, swing, sound parameters). Strip labels do not mute.
+- **Strips**: the horizontal slider rows (densities, chaos, drift, drive, bpm, swing, sound parameters, hh accent among them). A touch or pen moves a strip relative to the drag and a tap never changes it; a mouse click on the track sets the value there. Strip labels do not mute.
 - **Loop strip**: the four-zone looper control.
 - **Bottom bar**: `sound` / `play`, `set anchor`, `↺ return on bar`.
 - **Footer**: `// help  // about  // source` under the bottom bar.

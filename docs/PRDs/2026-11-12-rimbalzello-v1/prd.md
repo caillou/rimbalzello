@@ -294,7 +294,7 @@ Out-of-range bpm or swing values clamp. A wrong length, bad base64 or an unknown
 - `touch-action: none` on the pad, strips and loop strip. No text selection, no long-press callouts or context menus.
 - The pad keeps clear of the left 16 px of the screen, so the iOS edge swipe does not navigate back mid-performance.
 - The loop strip tracks the finger across zones while held.
-- Sliders move relative to the touch; a tap on the track does not jump the value.
+- Sliders move relative to a touch or pen; a tap on the track does not jump the value. With a mouse, a click on the track sets the value there and a drag from there follows the pointer; a press on the thumb grabs it without moving the value.
 - Mutes are the step display's drum labels only, each with a hit area of at least 44 px. Strip labels do not mute. Keys `q` `w` `e` also mute.
 - Displayed values, including the X/Y readout, run 0–100. Stored values are bytes.
 

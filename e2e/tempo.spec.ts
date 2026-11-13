@@ -1,3 +1,4 @@
+import { finger } from './finger.ts';
 import { expect, test, type Locator, type Page } from './fixtures.ts';
 
 // Tempo on a phone (design.md, Tempo): the `tempo` tab after `mix` and `fx`
@@ -13,31 +14,6 @@ const button = (scope: Page | Locator, name: string) => scope.getByRole('button'
 
 async function bpm(page: Page): Promise<number> {
   return Number((await readout(page).textContent())?.match(/\d+/)?.[0]);
-}
-
-/**
- * A finger on a control, as a touch pointer: landing, moving or lifting
- * `dx` px right of the control's centre (left when negative).
- */
-function finger(control: Locator, type: 'pointerdown' | 'pointermove' | 'pointerup', dx = 0) {
-  return control.evaluate(
-    (element, { type, dx }) => {
-      const rect = element.getBoundingClientRect();
-      element.dispatchEvent(
-        new PointerEvent(type, {
-          bubbles: true,
-          cancelable: true,
-          composed: true,
-          pointerId: 41,
-          pointerType: 'touch',
-          isPrimary: true,
-          clientX: rect.left + rect.width / 2 + dx,
-          clientY: rect.top + rect.height / 2,
-        }),
-      );
-    },
-    { type, dx },
-  );
 }
 
 test('the bpm readout opens the tempo tab, with bpm, swing and tap tempo, from mix and from fx', async ({ page }) => {
@@ -110,26 +86,25 @@ for (const { name, min, max, unit } of [
     await expectShown(start);
 
     // Landing near the left end leaves the value where it was.
-    const width = (await control.boundingBox())!.width;
-    await finger(control, 'pointerdown', -width / 2 + 80);
-    await finger(control, 'pointerup', -width / 2 + 80);
+    await finger(control, 'pointerdown', { at: 0.1 });
+    await finger(control, 'pointerup', { at: 0.1 });
     await expectShown(start);
 
     // A drag to the right raises it from there; far past the end it stops at the top.
     await finger(control, 'pointerdown');
-    await finger(control, 'pointermove', 20);
-    await finger(control, 'pointermove', 60);
+    await finger(control, 'pointermove', { dx: 20 });
+    await finger(control, 'pointermove', { dx: 60 });
     const raised = await value();
     expect(raised).toBeGreaterThan(start);
     await expectShown(raised);
-    await finger(control, 'pointermove', 2000);
+    await finger(control, 'pointermove', { dx: 2000 });
     await expectShown(max);
 
     // Far to the left it stops at the bottom, and turned back it rises at once.
-    await finger(control, 'pointermove', -2000);
+    await finger(control, 'pointermove', { dx: -2000 });
     await expectShown(min);
-    await finger(control, 'pointermove', -1990);
-    await finger(control, 'pointerup', -1990);
+    await finger(control, 'pointermove', { dx: -1990 });
+    await finger(control, 'pointerup', { dx: -1990 });
     expect(await value()).toBeGreaterThan(min);
   });
 }

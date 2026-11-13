@@ -80,7 +80,7 @@ The hh tab holds two sliders, `accent` and `level`, in one row. `accent` sets ho
 
 ### Tempo
 
-The `tempo` tab, after `mix` and `fx`, holds three rows: the bpm strip, the swing strip and a boxed `tap tempo` button. The two strips work like every other strip, moving relative to the touch, but show their own values: tempo runs 60–200 bpm, default 128; swing runs 50–75 %, default 56 % (shown `56%`). The header's − and + repeat while held. Tapping the bpm readout opens the tab, from `mix`, `fx` or sound mode. `v2-04-phone-tempo.png` shows the rows under the former panel's heading, with − and + where the strips now are.
+The `tempo` tab, after `mix` and `fx`, holds three rows: the bpm strip, the swing strip and a boxed `tap tempo` button. The two strips work like every other strip but show their own values: tempo runs 60–200 bpm, default 128; swing runs 50–75 %, default 56 % (shown `56%`). The header's − and + repeat while held. Tapping the bpm readout opens the tab, from `mix`, `fx` or sound mode. `v2-04-phone-tempo.png` shows the rows under the former panel's heading, with − and + where the strips now are.
 
 The tablet and laptop show tempo as a third group beside mix and fx, always on screen: the bpm and swing strips and `tap tempo` in one 44 px row under the strips, the two strips sharing what `tap tempo` leaves. The row has half the usual gaps and labels only as wide as their text, so the tracks keep about 75–90 px on the narrowest laptop column. There the bpm readout has nothing to open and is only a readout, without the dashed underline.
 
@@ -169,7 +169,7 @@ The step display highlights the played step. While a loop is held, the playhead 
 
 - `touch-action: none` on the pad, strips and loop strip.
 - No text selection, no long-press callouts or context menus.
-- Sliders move relative to the touch; a tap on the track does not jump the value.
+- Sliders move relative to a touch or pen; a tap on the track does not jump the value. With a mouse, a click on the track sets the value there and a drag from there follows the pointer; a press on the thumb grabs it without moving the value.
 
 ## Help
 

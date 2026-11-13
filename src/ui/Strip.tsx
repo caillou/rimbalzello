@@ -1,8 +1,18 @@
-// A strip: one horizontal slider row (label, track, value). It moves relative
-// to the touch: a drag anywhere on the row moves the value by the distance
-// dragged along the track, and a tap changes nothing. Most strips hold a
-// byte and show it as 0–100; bpm and swing hold their own range and show
+// A strip: one horizontal slider row (label, track, value). Most strips hold
+// a byte and show it as 0–100; bpm and swing hold their own range and show
 // their value as it is (`128`, `56%`). A labelled ARIA slider, so keys work too.
+//
+// A touch moves it relative: a drag anywhere on the row moves the value by
+// the distance dragged along the track, and a tap changes nothing, so a
+// careless landing never loses a set value. A mouse press on the track, off
+// the thumb, sets the value there at once, and the drag that follows tracks
+// the pointer. A mouse press on the thumb grabs it, and one on the label or
+// the value drags relative, as a touch does.
+//
+// Which pointers count as a mouse is what the browser reports in
+// `pointerType`: a trackpad, an iPad pointer and a Magic Mouse report
+// `mouse` and jump; an Apple Pencil and graphics tablets report `pen` and
+// stay relative, as does a synthetic event, which reports `''`.
 
 import { createUniqueId } from 'solid-js';
 import { BYTE_RANGE, type Range } from '../engine/setup';
@@ -34,18 +44,31 @@ const KEY_STEPS: Partial<Record<string, number>> = {
   PageDown: -10,
 };
 
-interface Drag {
+/** A drag that moves the value by the distance dragged, from wherever it started. */
+interface RelativeDrag {
+  mode: 'relative';
   pointerId: number;
+  mouse: boolean;
   /** Where the value was `value`, in client px. */
   from: number;
   value: number;
-  /** False until the finger has travelled past the drag threshold. */
+  /** False until the pointer has travelled past the drag threshold. */
   moving: boolean;
 }
+
+/** A mouse drag begun on the track: the value follows the pointer along it. */
+interface AbsoluteDrag {
+  mode: 'absolute';
+  pointerId: number;
+  mouse: true;
+}
+
+type Drag = RelativeDrag | AbsoluteDrag;
 
 export function Strip(props: StripProps) {
   const labelId = createUniqueId();
   let track!: HTMLSpanElement;
+  let thumb!: HTMLSpanElement;
   let drag: Drag | undefined;
   const range = () => props.range ?? BYTE_RANGE;
   // A byte shows as 0–100; a value with a range of its own shows as it is.
@@ -53,9 +76,44 @@ export function Strip(props: StripProps) {
   const fromShown = (shown: number) => (props.range ? shown : fromDisplay(shown));
   const shown = () => toShown(props.value);
 
+  /** The value under `clientX` on the track, clamped to the range. */
+  function valueAt(clientX: number) {
+    const { min, max } = range();
+    const rect = track.getBoundingClientRect();
+    const fraction = Math.min(1, Math.max(0, (clientX - rect.left) / Math.max(1, rect.width)));
+    return min + fraction * (max - min);
+  }
+
+  /**
+   * A mouse press on the track, off the thumb. Half a thumb hangs past
+   * either end, so the track counts that far out too.
+   */
+  function onTrackOffThumb(clientX: number) {
+    const rect = track.getBoundingClientRect();
+    const knob = thumb.getBoundingClientRect();
+    const half = knob.width / 2;
+    if (clientX < rect.left - half || clientX > rect.right + half) return false;
+    return Math.abs(clientX - (knob.left + half)) > half;
+  }
+
   function down(event: PointerEvent) {
-    if (drag || (event.pointerType === 'mouse' && event.button !== 0)) return;
-    drag = { pointerId: event.pointerId, from: event.clientX, value: props.value, moving: false };
+    if (drag) return;
+    const mouse = event.pointerType === 'mouse';
+    // A ctrl-click is the context click on macOS, not a press.
+    if (mouse && (event.button !== 0 || event.ctrlKey)) return;
+    if (mouse && onTrackOffThumb(event.clientX)) {
+      drag = { mode: 'absolute', pointerId: event.pointerId, mouse };
+      props.onChange(valueAt(event.clientX));
+    } else {
+      drag = {
+        mode: 'relative',
+        pointerId: event.pointerId,
+        mouse,
+        from: event.clientX,
+        value: props.value,
+        moving: false,
+      };
+    }
     try {
       (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
     } catch {
@@ -65,6 +123,15 @@ export function Strip(props: StripProps) {
 
   function move(event: PointerEvent) {
     if (!drag || event.pointerId !== drag.pointerId) return;
+    // A mouse released where the strip never heard of it: the drag is over.
+    if (drag.mouse && event.buttons === 0) {
+      drag = undefined;
+      return;
+    }
+    if (drag.mode === 'absolute') {
+      props.onChange(valueAt(event.clientX));
+      return;
+    }
     if (!drag.moving) {
       if (Math.abs(event.clientX - drag.from) < tunables.strips.dragThreshold) return;
       // Measured from here, so passing the threshold does not jump the value.
@@ -72,7 +139,7 @@ export function Strip(props: StripProps) {
       drag.from = event.clientX;
     }
     const { min, max } = range();
-    const wanted = drag.value + ((event.clientX - drag.from) / Math.max(1, track.clientWidth)) * (max - min);
+    const wanted = drag.value + ((event.clientX - drag.from) / Math.max(1, track.getBoundingClientRect().width)) * (max - min);
     const value = Math.min(max, Math.max(min, wanted));
     // Past either end, start again from the end, so turning back moves at once.
     if (value !== wanted) {
@@ -113,6 +180,7 @@ export function Strip(props: StripProps) {
       onPointerMove={move}
       onPointerUp={end}
       on:pointercancel={end}
+      on:lostpointercapture={end}
       onKeyDown={key}
     >
       <span id={labelId} class="strip-label">
@@ -120,7 +188,7 @@ export function Strip(props: StripProps) {
       </span>
       <span ref={track} class="strip-track">
         <span class="strip-fill" />
-        <span class="strip-thumb" />
+        <span ref={thumb} class="strip-thumb" />
       </span>
       <span class="strip-value" aria-hidden="true">
         {shown()}

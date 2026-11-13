@@ -1,3 +1,4 @@
+import { finger } from './finger.ts';
 import { expect, test, type Page } from './fixtures.ts';
 import { expectLayoutRules } from './layout-rules.ts';
 import { readout } from './pad-readout.ts';
@@ -86,30 +87,10 @@ test("bd decay changes the setup's bd decay, and each drum keeps its values acro
 test("a drag held across a tab switch leaves the new drum's slider alone", async ({ page }) => {
   // One thumb drags bd decay and holds; the other taps the sd tab; the first thumb moves on.
   const decay = slider(page, 'decay');
-  const finger = (type: string, dx: number) =>
-    decay.evaluate(
-      (element, { type, dx }) => {
-        const rect = element.getBoundingClientRect();
-        element.dispatchEvent(
-          new PointerEvent(type, {
-            bubbles: true,
-            cancelable: true,
-            composed: true,
-            pointerId: 31,
-            pointerType: 'touch',
-            isPrimary: true,
-            clientX: rect.left + rect.width / 2 + dx,
-            clientY: rect.top + rect.height / 2,
-          }),
-        );
-      },
-      { type, dx },
-    );
-
   const bdBefore = await decay.getAttribute('aria-valuenow');
-  await finger('pointerdown', 0);
-  await finger('pointermove', 10);
-  await finger('pointermove', 30);
+  await finger(decay, 'pointerdown', { pointerId: 31 });
+  await finger(decay, 'pointermove', { dx: 10, pointerId: 31 });
+  await finger(decay, 'pointermove', { dx: 30, pointerId: 31 });
   await expect(decay).not.toHaveAttribute('aria-valuenow', bdBefore ?? '');
 
   await tab(page, 'sd').click();
@@ -118,8 +99,8 @@ test("a drag held across a tab switch leaves the new drum's slider alone", async
   const before = await setupBytes(page);
   await expect(decay).toHaveAttribute('aria-valuenow', shown(before[SD_DECAY]));
 
-  await finger('pointermove', 31);
-  await finger('pointerup', 31);
+  await finger(decay, 'pointermove', { dx: 31, pointerId: 31 });
+  await finger(decay, 'pointerup', { dx: 31, pointerId: 31 });
   await expect(decay).toHaveAttribute('aria-valuenow', shown(before[SD_DECAY]));
   await hashCaughtUp(page);
   expect(await setupBytes(page), 'the setup does not change').toEqual(before);

@@ -134,16 +134,27 @@ test.describe('laptop layout at 1280×800', () => {
       for (const slider of await section.getByRole('slider').all()) await expect(slider).toBeInViewport();
     }
 
-    // Dragged with the mouse, the swing strip moves from 56 %.
+    // Grabbed by its thumb with the mouse, the swing strip stays at 56 %,
+    // then moves from there by the distance dragged.
     const swing = tempo(page).getByRole('slider', { name: 'swing', exact: true });
     await expect(swing).toContainText('56%');
     const row = await box(swing);
-    const y = row.y + row.height / 2;
-    await page.mouse.move(row.x + row.width / 2, y);
+    const track = await box(swing.locator('.strip-track'));
+    const thumb = await box(swing.locator('.strip-thumb'));
+    const y = Math.round(row.y + row.height / 2);
+    // Off the thumb's centre but on it, on a whole px: a jump would show here.
+    const x = Math.round(thumb.x + thumb.width / 2) + 4;
+    await page.mouse.move(x, y);
     await page.mouse.down();
-    await page.mouse.move(row.x + row.width / 2 + 40, y, { steps: 8 });
+    await expect(swing).toHaveAttribute('aria-valuenow', '56');
+    // Past the drag threshold, then 40 px further.
+    await page.mouse.move(x + 6, y);
+    await page.mouse.move(x + 46, y, { steps: 8 });
     await page.mouse.up();
-    expect(Number(await swing.getAttribute('aria-valuenow'))).toBeGreaterThan(56);
+    const range = 75 - 50;
+    expect(Math.abs(Number(await swing.getAttribute('aria-valuenow')) - (56 + (40 / track.width) * range))).toBeLessThanOrEqual(
+      1 + range / track.width,
+    );
   });
 
   test('the outermost map node marks sit on the pad edges', async ({ page }) => {
@@ -312,6 +323,12 @@ test.describe('a laptop window resized from 1280×800 to 1920×1080', () => {
     expectRounded(zoomed.thumb.width, unzoomed.parts.thumb.width, 3);
     expect(zoomed.thumb.height).toBe(zoomed.thumb.width);
     expect(zoomed.thumb.y + zoomed.thumb.height / 2).toBeCloseTo(zoomed.track.y + zoomed.track.height / 2, 1);
+
+    // Zoomed, a mouse click a quarter of the way along the track still sets a quarter.
+    await page.mouse.click(Math.round(zoomed.track.x + 0.25 * zoomed.track.width), Math.round(zoomed.track.y));
+    expect(Math.abs(Number(await chaos(page).getAttribute('aria-valuenow')) - 25)).toBeLessThanOrEqual(
+      1 + 100 / zoomed.track.width,
+    );
   });
 });
 

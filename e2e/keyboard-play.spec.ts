@@ -208,7 +208,8 @@ test('a focused button takes space and a focused strip the arrows; after a click
   expect(await readout(page)).toEqual(position);
 
   const driven = await drive.getAttribute('aria-valuenow');
-  await drive.click();
+  // On its label: a click on the track would set the value there.
+  await drive.getByText('drive', { exact: true }).click();
   await page.keyboard.press('ArrowRight');
   await expect.poll(async () => (await readout(page)).x).toBeGreaterThan(position.x);
   await expect(chaos).toHaveAttribute('aria-valuenow', String(value + 1));
