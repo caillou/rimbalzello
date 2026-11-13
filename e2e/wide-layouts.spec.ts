@@ -15,9 +15,10 @@ const tempo = (page: Page) => page.getByRole('group', { name: 'tempo' });
 
 /** Tempo's controls show, each whole, without opening anything. */
 async function expectTempoShown(page: Page) {
-  for (const name of ['bpm down', 'bpm up', 'swing down', 'swing up', 'tap tempo']) {
-    await expect(tempo(page).getByRole('button', { name, exact: true })).toBeInViewport({ ratio: 1 });
+  for (const name of ['bpm', 'swing']) {
+    await expect(tempo(page).getByRole('slider', { name, exact: true })).toBeInViewport({ ratio: 1 });
   }
+  await expect(tempo(page).getByRole('button', { name: 'tap tempo', exact: true })).toBeInViewport({ ratio: 1 });
 }
 
 async function box(locator: Locator) {
@@ -126,10 +127,16 @@ test.describe('laptop layout at 1280×800', () => {
       for (const slider of await section.getByRole('slider').all()) await expect(slider).toBeInViewport();
     }
 
-    const swing = page.getByText(/^\d+%$/);
-    await expect(swing).toHaveText('56%');
-    await page.getByRole('button', { name: 'swing up', exact: true }).click();
-    await expect(swing).toHaveText('57%');
+    // Dragged with the mouse, the swing strip moves from 56 %.
+    const swing = tempo(page).getByRole('slider', { name: 'swing', exact: true });
+    await expect(swing).toContainText('56%');
+    const row = await box(swing);
+    const y = row.y + row.height / 2;
+    await page.mouse.move(row.x + row.width / 2, y);
+    await page.mouse.down();
+    await page.mouse.move(row.x + row.width / 2 + 40, y, { steps: 8 });
+    await page.mouse.up();
+    expect(Number(await swing.getAttribute('aria-valuenow'))).toBeGreaterThan(56);
   });
 
   test('the outermost map node marks sit on the pad edges', async ({ page }) => {

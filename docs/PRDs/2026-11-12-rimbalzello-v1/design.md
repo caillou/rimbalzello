@@ -15,7 +15,7 @@ The review round in `reviews/` changed the step resolution, the layouts, mutes, 
 | `designs/v2-01-phone.png` | Phone in Safari (393×659): mix / fx tabs, mutes on step labels, X/Y readout | current, but without the `tempo` tab after `fx` |
 | `designs/v2-02-phone-compact.png` | Compact (SE in Safari, 375×553): slim header, step display inside the pad | current |
 | `designs/v2-03-phone-sound.png` | Sound mode on a phone: drum tabs, sliders in two columns | current |
-| `designs/v2-04-phone-tempo.png` | The former tempo panel: bpm, swing 56 %, tap tempo | outdated: the `tempo` tab holds the same three rows, without the `## tempo` heading and `← play` |
+| `designs/v2-04-phone-tempo.png` | The former tempo panel: bpm, swing 56 %, tap tempo | outdated: the `tempo` tab holds the same three rows with bpm and swing as strips, not − and +, and without the `## tempo` heading and `← play` |
 | `designs/v2-05-phone-tap-to-play.png` | First launch: `▶ tap to play` over the dimmed pad | current |
 | `designs/v2-06-phone-help.png` | Help open: two-finger undo, tap labels to mute | current |
 | `designs/v2-07-tablet.png` | Tablet portrait (820×1106): pad on top, two columns below | current |
@@ -29,10 +29,10 @@ Borrowed from caillou.ch, so the app reads as part of the site.
 - **Colours** (unchanged for v1):
   - background `#202322`, pad `#1a1c1b`, hairlines and empty tracks `#3a3d3c`
   - text `#ffffff`, secondary `#ababab`, tertiary and markers `#757575`
-  - bd `#ffd866` (yellow), sd `#ff61ef` (pink), hh `#bef289` (green), drive `#fc618d` (red), chaos, drift and swing white
+  - bd `#ffd866` (yellow), sd `#ff61ef` (pink), hh `#bef289` (green), drive `#fc618d` (red), chaos, drift, bpm and swing white
 - **Text**: lowercase labels. `#` before the app title and `##` before section headings, in grey. Italic for text buttons and navigation.
 - **Current step**: yellow background, black text, like the blog's text selection.
-- **Sliders**: 2 px track; filled part and square thumb in the control's colour; value right-aligned in grey, shown 0–100.
+- **Sliders**: 2 px track; filled part and square thumb in the control's colour; value right-aligned in grey, shown 0–100, except bpm and swing, which show their own values (`128`, `56%`).
 - **Loop strip**: four boxed zones (`1/4 1/8 1/16 1/32`) with hairline borders; the held zone is white with black text.
 - **Buttons**: text buttons, italic. `set anchor` underlined. `↺ return on bar` is the only solid block (yellow, black text) and pulses while a return is pending.
 - **Footer**: `// help   // about   // source` in small grey uppercase with wide letter spacing (the blog's footer style); the active item turns white.
@@ -77,9 +77,9 @@ Tapping `→ sound` swaps the `mix` / `fx` / `tempo` tabs for drum tabs: `bd` `s
 
 ### Tempo
 
-The `tempo` tab, after `mix` and `fx`, holds three rows: bpm with − and +, swing with − and +, and a boxed `tap tempo` button. − and + repeat while held, here and in the header. Tempo runs 60–200 bpm, default 128. Swing runs 50–75 %, default 56 %. Tapping the bpm readout opens the tab, from `mix`, `fx` or sound mode. `v2-04-phone-tempo.png` shows the rows under the former panel's heading.
+The `tempo` tab, after `mix` and `fx`, holds three rows: the bpm strip, the swing strip and a boxed `tap tempo` button. The two strips work like every other strip, moving relative to the touch, but show their own values: tempo runs 60–200 bpm, default 128; swing runs 50–75 %, default 56 % (shown `56%`). The header's − and + repeat while held. Tapping the bpm readout opens the tab, from `mix`, `fx` or sound mode. `v2-04-phone-tempo.png` shows the rows under the former panel's heading, with − and + where the strips now are.
 
-The tablet and laptop show tempo as a third group beside mix and fx, always on screen: bpm, swing and `tap tempo` in one row under the strips, `tap tempo` taking the rest of the row. There the bpm readout has nothing to open and is only a readout, without the dashed underline.
+The tablet and laptop show tempo as a third group beside mix and fx, always on screen: the bpm and swing strips and `tap tempo` in one 44 px row under the strips, the two strips sharing what `tap tempo` leaves. The row has half the usual gaps and labels only as wide as their text, so the tracks keep about 75–90 px on the narrowest laptop column. There the bpm readout has nothing to open and is only a readout, without the dashed underline.
 
 ### Compact phones
 

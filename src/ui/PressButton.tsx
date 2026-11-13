@@ -1,7 +1,7 @@
 // A button that acts when pressed, not when released: a pointer acts on
 // touch-down, so a tap lands at once, and keys (Enter, Space) or assistive
 // technology act through the click they send. With `repeat` it acts again
-// and again while held, after a delay (− and + for tempo and swing).
+// and again while held, after a delay (the header's − and + for tempo).
 
 import { onCleanup, type JSX } from 'solid-js';
 import { tunables } from '../engine/tunables';

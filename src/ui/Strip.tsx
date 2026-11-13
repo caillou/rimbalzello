@@ -1,10 +1,11 @@
 // A strip: one horizontal slider row (label, track, value). It moves relative
 // to the touch: a drag anywhere on the row moves the value by the distance
-// dragged along the track, and a tap changes nothing. It shows 0–100 and
-// hands out bytes. A labelled ARIA slider, so keys work too.
+// dragged along the track, and a tap changes nothing. Most strips hold a
+// byte and show it as 0–100; bpm and swing hold their own range and show
+// their value as it is (`128`, `56%`). A labelled ARIA slider, so keys work too.
 
 import { createUniqueId } from 'solid-js';
-import { BYTE_RANGE } from '../engine/setup';
+import { BYTE_RANGE, type Range } from '../engine/setup';
 import { tunables } from '../engine/tunables';
 import { fromDisplay, toDisplay } from './display';
 import './strip.css';
@@ -13,13 +14,17 @@ export interface StripProps {
   label: string;
   /** The control's colour, such as `var(--bd)`. */
   colour: string;
-  /** The stored value, a byte. */
+  /** The stored value: a byte, unless `range` says otherwise. */
   value: number;
-  /** A new value in bytes, not rounded; the store rounds and clamps it. */
+  /** The value's range when it is not a byte; such a value shows as it is, not as 0–100. */
+  range?: Range;
+  /** Shown after the value, such as `%`. */
+  unit?: string;
+  /** A new value, not rounded; the store rounds and clamps it. */
   onChange(value: number): void;
 }
 
-/** Display steps per key: arrows by 1, page keys by 10. */
+/** Shown steps per key: arrows by 1, page keys by 10. */
 const KEY_STEPS: Partial<Record<string, number>> = {
   ArrowRight: 1,
   ArrowUp: 1,
@@ -42,7 +47,11 @@ export function Strip(props: StripProps) {
   const labelId = createUniqueId();
   let track!: HTMLSpanElement;
   let drag: Drag | undefined;
-  const shown = () => toDisplay(props.value);
+  const range = () => props.range ?? BYTE_RANGE;
+  // A byte shows as 0–100; a value with a range of its own shows as it is.
+  const toShown = (value: number) => (props.range ? value : toDisplay(value));
+  const fromShown = (shown: number) => (props.range ? shown : fromDisplay(shown));
+  const shown = () => toShown(props.value);
 
   function down(event: PointerEvent) {
     if (drag || (event.pointerType === 'mouse' && event.button !== 0)) return;
@@ -62,9 +71,9 @@ export function Strip(props: StripProps) {
       drag.moving = true;
       drag.from = event.clientX;
     }
-    const { max } = BYTE_RANGE;
-    const wanted = drag.value + ((event.clientX - drag.from) / Math.max(1, track.clientWidth)) * max;
-    const value = Math.min(max, Math.max(0, wanted));
+    const { min, max } = range();
+    const wanted = drag.value + ((event.clientX - drag.from) / Math.max(1, track.clientWidth)) * (max - min);
+    const value = Math.min(max, Math.max(min, wanted));
     // Past either end, start again from the end, so turning back moves at once.
     if (value !== wanted) {
       drag.value = value;
@@ -78,11 +87,12 @@ export function Strip(props: StripProps) {
   }
 
   function key(event: KeyboardEvent) {
+    const [min, max] = [toShown(range().min), toShown(range().max)];
     const step = KEY_STEPS[event.key];
-    const next = event.key === 'Home' ? 0 : event.key === 'End' ? 100 : step === undefined ? undefined : shown() + step;
+    const next = event.key === 'Home' ? min : event.key === 'End' ? max : step === undefined ? undefined : shown() + step;
     if (next === undefined) return;
     event.preventDefault();
-    props.onChange(fromDisplay(Math.min(100, Math.max(0, next))));
+    props.onChange(fromShown(Math.min(max, Math.max(min, next))));
   }
 
   return (
@@ -91,10 +101,14 @@ export function Strip(props: StripProps) {
       role="slider"
       tabindex="0"
       aria-labelledby={labelId}
-      aria-valuemin="0"
-      aria-valuemax="100"
+      aria-valuemin={toShown(range().min)}
+      aria-valuemax={toShown(range().max)}
       aria-valuenow={shown()}
-      style={{ '--colour': props.colour, '--value': `${(props.value / BYTE_RANGE.max) * 100}%` }}
+      aria-valuetext={props.unit ? `${shown()}${props.unit}` : undefined}
+      style={{
+        '--colour': props.colour,
+        '--value': `${((props.value - range().min) / (range().max - range().min)) * 100}%`,
+      }}
       onPointerDown={down}
       onPointerMove={move}
       onPointerUp={end}
@@ -110,6 +124,7 @@ export function Strip(props: StripProps) {
       </span>
       <span class="strip-value" aria-hidden="true">
         {shown()}
+        {props.unit}
       </span>
     </div>
   );

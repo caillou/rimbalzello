@@ -29,26 +29,28 @@
     padding: 0 16px;
   }
 
-  /* Tempo, the third group beside mix and fx: bpm, swing and tap tempo in
-     one row under the strips, tap tempo taking what is left of it. */
+  /* Tempo, the third group beside mix and fx: the bpm and swing strips and
+     tap tempo in one row under the strips, the two strips sharing what tap
+     tempo leaves. Half the usual gaps and labels as wide as their text, so
+     the tracks keep about 75–90 px on the narrowest laptop column (520 px). */
   & > .tempo-controls {
     display: flex;
     grid-area: tempo;
     align-items: center;
-    gap: 24px;
+    gap: 12px;
     padding: 0 16px;
 
-    & .tempo-label {
+    & .strip {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    & .strip-label {
       width: auto;
     }
 
-    & .tempo-value {
-      flex-grow: 0;
-      min-width: 4ch;
-    }
-
     & .tap-tempo {
-      flex: 1 1 auto;
+      flex: none;
       width: auto;
       padding: 0 12px;
     }

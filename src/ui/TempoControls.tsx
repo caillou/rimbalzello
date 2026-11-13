@@ -1,13 +1,14 @@
-// Tempo: bpm and swing, each with − and +, which repeat while held, and the
-// boxed `tap tempo` button, which sets the tempo from the beat the player
-// taps. The store rounds and clamps both into their ranges (60–200 bpm,
-// 50–75 %). Phones show them as the `tempo` tab's three rows, after `mix` and
-// `fx`; the tablet and laptop layouts set them in one row under the strips.
+// Tempo: the bpm and swing strips, which show their own values (60–200 bpm,
+// 50–75 %), and the boxed `tap tempo` button, which sets the tempo from the
+// beat the player taps. The store rounds and clamps both into their ranges.
+// Phones show them as the `tempo` tab's three rows, after `mix` and `fx`;
+// the tablet and laptop layouts set them in one row under the strips.
 
 import type { Accessor } from 'solid-js';
-import type { Setup } from '../engine/setup';
+import { BPM_RANGE, SWING_RANGE, type Setup } from '../engine/setup';
 import type { SetupSnapshot } from '../engine/setup-store';
 import { PressButton } from './PressButton';
+import { Strip } from './Strip';
 import { createTapTempo } from './tap-tempo';
 import './tempo-controls.css';
 
@@ -20,9 +21,6 @@ export interface TempoControlsProps {
 export function TempoControls(props: TempoControlsProps) {
   const tapTempo = createTapTempo();
 
-  const changeTempo = (by: number) => props.onChange((setup) => void (setup.bpm += by));
-  const changeSwing = (by: number) => props.onChange((setup) => void (setup.swing += by));
-
   // Each tap counts from the moment of the touch.
   function tap(time: number) {
     const bpm = tapTempo.tap(time);
@@ -31,26 +29,21 @@ export function TempoControls(props: TempoControlsProps) {
 
   return (
     <div class="tempo-controls" role="group" aria-label="tempo">
-      <div class="tempo-row">
-        <span class="tempo-label">bpm</span>
-        <PressButton class="tempo-button" label="bpm down" repeat onPress={() => changeTempo(-1)}>
-          −
-        </PressButton>
-        <span class="tempo-value">{props.setup().bpm}</span>
-        <PressButton class="tempo-button" label="bpm up" repeat onPress={() => changeTempo(1)}>
-          +
-        </PressButton>
-      </div>
-      <div class="tempo-row">
-        <span class="tempo-label">swing</span>
-        <PressButton class="tempo-button" label="swing down" repeat onPress={() => changeSwing(-1)}>
-          −
-        </PressButton>
-        <span class="tempo-value">{props.setup().swing}%</span>
-        <PressButton class="tempo-button" label="swing up" repeat onPress={() => changeSwing(1)}>
-          +
-        </PressButton>
-      </div>
+      <Strip
+        label="bpm"
+        colour="var(--bpm)"
+        range={BPM_RANGE}
+        value={props.setup().bpm}
+        onChange={(bpm) => props.onChange((setup) => void (setup.bpm = bpm))}
+      />
+      <Strip
+        label="swing"
+        colour="var(--swing)"
+        range={SWING_RANGE}
+        unit="%"
+        value={props.setup().swing}
+        onChange={(swing) => props.onChange((setup) => void (setup.swing = swing))}
+      />
       <PressButton class="tap-tempo" onPress={tap}>
         tap tempo
       </PressButton>

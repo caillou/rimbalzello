@@ -1,26 +1,7 @@
-/* Tempo: a bpm row and a swing row (label, −, value, +) and the boxed
-   `tap tempo` button. On phones they are the `tempo` tab's three 44 px rows,
-   as tall as the three strips of `mix` and `fx`, so the pad keeps its size
-   when the tab changes; wide-layouts.css sets them in one row. The − and +
-   share the header's `.tempo-button` look. */
-.tempo-row {
-  display: flex;
-  align-items: center;
-  height: 44px;
-}
-
-.tempo-label {
-  flex-shrink: 0;
-  width: 56px;
-  font-size: 15px;
-}
-
-.tempo-value {
-  flex-grow: 1;
-  font-size: 15px;
-  text-align: center;
-}
-
+/* Tempo: the bpm and swing strips and the boxed `tap tempo` button. On
+   phones they are the `tempo` tab's three 44 px rows, as tall as the three
+   strips of `mix` and `fx`, so the pad keeps its size when the tab changes;
+   wide-layouts.css sets them in one row. */
 .tap-tempo {
   width: 100%;
   height: 44px;

@@ -96,7 +96,7 @@ export const tunables = {
     nudgeRunGap: 500,
   },
 
-  /** − and + for tempo and swing repeat while held, in the header and in tempo. Tuned by feel. */
+  /** The header's − and + for tempo repeat while held. Tuned by feel. */
   repeat: {
     /** Milliseconds from the press to the first repeat. About 400 ms, so a tap never repeats. */
     delay: 400,
