@@ -3,13 +3,13 @@
 // browser's back button return to /. Both URLs carry the setup hash, so the
 // music never changes on the way in or out. They keep the query too, which
 // holds the debug flags (debug-flags.ts). Both paths sit under the site's
-// base (/rimbalzello/about/ on GitHub's project page).
+// base (vite.config.ts).
 
 import { createSignal, onCleanup, type Accessor } from 'solid-js';
 import type { SetupStore } from '../engine/setup-store';
 import { encodeSetup } from '../engine/url-codec';
 
-/** The play screen's path: the site's base, '/' or '/rimbalzello/' (vite.config.ts). */
+/** The play screen's path: the site's base, '/' in production (vite.config.ts). */
 export const PLAY_PATH = import.meta.env.BASE_URL;
 export const ABOUT_PATH = `${PLAY_PATH}about/`;
 

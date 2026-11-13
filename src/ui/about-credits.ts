@@ -8,7 +8,7 @@ export interface CreditsBuild {
   /** The commit the site was built from. */
   commitHash: string;
   repositoryUrl: string;
-  /** The path the site is served under, with both slashes: '/' or '/rimbalzello/'. */
+  /** The path the site is served under, with both slashes: '/' in production. */
   basePath: string;
 }
 

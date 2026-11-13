@@ -1,6 +1,6 @@
 # rimbalzello
 
-A drum machine for the browser that you play by moving through a map of drum patterns. Phone first, a live instrument, a static site at [caillou.github.io/rimbalzello](https://caillou.github.io/rimbalzello/), moving to rimbalzello.caillou.ch.
+A drum machine for the browser that you play by moving through a map of drum patterns. Phone first, a live instrument, a static site at [rimbalzello.caillou.ch](https://rimbalzello.caillou.ch/).
 
 ## Development
 
@@ -25,15 +25,21 @@ pnpm install
 
 Every push runs the checks in GitHub Actions. On `main`, a green run deploys `dist/` to GitHub Pages; a red run does not deploy.
 
-`BASE_PATH` sets the path the site is served under, `/` by default. CI builds and tests with `/rimbalzello/`, for GitHub's project page at [caillou.github.io/rimbalzello](https://caillou.github.io/rimbalzello/); run `BASE_PATH=/rimbalzello/ pnpm test:e2e` to check that build locally.
+`BASE_PATH` sets the path the site is served under. It is `/` by default and in CI, which is how [rimbalzello.caillou.ch](https://rimbalzello.caillou.ch/) serves it. To check a build served under a path, run for example `BASE_PATH=/rimbalzello/ pnpm test:e2e`. It leaves `dist/` built for that path, so a later bare `pnpm preview` serves a page whose assets 404 until the next build.
 
 ## Setup outside the repo
 
-These steps are manual and done once:
+These steps are manual and done once, in this order:
 
 1. Create the public GitHub repo and push `main`.
-2. In the repo settings, under Pages, set the source to "GitHub Actions".
-3. The custom domain `rimbalzello.caillou.ch` is not live yet. The domain, its DNS record and `public/CNAME` come back in the order set out in issues [#1](https://github.com/caillou/rimbalzello/issues/1) and [#9](https://github.com/caillou/rimbalzello/issues/9), and `BASE_PATH` in `.github/workflows/ci.yml` goes back to `/`.
+2. Verify `caillou.ch` for the account under GitHub Settings, Pages, Verified domains. It adds a TXT record. Keep it.
+3. Enable Pages with GitHub Actions as the source: `gh api -X POST repos/caillou/rimbalzello/pages -f build_type=workflow`.
+4. Set the custom domain: `gh api -X PUT repos/caillou/rimbalzello/pages -f cname=rimbalzello.caillou.ch -f build_type=workflow`.
+5. Only then add the DNS record, a CNAME from `rimbalzello` to `caillou.github.io`.
+6. Run `gh variable set DEPLOY_PAGES -b true -R caillou/rimbalzello` so the deploy job runs, then push or re-run CI.
+7. Once GitHub issues the certificate, turn on Enforce HTTPS with `gh api -X PUT repos/caillou/rimbalzello/pages -F https_enforced=true`.
+
+The order guards against a subdomain takeover. The verified domain keeps other accounts from claiming `rimbalzello.caillou.ch`, and the DNS record only goes in once this repo holds the name. If Pages is ever turned off, remove the DNS record. The domain lives only in the Pages settings. There is no `CNAME` file, because GitHub ignores it when an Actions workflow publishes the site.
 
 ## Licence
 

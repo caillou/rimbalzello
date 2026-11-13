@@ -30,9 +30,10 @@ function prerenderCredits(commit: string, basePath: string): Plugin {
 }
 
 /**
- * The path the site is served under: '/' by default, '/rimbalzello/' for
- * GitHub's project page (BASE_PATH in ci.yml). The app's own links and the
- * HTML pages read it as import.meta.env.BASE_URL and %BASE_URL%.
+ * The path the site is served under: '/' by default, as rimbalzello.caillou.ch
+ * serves it. Set BASE_PATH (e.g. '/rimbalzello/') to build for a path instead.
+ * The app's own links and the HTML pages read it as import.meta.env.BASE_URL
+ * and %BASE_URL%.
  */
 const base = process.env.BASE_PATH || '/';
 if (!base.startsWith('/') || !base.endsWith('/')) {
