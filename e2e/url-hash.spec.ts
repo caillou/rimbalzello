@@ -1,8 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 
 // The setup in the URL hash: a link opens with its groove, the hash follows
-// every change without adding history, and the bare address brings back the
-// last setup on the device.
+// every change without adding history, and the bare address opens with the
+// default setup.
 
 // The laptop layout, so all six strips show.
 test.use({ viewport: { width: 1280, height: 800 } });
@@ -64,17 +64,14 @@ test('a change reaches the hash within about a second, without adding history', 
   expect(await page.evaluate(() => history.length)).toBe(entries);
 });
 
-test('the bare address brings back the last setup; a link wins over it', async ({ page }) => {
+test('the bare address after a changed session opens with the default setup', async ({ page }) => {
   await page.goto('./');
+  const defaults = await shown(page);
   await strip(page, 'chaos').press('End');
-
-  await page.goto('./');
   await expect(strip(page, 'chaos')).toHaveAttribute('aria-valuenow', '100');
 
-  // From another page, so the link loads the app instead of changing the hash.
-  await page.goto('about:blank');
-  await page.goto(KNOWN);
-  await expect.poll(() => shown(page)).toEqual(KNOWN_SHOWN);
+  await page.goto('./');
+  await expect.poll(() => shown(page)).toEqual(defaults);
 });
 
 test('a malformed hash loads the default setup without errors', async ({ page }) => {
@@ -84,10 +81,8 @@ test('a malformed hash loads the default setup without errors', async ({ page })
   });
   page.on('pageerror', (error) => problems.push(`page: ${error.message}`));
 
-  // A first visit shows the default setup; the device then remembers another one.
   await page.goto('./');
   const defaults = await shown(page);
-  await strip(page, 'chaos').press('End');
 
   await page.goto('about:blank');
   await page.goto('./#v1.!!!');

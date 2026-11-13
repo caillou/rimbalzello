@@ -23,7 +23,7 @@ function playOnFakeClock(context: FakeContext) {
   vi.useFakeTimers();
   onTestFinished(() => void vi.useRealTimers());
   const kit = { trigger() {}, cancelScheduled() {}, setMuted() {}, setDrift() {}, setDrive() {} };
-  const store = createSetupStore({ storage: { getItem: () => null, setItem() {} } });
+  const store = createSetupStore();
   const transport = createTransport({ setup: store.setup(), seed: 1 });
   const scheduler = createScheduler(context as unknown as BaseAudioContext, kit, transport, store);
   scheduler.play();

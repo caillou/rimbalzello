@@ -22,7 +22,7 @@ Use these words, with these meanings, in code, tests, issues and docs. Don't inv
 
 ## State
 
-- **Setup**: everything that defines the music: position, chaos, densities, sound, drift, drive, swing, tempo. The URL hash encodes the setup; the device remembers the last one, and a URL hash always wins.
+- **Setup**: everything that defines the music: position, chaos, densities, sound, drift, drive, swing, tempo. The URL hash encodes the setup; the bare address, or a broken hash, opens with the default setup. The device does not remember it.
 - **Mutes**: which drums are silenced. Performance state, not part of the setup.
 - **Anchor**: a stored snapshot of the setup minus tempo. **Set anchor** stores it; **return** restores it when the playhead next crosses step 0. On load the anchor is the loaded setup; it is not kept across reloads. Mutes and tempo are never touched by return.
 - **Pad undo**: one-step flip/flop of the last pad move (two-finger tap, or `z`). Pad only.

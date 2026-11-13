@@ -1,17 +1,9 @@
-import { describe, expect, onTestFinished, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { defaultSetup, type Setup } from './setup';
-import { createSetupStore, rememberedSetup, type SetupStorage, type SetupStore } from './setup-store';
-
-function memoryStorage(): SetupStorage {
-  const items = new Map<string, string>();
-  return {
-    getItem: (key) => items.get(key) ?? null,
-    setItem: (key, value) => void items.set(key, value),
-  };
-}
+import { createSetupStore, type SetupStore } from './setup-store';
 
 function store(setup: Setup = defaultSetup()): SetupStore {
-  return createSetupStore({ setup, storage: memoryStorage() });
+  return createSetupStore({ setup });
 }
 
 /** A setup with every byte field at `byte`, so it differs from another one in every field. */
@@ -128,44 +120,4 @@ test('tempo and swing stay in range, so what plays is what the link holds', () =
   expect([s.setup().bpm, s.setup().swing]).toEqual([200, 75]);
   s.change((setup) => void Object.assign(setup, { bpm: 0, swing: 10 }));
   expect([s.setup().bpm, s.setup().swing]).toEqual([60, 50]);
-});
-
-describe('device memory', () => {
-  test('the setup round-trips through storage', () => {
-    const storage = memoryStorage();
-    expect(rememberedSetup(storage)).toBeUndefined();
-
-    const s = createSetupStore({ setup: START, storage });
-    expect(rememberedSetup(storage)).toEqual(START);
-    s.change(becomes(NOODLED));
-    s.padBegin();
-    s.padTo(12, 34);
-    s.padCommit();
-    expect(rememberedSetup(storage)).toEqual(s.setup());
-  });
-
-  function stubLocalStorage(get: () => unknown): void {
-    const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
-    Object.defineProperty(globalThis, 'localStorage', { configurable: true, get });
-    onTestFinished(() => {
-      if (original) Object.defineProperty(globalThis, 'localStorage', original);
-      else delete (globalThis as { localStorage?: unknown }).localStorage;
-    });
-  }
-
-  const fails = () => {
-    throw new DOMException('storage is blocked', 'SecurityError');
-  };
-
-  test.each([
-    ['missing', () => undefined],
-    ['throwing on access', fails],
-    ['throwing on use', () => ({ getItem: fails, setItem: fails })],
-  ])('a %s localStorage does not stop the store', (_, get) => {
-    stubLocalStorage(get);
-    expect(rememberedSetup()).toBeUndefined();
-    const s = createSetupStore({ setup: START });
-    s.change(becomes(NOODLED));
-    expect(s.setup()).toEqual(NOODLED);
-  });
 });

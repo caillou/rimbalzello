@@ -1,6 +1,6 @@
 // Setup store: the state the UI and the transport subscribe to. It holds the
-// setup, the mutes, the anchor and the pad's undo slot, and remembers the
-// setup on the device. No UI and no framework: subscribers are callbacks.
+// setup, the mutes, the anchor and the pad's undo slot. No UI and no
+// framework: subscribers are callbacks.
 //
 // Everything the store hands out is frozen. Change state through its methods,
 // which notify the subscribers.
@@ -14,7 +14,6 @@ import {
   type Range,
   type Setup,
 } from './setup';
-import { decodeSetup, encodeSetup } from './url-codec';
 
 type DeepReadonly<T> = { readonly [K in keyof T]: DeepReadonly<T[K]> };
 
@@ -24,17 +23,12 @@ export type SetupSnapshot = DeepReadonly<Setup>;
 /** Which drums are silenced. Performance state, not part of the setup. */
 export type Mutes = Readonly<Record<Drum, boolean>>;
 
-/** Where the setup is remembered on the device. localStorage fits. */
-export type SetupStorage = Pick<Storage, 'getItem' | 'setItem'>;
-
 export interface SetupStoreOptions {
   /**
-   * The setup the session starts with, from the URL hash or device memory.
-   * It is the anchor until the player sets one. Defaults to the default setup.
+   * The setup the session starts with, from the URL hash. It is the anchor
+   * until the player sets one. Defaults to the default setup.
    */
   setup?: Setup;
-  /** Where the setup is remembered. Defaults to localStorage. */
-  storage?: SetupStorage;
 }
 
 export interface SetupStore {
@@ -83,27 +77,7 @@ interface Position {
   readonly y: number;
 }
 
-const STORAGE_KEY = 'rimbalzello.setup';
-
-/**
- * The setup this device remembers from the last visit, or undefined when
- * there is none or storage is unavailable. Whether it or the URL hash wins
- * is the caller's choice.
- */
-export function rememberedSetup(storage = deviceStorage()): Setup | undefined {
-  try {
-    // Stored in the URL hash format, so old entries decode like old links.
-    const hash = storage?.getItem(STORAGE_KEY);
-    return hash == null ? undefined : decodeSetup(hash);
-  } catch {
-    return undefined;
-  }
-}
-
-export function createSetupStore({
-  setup: initial = defaultSetup(),
-  storage = deviceStorage(),
-}: SetupStoreOptions = {}): SetupStore {
+export function createSetupStore({ setup: initial = defaultSetup() }: SetupStoreOptions = {}): SetupStore {
   let setup = frozen(inRange(initial));
   let mutes: Mutes = frozen({ bd: false, sd: false, hh: false });
   /** The setup at the last set anchor; its tempo is never restored. */
@@ -114,23 +88,12 @@ export function createSetupStore({
   let undoSlot: Position | null = null;
   const listeners = new Set<() => void>();
 
-  remember();
-
   function notify(): void {
     for (const listener of listeners) listener();
   }
 
-  function remember(): void {
-    try {
-      storage?.setItem(STORAGE_KEY, encodeSetup(setup));
-    } catch {
-      // Not remembered on this device; the session goes on.
-    }
-  }
-
   function replace(next: Setup): void {
     setup = frozen(inRange(next));
-    remember();
     notify();
   }
 
@@ -235,13 +198,4 @@ function frozen<T extends object>(value: T): DeepReadonly<T> {
     if (typeof inner === 'object' && inner !== null) frozen(inner);
   }
   return Object.freeze(value) as DeepReadonly<T>;
-}
-
-/** localStorage, or undefined where reading it throws (blocked storage). */
-function deviceStorage(): SetupStorage | undefined {
-  try {
-    return globalThis.localStorage;
-  } catch {
-    return undefined;
-  }
 }

@@ -86,15 +86,15 @@ Where `prd.md` and `design.md` disagree, `prd.md` wins for behaviour and `design
 41. As a player, I want "return" to bring back the anchored pattern, sound, swing, drift and drive at the next bar, so that coming back sounds like a drop, not a stumble.
 42. As a player, I want the return button to pulse until it lands, so that I know a return is pending.
 43. As a player, I want return to leave tempo and mutes alone, so that it doesn't fight what I'm doing in the moment.
-44. As a player, I want return before I have set any anchor to bring back the setup the session started with, so that the button always does something sensible.
+44. As a player, I want return before I have set any anchor to bring back the setup the page opened with (the link's, or the default setup at the bare address), so that the button always does something sensible.
 
-### Sharing and persistence
+### Sharing
 
 45. As a player, I want the URL to always reflect the current setup, so that I can copy it and share my groove.
 46. As someone who receives a link, I want it to open with that exact groove, sound, swing and tempo, so that I hear what was shared.
 47. As a player, I want the URL to update without filling my browser history, so that the back button still leaves the app.
 48. As a player, I want old links to keep working after new features ship, so that shared grooves don't break.
-49. As a player, I want the app to reopen with my last setup when I open the bare address, so that I pick up where I left off.
+49. As a player, I want the bare address to always open with the default setup, so that only a link carries a groove and a past visit never decides what plays.
 
 ### Layouts
 
@@ -163,7 +163,7 @@ Where `prd.md` and `design.md` disagree, `prd.md` wins for behaviour and `design
    - anchor return quantisation: a pending return lands when the playhead next crosses step 0;
    - glide timing: a new pad target glides from the current position over one or two steps, starting at once.
    A thin real-time wrapper runs it from `AudioContext.currentTime` with a lookahead of about 100 ms.
-3. **Setup store (deep).** Holds the setup (x, y, chaos, densities, per-drum sound, drift, drive, swing, bpm), plus mutes, the anchor snapshot and the pad's undo slot. Anchor captures pattern, sound, swing, drift and drive; never tempo or mutes. On load the anchor is set to the loaded setup, so return before any `set anchor` restores the start setup. The anchor is not kept across reloads. The last setup is remembered on the device (localStorage, wrapped in try/catch); a URL hash always wins over it. Pad undo is one step and flip/flops.
+3. **Setup store (deep).** Holds the setup (x, y, chaos, densities, per-drum sound, drift, drive, swing, bpm), plus mutes, the anchor snapshot and the pad's undo slot. Anchor captures pattern, sound, swing, drift and drive; never tempo or mutes. On load the setup comes from the URL hash, and the bare address or a broken hash gives the default setup. The anchor is set to the loaded setup, so return before any `set anchor` restores the link's setup, or the defaults. The anchor is not kept across reloads. Nothing is stored on the device for the setup: a reload keeps the hash, so the setup survives it through the URL. Pad undo is one step and flip/flops.
 4. **URL codec (deep, pure).** Setup ↔ URL hash, encoded as `v1.` plus base64url. Each field is one byte; the byte order below is fixed for v1. Includes bpm and swing; excludes mutes and anchor. An unknown version or a malformed payload falls back to the default setup. A later version appends fields and bumps the version; decoders for older versions stay. The hash updates with `replaceState`, at most once per second, inside try/catch. See URL format below.
 5. **Pad gesture interpreter (deep, pure).** Pointer events with timestamps in, intents out: jump (on tap, at once), drag (glide then follow), undo (two-finger tap), fine adjust (double-tap and slide, relative, about ¼ speed). It owns all gesture timing in milliseconds; the transport owns step timing. The state machine is in `design.md`. Thresholds live in the tunables module.
 6. **Kit, voices and master bus.** The transport plays drums through a **kit** interface: trigger a drum at a time with a velocity and its sound parameters, cancel hits that are scheduled but not started, and set per-drum mute gains. v1 ships one kit of native Web Audio voices:
@@ -321,7 +321,7 @@ The AudioContext is created on the first gesture (the `▶ tap to play` tap). Sa
 ## Testing Decisions
 
 - Tests check external behaviour through each module's public interface, never internal state or private helpers. A good test reads like a statement about the instrument: "holding 1/8 while step 13 is heard plays steps 13, 14, 15, 16, 13, … and on release plays the step the playhead has reached".
-- Tested modules: pattern generator, transport (looper, swing, chaos re-roll, return quantisation, glide timing), setup store (anchor, undo, persistence), URL codec (round-trip, byte order, clamping, malformed input), pad gesture interpreter, keyboard bindings.
+- Tested modules: pattern generator, transport (looper, swing, chaos re-roll, return quantisation, glide timing), setup store (anchor, undo), URL codec (round-trip, byte order, clamping, malformed input), pad gesture interpreter, keyboard bindings.
 - Pattern generator: tests check behaviour with perturbations given as input: node placement, interpolation at node positions and in between, 8-bit wraparound, density thresholds, accents. Golden fixtures from the original C++ are optional, not required.
 - Looper test statements, at least:
   - "Holding 1/4 from step 4, then sliding to 1/8 when the playhead is at step 10, plays 6, 7, 4, 5, 6, …"

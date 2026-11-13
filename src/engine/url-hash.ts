@@ -4,26 +4,15 @@
 // and at most once a second: Safari throws when a page calls it too often.
 // A change during that second still lands when the second is over.
 //
-// Encoding is the URL codec's job, and remembering the setup on the device
-// the setup store's. Mutes and the anchor are not part of the setup, so they
-// never reach the URL.
+// Encoding is the URL codec's job. Mutes and the anchor are not part of the
+// setup, so they never reach the URL. Nothing else holds the setup between
+// visits: the bare address opens with the default setup.
 
-import { defaultSetup, type Setup } from './setup';
-import { rememberedSetup, type SetupStorage, type SetupStore } from './setup-store';
+import type { SetupStore } from './setup-store';
 import { decodeSetup, encodeSetup } from './url-codec';
 
 /** Shortest gap between two writes of the hash, in ms (PRD). */
 const WRITE_GAP = 1000;
-
-/**
- * The setup a page load starts with. A hash always wins, even one that
- * cannot be read, which gives the default setup. Without one, the setup the
- * device remembers; otherwise the default. Call it before creating the
- * store, which overwrites what the device remembers.
- */
-export function startingSetup(hash: string, storage?: SetupStorage): Setup {
-  return hasSetup(hash) ? decodeSetup(hash) : (rememberedSetup(storage) ?? defaultSetup());
-}
 
 /** The browser around the hash. Defaults to the page's window; tests pass fakes. */
 export interface UrlHashHost {

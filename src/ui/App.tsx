@@ -6,7 +6,8 @@ import { createScheduler, type Scheduler } from '../engine/scheduler';
 import { DRUMS, type Setup } from '../engine/setup';
 import { createSetupStore, type Mutes, type SetupSnapshot } from '../engine/setup-store';
 import { createTransport, type LoopSteps } from '../engine/transport';
-import { startingSetup, syncUrlHash } from '../engine/url-hash';
+import { decodeSetup } from '../engine/url-codec';
+import { syncUrlHash } from '../engine/url-hash';
 import { repositoryUrl } from '../repository';
 import { About } from './About';
 import { ABOUT_PATH, claimLinkClick, createAboutRoute } from './about-route';
@@ -70,7 +71,8 @@ function updateKit(kit: Kit, before: KitState, after: KitState) {
 }
 
 export function App() {
-  const store = createSetupStore({ setup: startingSetup(location.hash) });
+  // A link's setup, or the default one for the bare address or a broken hash.
+  const store = createSetupStore({ setup: decodeSetup(location.hash) });
   onCleanup(syncUrlHash(store));
   const [setup, setSetup] = createSignal(store.setup());
   const [mutes, setMutes] = createSignal(store.mutes());

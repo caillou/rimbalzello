@@ -1,41 +1,9 @@
 import { afterEach, expect, test, vi } from 'vitest';
-import { defaultSetup, type Setup } from './setup';
-import { createSetupStore, type SetupStorage } from './setup-store';
-import { decodeSetup, encodeSetup } from './url-codec';
-import { startingSetup, syncUrlHash, type UrlHashHost } from './url-hash';
+import { createSetupStore } from './setup-store';
+import { decodeSetup } from './url-codec';
+import { syncUrlHash, type UrlHashHost } from './url-hash';
 
 afterEach(() => void vi.useRealTimers());
-
-function memoryStorage(): SetupStorage {
-  const items = new Map<string, string>();
-  return {
-    getItem: (key) => items.get(key) ?? null,
-    setItem: (key, value) => void items.set(key, value),
-  };
-}
-
-/** A device that remembers `setup`, as a visit leaves it. */
-function deviceRemembering(setup: Setup): SetupStorage {
-  const storage = memoryStorage();
-  createSetupStore({ setup, storage });
-  return storage;
-}
-
-const REMEMBERED: Setup = { ...defaultSetup(), chaos: 200, bpm: 140 };
-const LINKED: Setup = { ...defaultSetup(), x: 10, y: 240, bpm: 90 };
-
-test('a hash wins over the setup the device remembers, even one that cannot be read', () => {
-  const device = deviceRemembering(REMEMBERED);
-  expect(startingSetup(`#${encodeSetup(LINKED)}`, device)).toEqual(LINKED);
-  expect(startingSetup('#v1.not-a-setup', device)).toEqual(defaultSetup());
-});
-
-test('without a hash, or with a bare #, the setup the device remembers comes back, else the default', () => {
-  const device = deviceRemembering(REMEMBERED);
-  expect(startingSetup('', device)).toEqual(REMEMBERED);
-  expect(startingSetup('#', device)).toEqual(REMEMBERED);
-  expect(startingSetup('', memoryStorage())).toEqual(defaultSetup());
-});
 
 test('a drag writes the hash at most once a second, and its last setup lands', () => {
   vi.useFakeTimers();
@@ -53,7 +21,7 @@ test('a drag writes the hash at most once a second, and its last setup lands', (
     addEventListener: () => {},
     removeEventListener: () => {},
   };
-  const store = createSetupStore({ storage: memoryStorage() });
+  const store = createSetupStore();
   syncUrlHash(store, host);
 
   // Three seconds of drag on the chaos strip, a change every 50 ms.

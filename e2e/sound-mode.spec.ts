@@ -7,6 +7,8 @@ import { readout } from './pad-readout.ts';
 test.use({ viewport: { width: 393, height: 659 } });
 
 test.beforeEach(async ({ page }) => {
+  // Time still flows; `hashCaughtUp` moves it on by the hash's write gap.
+  await page.clock.install();
   await page.goto('./');
   await page.getByRole('button', { name: '▶ tap to play' }).click();
   await page.getByRole('button', { name: '→ sound' }).click();
@@ -26,17 +28,16 @@ const SD_DECAY = 14;
 const tab = (page: Page, drum: string) => page.getByRole('tab', { name: drum, exact: true });
 const slider = (page: Page, name: string) => page.getByRole('slider', { name, exact: true });
 
-/**
- * The setup the store remembers on the device, as the bytes of the v1 URL
- * format the store writes it in.
- */
+/** The setup in the URL hash, as the bytes of the v1 format. */
 function setupBytes(page: Page): Promise<number[]> {
   return page.evaluate(() => {
-    const stored = localStorage.getItem('rimbalzello.setup') ?? '';
-    const base64 = stored.replace(/^v1\./, '').replaceAll('-', '+').replaceAll('_', '/');
+    const base64 = location.hash.replace(/^#v1\./, '').replaceAll('-', '+').replaceAll('_', '/');
     return Array.from(atob(base64), (char) => char.charCodeAt(0));
   });
 }
+
+/** Moves time on until the URL hash holds the latest setup: it follows a change at most a second later. */
+const hashCaughtUp = (page: Page) => page.clock.runFor(1000);
 
 /** A byte as the sliders show it, 0–100. */
 const shown = (byte: number | undefined) => String(Math.round(((byte ?? NaN) / 255) * 100));
@@ -60,8 +61,8 @@ test("bd decay changes the setup's bd decay, and each drum keeps its values acro
 
   await slider(page, 'decay').press('End');
   await expect(slider(page, 'decay')).toHaveAttribute('aria-valuenow', '100');
+  await expect.poll(async () => (await setupBytes(page))[BD_DECAY]).toBe(255);
   const bdChanged = await setupBytes(page);
-  expect(bdChanged[BD_DECAY]).toBe(255);
   expect(others(bdChanged, BD_DECAY), 'only bd decay changes').toEqual(others(before, BD_DECAY));
 
   // The sd tab shows sd's own decay and changes only that.
@@ -70,8 +71,8 @@ test("bd decay changes the setup's bd decay, and each drum keeps its values acro
   await expect(slider(page, 'decay')).toHaveAttribute('aria-valuenow', shown(before[SD_DECAY]));
   await slider(page, 'decay').press('Home');
   await expect(slider(page, 'decay')).toHaveAttribute('aria-valuenow', '0');
+  await expect.poll(async () => (await setupBytes(page))[SD_DECAY]).toBe(0);
   const sdChanged = await setupBytes(page);
-  expect(sdChanged[SD_DECAY]).toBe(0);
   expect(others(sdChanged, SD_DECAY), 'only sd decay changes').toEqual(others(bdChanged, SD_DECAY));
 
   // Back and forth, each drum shows the value it was left at.
@@ -113,12 +114,14 @@ test("a drag held across a tab switch leaves the new drum's slider alone", async
 
   await tab(page, 'sd').click();
   await expect(page.getByText('snare drum', { exact: true })).toBeVisible();
+  await hashCaughtUp(page);
   const before = await setupBytes(page);
   await expect(decay).toHaveAttribute('aria-valuenow', shown(before[SD_DECAY]));
 
   await finger('pointermove', 31);
   await finger('pointerup', 31);
   await expect(decay).toHaveAttribute('aria-valuenow', shown(before[SD_DECAY]));
+  await hashCaughtUp(page);
   expect(await setupBytes(page), 'the setup does not change').toEqual(before);
 });
 
