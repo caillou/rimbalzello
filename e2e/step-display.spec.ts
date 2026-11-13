@@ -24,18 +24,18 @@ const bdStep = (page: Page, step: number) => page.locator('[data-drum="bd"] .ste
 
 const weightOf = (cell: Locator) => cell.evaluate((element) => Number(getComputedStyle(element).fontWeight));
 
-/** Whether an upright IBM Plex Mono face of this weight has loaded. */
-const faceLoaded = (page: Page, weight: number) =>
+/** Whether an IBM Plex Mono face of this weight and style has loaded. */
+const faceLoaded = (page: Page, weight: number, style: 'normal' | 'italic' = 'normal') =>
   page.evaluate(
-    (weight) =>
+    ({ weight, style }) =>
       [...document.fonts].some(
         (face) =>
           face.family.includes('IBM Plex Mono') &&
-          face.style === 'normal' &&
+          face.style === style &&
           face.weight === String(weight) &&
           face.status === 'loaded',
       ),
-    weight,
+    { weight, style },
   );
 
 test('an accented hit is drawn bolder than a plain one', async ({ page }) => {
@@ -51,9 +51,10 @@ test('an accented hit is drawn bolder than a plain one', async ({ page }) => {
   const normal = await weightOf(plain);
   await expect.poll(() => weightOf(accent)).toBeGreaterThan(normal);
 
-  // The bold comes from a downloaded face, not one the browser fakes. The
-  // headings use the same face, so this guards against a dropped
-  // @fontsource import rather than the accent's rule.
+  // The bold comes from a downloaded face, not one the browser fakes. Only
+  // the accents use the upright bold (the headings are italic), so this also
+  // guards the step line staying upright, and against a dropped @fontsource
+  // import.
   const bold = await weightOf(accent);
   await expect.poll(() => faceLoaded(page, bold)).toBe(true);
 });
@@ -96,4 +97,15 @@ test('the steps fall into four beats of 8, with a gap before steps 8, 16 and 24'
     if (i % 8 === 7) expect(distance, `steps ${i} → ${i + 1}`).toBeGreaterThan(step + 1);
     else expect(distance, `steps ${i} → ${i + 1}`).toBeCloseTo(step, 1);
   }
+});
+
+test('the text around the step lines is set in a real italic face, not a slant the browser fakes', async ({ page }) => {
+  // The mute labels are italic at the screen's normal weight. A dropped
+  // `*-italic.css` import would leave every label, button and heading in a
+  // slanted upright face.
+  await page.goto('./');
+  const label = page.getByRole('button', { name: 'mute bass drum', exact: true });
+  await expect(label).toBeVisible();
+  const weight = await weightOf(label);
+  await expect.poll(() => faceLoaded(page, weight, 'italic')).toBe(true);
 });

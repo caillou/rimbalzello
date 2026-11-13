@@ -8,34 +8,34 @@ The review round in `reviews/` changed the step resolution, the layouts, mutes, 
 
 | File | What it shows | Status |
 | --- | --- | --- |
-| `designs/06-laptop-shortcuts-shown.png` | Laptop (1280×800) with keycap hints shown | outdated, pending design pass: old tempo and help keys, no tempo row, map nodes drawn inset |
-| `designs/07-laptop-shortcuts-hidden.png` | Laptop, default state, hints hidden | outdated, pending design pass: as 06 |
-| `designs/08-about.png` | About view | current |
-| `designs/09-404.png` | 404 page | current |
-| `designs/v2-01-phone.png` | Phone in Safari (393×659): mix / fx tabs, mutes on step labels, X/Y readout | current, but without the `tempo` tab after `fx` |
-| `designs/v2-02-phone-compact.png` | Compact (SE in Safari, 375×553): slim header, step display inside the pad | current |
-| `designs/v2-03-phone-sound.png` | Sound mode on a phone: drum tabs, sliders in two columns | current |
+| `designs/06-laptop-shortcuts-shown.png` | Laptop (1280×800) with keycap hints shown | outdated, pending design pass: old tempo and help keys, no tempo row, map nodes drawn inset; type now italic, steps now in four beats |
+| `designs/07-laptop-shortcuts-hidden.png` | Laptop, default state, hints hidden | outdated, pending design pass: as 06, type and steps too |
+| `designs/08-about.png` | About view | current, but type now italic |
+| `designs/09-404.png` | 404 page | current, but type now italic |
+| `designs/v2-01-phone.png` | Phone in Safari (393×659): mix / fx tabs, mutes on step labels, X/Y readout | current, but without the `tempo` tab after `fx`; type now italic, steps now in four beats |
+| `designs/v2-02-phone-compact.png` | Compact (SE in Safari, 375×553): slim header, step display inside the pad | current, but type now italic, steps now in four beats |
+| `designs/v2-03-phone-sound.png` | Sound mode on a phone: drum tabs, sliders in two columns | current, but type now italic, steps now in four beats |
 | `designs/v2-04-phone-tempo.png` | The former tempo panel: bpm, swing 56 %, tap tempo | outdated: the `tempo` tab holds the same three rows with bpm and swing as strips, not − and +, and without the `## tempo` heading and `← play` |
-| `designs/v2-05-phone-tap-to-play.png` | First launch: `▶ tap to play` over the dimmed pad | current |
-| `designs/v2-06-phone-help.png` | Help open: two-finger undo, tap labels to mute | current |
-| `designs/v2-07-tablet.png` | Tablet portrait (820×1106): pad on top, two columns below | current, but with `bd` `sd` `hh` where the strips and drum tabs now write the names out |
+| `designs/v2-05-phone-tap-to-play.png` | First launch: `▶ tap to play` over the dimmed pad | current, but type now italic, steps now in four beats |
+| `designs/v2-06-phone-help.png` | Help open: two-finger undo, tap labels to mute | current, but type now italic, steps now in four beats |
+| `designs/v2-07-tablet.png` | Tablet portrait (820×1106): pad on top, two columns below | current, but with `bd` `sd` `hh` where the strips and drum tabs now write the names out; type now italic, steps now in four beats |
 | pending | Rotate hint | screenshots pending |
 
 ## Visual language
 
 Borrowed from caillou.ch, so the app reads as part of the site.
 
-- **Font**: IBM Plex Mono only, self-hosted. Weights follow screen resolution like the blog: normal 400 / bold 600 at 1×, 300 / 500 at 2×, 200 / 400 at 3×.
+- **Font**: IBM Plex Mono only, self-hosted. Weights follow screen resolution like the blog: normal 400 / bold 600 at 1×, 300 / 500 at 2×, 200 / 400 at 3×. Italic for all text. Upright: the step display's lines, the keycap hints, and the glyphs the font lacks (`←` `→` `↺` `▶`, in `→ sound`, `← play`, `← back to play`, `↺ return on bar`, `▶ tap to play` and the help box), which a fallback font draws and the browser would otherwise slant.
 - **Colours** (unchanged for v1):
   - background `#202322`, pad `#1a1c1b`, hairlines and empty tracks `#3a3d3c`
   - text `#ffffff`, secondary `#ababab`, tertiary and markers `#757575`
   - bd `#ffd866` (yellow), sd `#ff61ef` (pink), hh `#bef289` (green), drive `#fc618d` (red), chaos, drift, bpm and swing white
-- **Text**: lowercase labels. `#` before the app title and `##` before section headings, in grey. Italic for text buttons and navigation.
+- **Text**: lowercase labels. `#` before the app title and `##` before section headings, in grey.
 - **Drum names**: `bd` `sd` `hh` on phones and in the tablet's step display; `bass drum`, `snare drum`, `hi-hat` where the tablet and laptop layouts have room: the strips, the drum tabs, the laptop's sound headings and its step display. A control's accessible name holds the name it shows (`mute bd`, `mute bass drum`), so voice control finds it by what it says.
 - **Current step**: yellow background, black text, like the blog's text selection.
 - **Sliders**: 2 px track; filled part and square thumb in the control's colour; value right-aligned in grey, shown 0–100, except bpm and swing, which show their own values (`128`, `56%`).
 - **Loop strip**: four boxed zones (`1/4 1/8 1/16 1/32`) with hairline borders; the held zone is white with black text.
-- **Buttons**: text buttons, italic. `set anchor` underlined. `↺ return on bar` is the only solid block (yellow, black text) and pulses while a return is pending.
+- **Buttons**: text buttons. `set anchor` underlined. `↺ return on bar` is the only solid block (yellow, black text) and pulses while a return is pending.
 - **Footer**: `// help   // about   // source` in small grey uppercase with wide letter spacing (the blog's footer style); the active item turns white.
 - **Keycap hints**: small keys with a grey 1 px outline and grey text next to their control; on light backgrounds (held loop zone, return button) the keycap inverts to black.
 - **Touch targets**: at least 44 px.
@@ -60,9 +60,9 @@ The play screen never scrolls. Every touch lands on a control. Loop strip and bo
 
 Top to bottom, filling the viewport exactly:
 
-1. **Header**: `# rimbalzello` left; `− 128 bpm +` and `stop`/`play` (italic, underlined) right. Tapping the bpm readout opens the `tempo` tab. The title is not a link.
+1. **Header**: `# rimbalzello` left; `− 128 bpm +` and `stop`/`play` (underlined) right. Tapping the bpm readout opens the `tempo` tab. The title is not a link.
 2. **Pad**: takes all remaining height. Dark field, thin crosshair through the position, a faint ring around it, the position as a yellow square, and the X/Y readout (0–100). The pad keeps clear of the left 16 px of the screen.
-3. **Step display**: three lines, `bd`, `sd`, `hh`, 32 characters each, one bar, in four beats of 8 with a small gap (a quarter of the text size) between beats: `x` in the drum's colour for a hit, bold for an accent, `·` in grey for a rest. The bold is the screen's bold weight (see Font) and stays on a muted line and under the highlight. Current step highlighted. The drum labels are the mute toggles (see Mutes).
+3. **Step display**: three lines, `bd`, `sd`, `hh`, 32 characters each, one bar, in four beats of 8 with a small gap (a quarter of the text size) between beats, upright unlike the rest of the text: `x` in the drum's colour for a hit, bold for an accent, `·` in grey for a rest. The bold is the screen's bold weight (see Font) and stays on a muted line and under the highlight. Current step highlighted. The drum labels are the mute toggles (see Mutes).
 4. **Loop strip**.
 5. **Tabs**: `mix` (the bd, sd and hh density strips), `fx` (chaos, drift and drive) and `tempo` (see Tempo). Each tab holds three 44 px rows, so the pad keeps its size when the tab changes.
 6. **Bottom bar**: `→ sound`, `set anchor`, `↺ return on bar`.
@@ -74,7 +74,7 @@ On load the app is stopped. A big `▶ tap to play` sits over the pad; one tap s
 
 ### Sound mode (phone)
 
-Tapping `→ sound` swaps the `mix` / `fx` / `tempo` tabs for drum tabs: `bd` `sd` `hh`, the active tab in its drum's colour with an underline and the drum's full name (`bass drum`) in grey italics on the right. The tablet and a short laptop window write the names out on the tabs instead (`bass drum` `snare drum` `hi-hat`), with nothing on the right. Below: that drum's sliders. The pad, step display and loop strip stay. The bottom bar's first item becomes `← play`. On phones the drum's sliders sit in two columns so they fit under the pad (`v2-03-phone-sound.png`).
+Tapping `→ sound` swaps the `mix` / `fx` / `tempo` tabs for drum tabs: `bd` `sd` `hh`, the active tab in its drum's colour with an underline and the drum's full name (`bass drum`) in grey on the right. The tablet and a short laptop window write the names out on the tabs instead (`bass drum` `snare drum` `hi-hat`), with nothing on the right. Below: that drum's sliders. The pad, step display and loop strip stay. The bottom bar's first item becomes `← play`. On phones the drum's sliders sit in two columns so they fit under the pad (`v2-03-phone-sound.png`).
 
 The hh tab holds two sliders, `accent` and `level`, in one row. `accent` sets how far an accented hh hit opens the hat: at 0 an accent is only louder, at 100 the hat is fully open; plain hh hits stay closed. Any hh hit cuts off an hh still ringing (the choke).
 
@@ -179,15 +179,15 @@ The step display highlights the played step. While a loop is held, the playhead 
 ## About
 
 - Entry: `// about` in the footer only.
-- Content: `← back to play · still playing` and a `×` close button at the top; h1 `# rimbalzello` (italic, yellow, grey `#`); one-line description; `## made from` (Grids and Peaks by Émilie Gillet, linked); `## made by` (Pierre Spring, linked to caillou.ch); `## licence` (GPL-3.0-or-later, like Grids, with links to the source at the deployed commit and to the third-party notices); footer `// source  // caillou.ch`; small grey note: not affiliated with Mutable Instruments, "Mutable Instruments" is a registered trademark.
-- Styled like a blog post: body 18 px with line-height 1.8, h2s italic with grey `##`, no bold headings, links yellow with a dashed underline inside grey `[ ]` brackets, pink on hover.
+- Content: `← back to play · still playing` and a `×` close button at the top; h1 `# rimbalzello` (yellow, grey `#`); one-line description; `## made from` (Grids and Peaks by Émilie Gillet, linked); `## made by` (Pierre Spring, linked to caillou.ch); `## licence` (GPL-3.0-or-later, like Grids, with links to the source at the deployed commit and to the third-party notices); footer `// source  // caillou.ch`; small grey note: not affiliated with Mutable Instruments, "Mutable Instruments" is a registered trademark.
+- Styled like a blog post: body 18 px with line-height 1.8, h2s with grey `##`, no bold headings, links yellow with a dashed underline inside grey `[ ]` brackets, pink on hover.
 - Behaviour: about is an app state, not a separate app. Opening it from the footer keeps the music playing and changes the URL to `/about/` (history push). `← back to play`, `×`, `esc` and the browser's back button all return to the play screen at `/`. The setup hash stays on both URLs.
 - `/about/` also exists as a real, prerendered file, so a direct visit or reload works on static hosting and shows the credits before any JavaScript runs.
 - The about view may scroll; the play screen may not.
 
 ## 404
 
-A plain static page served by GitHub Pages for unknown URLs: h1 `# 404` (italic, yellow), `this stone sank.`, and a blog-style link `[back to rimbalzello]`. No app code.
+A plain static page served by GitHub Pages for unknown URLs: h1 `# 404` (yellow), `this stone sank.`, and a blog-style link `[back to rimbalzello]`. No app code.
 
 ## Later (not in v1)
 

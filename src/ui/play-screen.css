@@ -96,12 +96,11 @@ button.bpm .bpm-value {
   color: var(--text-secondary);
 }
 
-/* Text buttons: italic, underlined, with a 44 px touch target. */
+/* Text buttons: underlined, with a 44 px touch target. */
 .text-button {
   min-width: calc(44px * var(--zoom));
   min-height: calc(44px * var(--zoom));
   font-size: calc(15px * var(--zoom));
-  font-style: italic;
   text-decoration: underline;
   text-underline-offset: calc(4px * var(--zoom));
 }
@@ -120,19 +119,18 @@ button.bpm .bpm-value {
   background: rgb(26 28 27 / 55%);
 }
 
-.tap-to-play span {
+.tap-to-play > span {
   padding: calc(14px * var(--zoom)) calc(22px * var(--zoom));
   background: var(--highlight);
   color: var(--on-highlight);
   font-size: calc(20px * var(--zoom));
-  font-style: italic;
 }
 
 .tap-to-play:focus-visible {
   outline: none;
 }
 
-.tap-to-play:focus-visible span {
+.tap-to-play:focus-visible > span {
   outline: round(2px * var(--zoom), 1px) solid var(--text);
   outline-offset: round(4px * var(--zoom), 1px);
 }
@@ -147,7 +145,7 @@ button.bpm .bpm-value {
     outline-offset: calc(2px * var(--zoom));
   }
 
-  .tap-to-play:focus-visible span {
+  .tap-to-play:focus-visible > span {
     outline: calc(2px * var(--zoom)) solid var(--text);
     outline-offset: calc(4px * var(--zoom));
   }
@@ -165,11 +163,10 @@ button.bpm .bpm-value {
 .bar-button {
   height: calc(44px * var(--zoom));
   font-size: calc(15px * var(--zoom));
-  font-style: italic;
 }
 
 /* `↺ return on bar` is the one solid block: yellow, black text. */
-.return-button span {
+.return-button > span {
   display: block;
   padding: calc(8px * var(--zoom)) calc(10px * var(--zoom));
   background: var(--highlight);
@@ -177,7 +174,7 @@ button.bpm .bpm-value {
 }
 
 /* It pulses while a return is pending, until the return lands at the bar. */
-.return-button.pending span {
+.return-button.pending > span {
   animation: return-pending 0.8s ease-in-out infinite;
 }
 

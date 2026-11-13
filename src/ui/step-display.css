@@ -28,9 +28,11 @@
   width: calc(10ch + 28px * var(--zoom));
 }
 
-/* Rests are grey; hits are `x` in the drum's colour. */
+/* Rests are grey; hits are `x` in the drum's colour. Upright, unlike the rest
+   of the text: the line is a picture of the bar. */
 .step-line {
   color: var(--text-tertiary);
+  font-style: normal;
   white-space: pre;
 }
 

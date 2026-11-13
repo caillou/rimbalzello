@@ -4,7 +4,7 @@
 // the pad stays playable under them. Laptop help is the keycap hints
 // (Keycap.tsx), which App shows instead.
 
-import { createSignal, For, onCleanup, type Accessor } from 'solid-js';
+import { createSignal, For, onCleanup, type Accessor, type JSX } from 'solid-js';
 import './help.css';
 
 const TOUCH_SCREEN = '(pointer: coarse)';
@@ -28,7 +28,7 @@ export function createTouchScreen(): Accessor<boolean> {
  * Hint lines: one `<p>` per line, its items joined by ` · `. Each item
  * stays whole, so on a narrow pad a line wraps between items.
  */
-function HintLines(props: { lines: readonly (readonly string[])[] }) {
+function HintLines(props: { lines: readonly (readonly JSX.Element[])[] }) {
   return (
     <For each={props.lines}>
       {(items) => (
@@ -37,7 +37,10 @@ function HintLines(props: { lines: readonly (readonly string[])[] }) {
             {(item, i) => (
               <>
                 {i() > 0 && ' '}
-                <span class="hint-item">{i() < items.length - 1 ? `${item} ·` : item}</span>
+                <span class="hint-item">
+                  {item}
+                  {i() < items.length - 1 && ' ·'}
+                </span>
               </>
             )}
           </For>
@@ -57,7 +60,12 @@ function helpLines(fullNames: boolean) {
     ['tap, drag: move', 'two-finger tap: undo'],
     ['double-tap + slide: fine', fullNames ? 'tap a drum name: mute' : 'tap bd sd hh: mute'],
     ['anchor: set, noodle, return on bar'],
-    ['loop: hold a size', '→ sound: shape the drums'],
+    [
+      'loop: hold a size',
+      <>
+        <span class="glyph-upright">→</span> sound: shape the drums
+      </>,
+    ],
   ];
 }
 
