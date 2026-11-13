@@ -49,7 +49,7 @@ export function About(props: AboutProps) {
       <nav class="about-nav">
         <span>
           <a class="about-back" href={PLAY_PATH} onClick={onLinkClick}>
-            <span class="marker glyph-upright">←</span> back to play
+            <span class="marker">←</span> back to play
           </a>
           <Show when={props.playing}>
             <span class="still-playing"> · still playing</span>

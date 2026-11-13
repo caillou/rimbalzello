@@ -50,6 +50,7 @@
   padding-block: 6px;
   margin-block: -6px;
   color: var(--text);
+  font-style: italic;
   text-decoration: none;
 }
 

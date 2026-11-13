@@ -1,7 +1,6 @@
 /* Blog-post look from caillou.ch, shared by the about view and the 404 page:
-   18 px text with line-height 1.8, a yellow h1 and h2s behind grey markers,
-   no bold headings, and links in grey brackets. Italic, like all text
-   (base.css). */
+   18 px text with line-height 1.8, an italic yellow h1 and italic h2s behind
+   grey markers, and links in grey brackets. */
 
 .blog {
   font-size: 18px;
@@ -12,6 +11,7 @@
    the order the stylesheets end up in. */
 .blog h1,
 .blog h2 {
+  font-style: italic;
   font-weight: var(--weight-normal);
 }
 

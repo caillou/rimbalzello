@@ -412,15 +412,7 @@ export function App() {
         </div>
         <Show when={audio() !== 'unlocked'}>
           <button type="button" class="tap-to-play" onClick={() => (audio() === 'locked' ? play() : session.unlock())}>
-            <span>
-              {audio() === 'locked' ? (
-                <>
-                  <span class="glyph-upright">▶</span> tap to play
-                </>
-              ) : (
-                'tap to resume'
-              )}
-            </span>
+            <span>{audio() === 'locked' ? '▶ tap to play' : 'tap to resume'}</span>
           </button>
         </Show>
       </Pad>
@@ -468,7 +460,7 @@ export function App() {
             Wide layouts have no sound mode. */}
         <Show when={!wide()}>
           <button type="button" class="bar-button" onClick={() => setMode(mode() === 'play' ? 'sound' : 'play')}>
-            <span class="marker glyph-upright">{mode() === 'play' ? '→' : '←'}</span> {mode() === 'play' ? 'sound' : 'play'}
+            <span class="marker">{mode() === 'play' ? '→' : '←'}</span> {mode() === 'play' ? 'sound' : 'play'}
           </button>
         </Show>
         <button type="button" class="bar-button text-button" onClick={setAnchor}>
@@ -483,7 +475,7 @@ export function App() {
           onClick={returnOnBar}
         >
           <span>
-            <span class="glyph-upright">↺</span> return on bar
+            ↺ return on bar
             <Keycap>r</Keycap>
           </span>
         </button>

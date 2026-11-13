@@ -1,7 +1,5 @@
 /* IBM Plex Mono, self-hosted (OFL-1.1). The weights below cover the
-   resolution-dependent normal and bold weights, upright and italic. All text
-   is italic; the step display's lines and the keycap hints stay upright, and
-   the accents are the only upright bold. */
+   resolution-dependent normal and bold weights, upright and italic. */
 @import '@fontsource/ibm-plex-mono/200.css';
 @import '@fontsource/ibm-plex-mono/200-italic.css';
 @import '@fontsource/ibm-plex-mono/300.css';
@@ -75,7 +73,6 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font);
-  font-style: italic;
   font-weight: var(--weight-normal);
 }
 
@@ -90,12 +87,6 @@ strong {
 ::selection {
   background: var(--highlight);
   color: var(--on-highlight);
-}
-
-/* A glyph the self-hosted font lacks (`←` `→` `↺` `▶`), drawn from a
-   fallback font: upright, so the browser never fakes a slant on it. */
-.glyph-upright {
-  font-style: normal;
 }
 
 /* The grey # and ## before titles and section headings. */

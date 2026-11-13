@@ -303,7 +303,7 @@ Out-of-range bpm or swing values clamp. A wrong length, bad base64 or an unknown
 - IBM Plex Mono everywhere, with caillou.ch's resolution-dependent weights: normal 400 / bold 600 at 1×, 300 / 500 at 2×, 200 / 400 at 3× (thin on retina, like the blog).
 - Background `#202322`, pad `#1a1c1b`, hairlines `#3a3d3c`; text white, secondary `#ababab`, tertiary `#757575`. Colours stay as they are in v1.
 - bd `#ffd866`, sd `#ff61ef`, hh `#bef289`, drive `#fc618d`, chaos, drift, bpm and swing white.
-- Lowercase labels, `#` and `##` markers in grey, italic text with an upright step display, `return` as the one solid yellow block. The current step is highlighted like caillou.ch's text selection (yellow background, black text).
+- Lowercase labels, `#` and `##` markers in grey, italic text buttons, `return` as the one solid yellow block. The current step is highlighted like caillou.ch's text selection (yellow background, black text).
 - Sliders: 2 px line, square thumb in the control's colour.
 - Loop strip: four boxed zones; the held zone is white with black text.
 - Keycap hints: small grey outlined keys next to each control; on light backgrounds (held loop box, return button) they invert to black.

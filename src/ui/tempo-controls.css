@@ -7,5 +7,6 @@
   height: calc(44px * var(--zoom));
   border: 1px solid var(--hairline);
   font-size: calc(15px * var(--zoom));
+  font-style: italic;
   touch-action: none;
 }
