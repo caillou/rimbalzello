@@ -48,7 +48,7 @@ Use these words, with these meanings, in code, tests, issues and docs. Don't inv
 - **Bottom bar**: `sound` / `play`, `set anchor`, `↺ return on bar`.
 - **Footer**: `// help  // about  // source` under the bottom bar.
 - **Tabs**: narrow-screen folding. **mix** (bd sd hh densities), **fx** (chaos drift drive) and **tempo** (bpm, swing, tap tempo) on phones, where tapping the bpm readout opens the tempo tab; **drum tabs** (bd sd hh) in sound mode. The tablet and laptop show mix, fx and tempo side by side as groups instead.
-- **Step display**: the text rendering of one bar (`x` hit, `·` rest, 32 characters per drum), current step highlighted yellow. Its drum labels are the mute toggles.
+- **Step display**: the text rendering of one bar (`x` hit, bold `x` accent, `·` rest, 32 characters per drum), current step highlighted yellow. Its drum labels are the mute toggles.
 - **Keycap hints**: small outlined keys next to controls on laptops, toggled with `?`, `h` or `// help`.
 - **Help**: on touch screens, a hint box over the pad explaining gestures and controls; on laptops, the keycap hints.
 - **About**: the credits view. An app state with its own prerendered URL `/about/`; opening it from the app keeps the music playing.

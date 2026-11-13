@@ -45,6 +45,12 @@
   color: var(--hh);
 }
 
+/* An accent: the hit's `x` in bold. Plex Mono keeps its advance at every
+   weight, so the line does not move. */
+.step-line .accent {
+  font-weight: var(--weight-bold);
+}
+
 /* A muted drum: grey line, label struck through. */
 .step-row.muted .step-label {
   color: var(--text-tertiary);

@@ -62,7 +62,7 @@ Top to bottom, filling the viewport exactly:
 
 1. **Header**: `# rimbalzello` left; `− 128 bpm +` and `stop`/`play` (italic, underlined) right. Tapping the bpm readout opens the `tempo` tab. The title is not a link.
 2. **Pad**: takes all remaining height. Dark field, thin crosshair through the position, a faint ring around it, the position as a yellow square, and the X/Y readout (0–100). The pad keeps clear of the left 16 px of the screen.
-3. **Step display**: three lines, `bd`, `sd`, `hh`, 32 characters each, one bar: `x` in the drum's colour for a hit, `·` in grey for a rest. Current step highlighted. The drum labels are the mute toggles (see Mutes).
+3. **Step display**: three lines, `bd`, `sd`, `hh`, 32 characters each, one bar: `x` in the drum's colour for a hit, bold for an accent, `·` in grey for a rest. The bold is the screen's bold weight (see Font) and stays on a muted line and under the highlight. Current step highlighted. The drum labels are the mute toggles (see Mutes).
 4. **Loop strip**.
 5. **Tabs**: `mix` (the bd, sd and hh density strips), `fx` (chaos, drift and drive) and `tempo` (see Tempo). Each tab holds three 44 px rows, so the pad keeps its size when the tab changes.
 6. **Bottom bar**: `→ sound`, `set anchor`, `↺ return on bar`.

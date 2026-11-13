@@ -1,9 +1,9 @@
-// The step display: one bar as text, `x` for a hit and `·` for a rest, one
-// line per drum, the played step highlighted. While a loop is held, the
-// playhead step is also shown, dimmed. While playing it follows the step
-// heard now, written straight to the DOM every animation frame, outside
-// Solid's update cycle. The drum labels are the mute toggles, `bd` `sd` `hh`
-// or the full names (drum-names.ts).
+// The step display: one bar as text, `x` for a hit, bold for an accent, and
+// `·` for a rest, one line per drum, the played step highlighted. While a
+// loop is held, the playhead step is also shown, dimmed. While playing it
+// follows the step heard now, written straight to the DOM every animation
+// frame, outside Solid's update cycle. The drum labels are the mute toggles,
+// `bd` `sd` `hh` or the full names (drum-names.ts).
 
 import { createEffect, For, onCleanup, type Accessor } from 'solid-js';
 import { hitsAt, PATTERN_STEPS, type PatternInput } from '../engine/pattern';
@@ -58,10 +58,15 @@ export function StepDisplay(props: StepDisplayProps) {
       const hits = hitsAt(pattern, step);
       for (const drum of DRUMS) {
         const cell = cells[drum][step];
-        const hit = hits[drum].hit;
-        if (!cell || (cell.textContent && cell.classList.contains('hit') === hit)) continue;
+        const { hit, accent } = hits[drum];
+        if (!cell) continue;
+        // A chaos re-roll or a pad move can turn a hit into an accent and
+        // back, so a cell is left alone only when both still match.
+        const drawn = cell.textContent !== '';
+        if (drawn && cell.classList.contains('hit') === hit && cell.classList.contains('accent') === accent) continue;
         cell.textContent = hit ? 'x' : '·';
         cell.classList.toggle('hit', hit);
+        cell.classList.toggle('accent', accent);
       }
     }
   }
