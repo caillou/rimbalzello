@@ -1,5 +1,5 @@
-/* The strips folded into `mix` and `fx` tabs, in the short and compact
-   layouts. The tabs are in the text colour: neither tab is a drum's. */
+/* The strips and tempo folded into `mix`, `fx` and `tempo` tabs, in the
+   phone layouts. The tabs are in the text colour: none is a drum's. */
 .strip-tabs {
   flex-shrink: 0;
   padding: 0 16px;

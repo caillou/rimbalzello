@@ -1,13 +1,15 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { readout } from './pad-readout.ts';
 
-// Set anchor and return on bar, on the phone play screen with all six strips.
+// Set anchor and return on bar, on the phone play screen with the `fx` tab
+// open: the strips it noodles with are chaos and drive.
 
 test.use({ viewport: { width: 393, height: 750 } });
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./');
   await page.getByRole('button', { name: '▶ tap to play' }).click();
+  await page.getByRole('tab', { name: 'fx', exact: true }).click();
 });
 
 const strip = (page: Page, label: string) => page.getByRole('slider', { name: label, exact: true });

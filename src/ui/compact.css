@@ -1,7 +1,7 @@
-/* The short and compact layouts (`designs/v2-01-phone.png`,
-   `designs/v2-02-phone-compact.png`). App picks the layout from the play
+/* The compact layout (`designs/v2-02-phone-compact.png`), the phone layout
+   tightened for the shortest phones. App picks the layout from the play
    screen's height and sets it as `data-layout`; layout.ts mirrors the row
-   heights set here. Both fold the six strips into `mix` and `fx` tabs. */
+   heights set here. */
 
 /* Compact: a slimmer header and bottom bar, and the step display inside the
    pad, over its lower edge. Every row is still a 44 px touch target. */

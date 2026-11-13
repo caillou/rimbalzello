@@ -1,19 +1,20 @@
-// The strips of the short and compact layouts, folded into two tabs: `mix`
-// (the bd, sd and hh densities) and `fx` (chaos, drift and drive), on a tab
-// row like sound mode's drum tabs. The panel holds the active tab's strips.
+// The strips of the phone layouts, folded into tabs: `mix` (the bd, sd and
+// hh densities), `fx` (chaos, drift and drive) and `tempo` (bpm, swing and
+// tap tempo), on a tab row like sound mode's drum tabs. Each tab holds three
+// 44 px rows, so the pad keeps its size when the tab changes.
 
 import { createUniqueId, For, type Accessor, type JSX } from 'solid-js';
 import './tabs.css';
 import './strip-tabs.css';
 
-const STRIP_TABS = ['mix', 'fx'] as const;
+const STRIP_TABS = ['mix', 'fx', 'tempo'] as const;
 export type StripTab = (typeof STRIP_TABS)[number];
 
 export interface StripTabsProps {
   active: Accessor<StripTab>;
   onSelect(tab: StripTab): void;
-  /** The active tab's strips. */
-  children: JSX.Element;
+  /** The active tab's rows. */
+  children(tab: StripTab): JSX.Element;
 }
 
 export function StripTabs(props: StripTabsProps) {
@@ -41,7 +42,7 @@ export function StripTabs(props: StripTabsProps) {
         </div>
       </div>
       <div role="tabpanel" aria-labelledby={tabId(props.active())}>
-        {props.children}
+        {props.children(props.active())}
       </div>
     </div>
   );

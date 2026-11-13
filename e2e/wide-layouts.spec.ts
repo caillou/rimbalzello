@@ -3,14 +3,22 @@ import { expectLayoutRules } from './layout-rules.ts';
 
 // The wide layouts (design.md, "Tablets" and "Laptops"): the tablet layout
 // in portrait (`designs/v2-07-tablet.png`), the laptop layout on laptops and
-// on tablets in landscape, and the rotate hint on phones in landscape.
+// on tablets in landscape, and the rotate hint on phones in landscape. Both
+// show tempo (bpm, swing and tap tempo) as a group of its own, without tabs.
 
 const DRUMS = ['bd', 'sd', 'hh'] as const;
 /** How many sound sliders each drum has (PRD stories 29–31). */
 const SOUND_SLIDERS = { bd: 5, sd: 5, hh: 1 };
 
-const readout = (page: Page) => page.getByRole('button', { name: /^\d+ bpm$/ });
 const tab = (page: Page, drum: string) => page.getByRole('tab', { name: drum, exact: true });
+const tempo = (page: Page) => page.getByRole('group', { name: 'tempo' });
+
+/** Tempo's controls show, each whole, without opening anything. */
+async function expectTempoShown(page: Page) {
+  for (const name of ['bpm down', 'bpm up', 'swing down', 'swing up', 'tap tempo']) {
+    await expect(tempo(page).getByRole('button', { name, exact: true })).toBeInViewport({ ratio: 1 });
+  }
+}
 
 async function box(locator: Locator) {
   const found = await locator.boundingBox();
@@ -32,29 +40,20 @@ for (const viewport of [
   test.describe(`laptop layout at ${viewport.width}×${viewport.height}`, () => {
     test.use({ viewport });
 
-    test('pad on the left, everything else on the right, within the layout rules; tap tempo too', async ({
-      page,
-    }) => {
+    test('pad on the left, everything else on the right, tempo too, within the layout rules', async ({ page }) => {
       await start(page);
       const pad = await box(page.locator('[data-control="pad"]'));
       for (const part of [
         page.getByRole('group', { name: 'step display' }),
         page.getByRole('slider', { name: 'chaos' }),
+        tempo(page),
         page.getByRole('group', { name: 'loop' }),
         page.getByRole('region', { name: 'hh' }),
       ]) {
         expect((await box(part)).x, `${part.toString()} right of the pad`).toBeGreaterThanOrEqual(pad.right);
       }
+      await expectTempoShown(page);
       await expectLayoutRules(page);
-
-      // The tempo panel only adds tap tempo: the strips stay.
-      await readout(page).click();
-      await expect(page.getByRole('button', { name: 'tap tempo' })).toBeInViewport();
-      await expect(page.getByRole('slider', { name: 'chaos' })).toBeInViewport();
-      await expectLayoutRules(page);
-
-      await readout(page).click();
-      await expect(page.getByRole('button', { name: 'tap tempo' })).toHaveCount(0);
     });
   });
 }
@@ -70,7 +69,7 @@ for (const viewport of [
   test.describe(`laptop layout at ${viewport.width}×${viewport.height}`, () => {
     test.use({ viewport });
 
-    test('folds the sound into the drum tabs, within the layout rules on each tab; tap tempo too', async ({
+    test('folds the sound into the drum tabs, within the layout rules on each tab, tempo still shown', async ({
       page,
     }) => {
       await start(page);
@@ -78,11 +77,13 @@ for (const viewport of [
       for (const part of [
         page.getByRole('group', { name: 'step display' }),
         page.getByRole('slider', { name: 'chaos' }),
+        tempo(page),
         page.getByRole('group', { name: 'loop' }),
         page.getByRole('tablist', { name: 'sound' }),
       ]) {
         expect((await box(part)).x, `${part.toString()} right of the pad`).toBeGreaterThanOrEqual(pad.right);
       }
+      await expectTempoShown(page);
 
       for (const drum of DRUMS) {
         await tab(page, drum).click();
@@ -90,11 +91,6 @@ for (const viewport of [
         await expectLayoutRules(page);
         expect((await box(page.locator('[data-control="pad"]'))).height, 'the pad keeps its size').toBe(pad.height);
       }
-
-      await readout(page).click();
-      await expect(page.getByRole('button', { name: 'tap tempo' })).toBeInViewport();
-      await expect(page.getByRole('slider', { name: 'chaos' })).toBeInViewport();
-      await expectLayoutRules(page);
     });
   });
 }
@@ -121,7 +117,7 @@ test.describe('a laptop window made shorter', () => {
 test.describe('laptop layout at 1280×800', () => {
   test.use({ viewport: { width: 1280, height: 800 } });
 
-  test('all three sound sections and swing show without opening a panel or tab', async ({ page }) => {
+  test('all three sound sections and swing show without opening a tab', async ({ page }) => {
     await start(page);
     await expect(page.getByRole('tab')).toHaveCount(0);
     for (const drum of DRUMS) {
@@ -170,15 +166,20 @@ test.describe('tablet layout at 820×1106', () => {
     const strips = await box(page.getByRole('slider', { name: 'drive' }));
     const loop = await box(page.getByRole('group', { name: 'loop' }));
     const tabs = await box(page.getByRole('tablist', { name: 'sound' }));
+    const sound = await box(page.getByRole('tabpanel'));
 
     for (const below of [steps, loop]) expect(below.y).toBeGreaterThanOrEqual(pad.bottom);
     expect(loop.x).toBeGreaterThanOrEqual(steps.right);
     expect(tabs.x).toBeGreaterThanOrEqual(strips.right);
     expect(tabs.y).toBeGreaterThanOrEqual(loop.bottom);
+    expect((await box(tempo(page))).y, 'tempo under the strips and the sound').toBeGreaterThanOrEqual(
+      Math.max(strips.bottom, sound.bottom),
+    );
+    await expectTempoShown(page);
     await expect(page.getByRole('button', { name: '→ sound' })).toHaveCount(0);
   });
 
-  test('keeps the layout rules on each drum tab and with the tempo panel open', async ({ page }) => {
+  test('keeps the layout rules and the pad size on each drum tab', async ({ page }) => {
     await start(page);
     const padHeight = (await box(page.locator('[data-control="pad"]'))).height;
     for (const drum of DRUMS) {
@@ -187,23 +188,6 @@ test.describe('tablet layout at 820×1106', () => {
       await expectLayoutRules(page);
       expect((await box(page.locator('[data-control="pad"]'))).height, 'the pad keeps its size').toBe(padHeight);
     }
-
-    await readout(page).click();
-    const panel = page.getByRole('region', { name: 'tempo' });
-    await expect(panel).toBeVisible();
-    await expect(page.getByRole('slider', { name: 'chaos' })).toHaveCount(0);
-    await expectLayoutRules(page);
-
-    // With the strips gone, the drum tabs alone set their row's height.
-    const panelPadHeight = (await box(page.locator('[data-control="pad"]'))).height;
-    for (const drum of DRUMS) {
-      await tab(page, drum).click();
-      expect((await box(page.locator('[data-control="pad"]'))).height, 'the pad keeps its size').toBe(panelPadHeight);
-    }
-
-    await page.getByRole('button', { name: '← play' }).click();
-    await expect(panel).toHaveCount(0);
-    await expect(page.getByRole('slider', { name: 'chaos' })).toBeVisible();
   });
 });
 

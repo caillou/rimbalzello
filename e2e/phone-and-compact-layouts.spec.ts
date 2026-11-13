@@ -2,9 +2,10 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import { expectLayoutRules } from './layout-rules.ts';
 import { readout } from './pad-readout.ts';
 
-// The short and compact layouts: phones too short for all six strips
-// (design.md; `designs/v2-01-phone.png`, `designs/v2-02-phone-compact.png`).
-// On a touch screen, so `// help` opens the help box.
+// The phone and compact layouts: the strips folded into `mix`, `fx` and
+// `tempo` tabs (design.md; `designs/v2-01-phone.png`,
+// `designs/v2-02-phone-compact.png`). On a touch screen, so `// help` opens
+// the help box.
 test.use({ hasTouch: true });
 
 /**
@@ -33,8 +34,9 @@ async function expectFits(page: Page) {
 }
 
 const VIEWPORTS = [
-  // Safari on a current iPhone: the short layout.
+  // Safari on current iPhones, short and tall: the phone layout.
   { width: 393, height: 659 },
+  { width: 393, height: 750 },
   // A shorter phone, and an SE in Safari: the compact layout.
   { width: 393, height: 600 },
   { width: 375, height: 553 },
@@ -44,18 +46,23 @@ for (const viewport of VIEWPORTS) {
   test.describe(`at ${viewport.width}×${viewport.height}`, () => {
     test.use({ viewport });
 
-    test('the layout rules hold in play, sound, tempo and help, with room for the pad', async ({ page }) => {
+    test('the layout rules hold on each tab, in sound mode and with help open, with room for the pad', async ({
+      page,
+    }) => {
       await page.goto('./');
       await page.evaluate(() => document.fonts.ready);
       // `▶ tap to play` leaves the mute labels free, in the pad too.
       await expectLayoutRules(page);
       await page.getByRole('button', { name: '▶ tap to play' }).click();
 
-      for (const name of ['mix', 'fx']) {
+      // Every tab holds three rows, so the pad keeps its size whichever is open.
+      const padHeight = (await box(pad(page))).height;
+      for (const name of ['mix', 'fx', 'tempo']) {
         await tab(page, name).click();
         await expect(tab(page, name)).toHaveAttribute('aria-selected', 'true');
         await expectLayoutRules(page);
         await expectFits(page);
+        expect((await box(pad(page))).height, `pad height on ${name}`).toBe(padHeight);
       }
 
       await page.getByRole('button', { name: '→ sound' }).click();
@@ -65,11 +72,6 @@ for (const viewport of VIEWPORTS) {
         await expectLayoutRules(page);
         await expectFits(page);
       }
-
-      await page.getByRole('button', { name: /^\d+ bpm$/ }).click();
-      await expect(page.getByRole('region', { name: 'tempo' })).toBeVisible();
-      await expectLayoutRules(page);
-      await expectFits(page);
 
       await page.getByRole('button', { name: '← play' }).click();
       await page.getByRole('button', { name: 'help', exact: true }).click();

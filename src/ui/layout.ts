@@ -8,28 +8,25 @@ import { createMemo, createSignal, onCleanup, type Accessor } from 'solid-js';
 import { tunables } from '../engine/tunables';
 
 /**
- * - phone: one column, pad on top, all six strips.
- * - short: the phone layout with the strips in `mix` and `fx` tabs.
- * - compact: the short layout tightened, with the step display inside the pad.
+ * - phone: one column, pad on top, the strips in `mix`, `fx` and `tempo` tabs.
+ * - compact: the phone layout tightened, with the step display inside the pad.
  * - tablet: wide and portrait: pad on top, two columns below.
  * - laptop: wide and landscape, tablets in landscape included: pad on the
  *   left, everything else on the right.
  * - rotate: landscape but too narrow or too short for two columns: a hint to
  *   turn the phone upright instead of the play screen.
  */
-export type Layout = 'phone' | 'short' | 'compact' | 'tablet' | 'laptop' | 'rotate';
+export type Layout = 'phone' | 'compact' | 'tablet' | 'laptop' | 'rotate';
 
-// The height of each phone layout's rows besides the pad, in CSS px. They
-// mirror the stylesheets; the e2e sweep over viewport heights catches a
-// stylesheet change that makes them wrong.
+/**
+ * The height of the phone layout's rows besides the pad, in CSS px: header
+ * 52, step display 80, loop strip 44, tab row 44 and three rows 132, bottom
+ * bar 48, footer 44. They mirror the stylesheets; the e2e sweep over
+ * viewport heights catches a stylesheet change that makes them wrong.
+ */
+const PHONE_ROWS = 444;
 
-/** Header 52, step display 80, loop strip 44, six strips 264, bottom bar 48, footer 44. */
-const PHONE_ROWS = 532;
-
-/** The phone layout's rows with a 44 px tab row and three strips instead of six. */
-const SHORT_ROWS = 444;
-
-// Below the short layout, the compact layout: a 44 px header and bottom bar
+// Below the phone layout, the compact layout: a 44 px header and bottom bar
 // and the step display inside the pad leave 352 px of rows. It is the
 // smallest, so its pad takes what is left.
 
@@ -38,8 +35,7 @@ function layoutFor(width: number, height: number): Layout {
   const landscape = width > height;
   if (width >= wideMinWidth && height >= wideMinHeight) return landscape ? 'laptop' : 'tablet';
   if (landscape) return 'rotate';
-  if (height >= PHONE_ROWS + padMinHeight) return 'phone';
-  return height >= SHORT_ROWS + padMinHeight ? 'short' : 'compact';
+  return height >= PHONE_ROWS + padMinHeight ? 'phone' : 'compact';
 }
 
 /** Whether a layout has two columns. */

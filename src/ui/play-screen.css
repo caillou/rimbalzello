@@ -1,5 +1,6 @@
-/* The play screen, phone layout: header, pad, step display, strips, bottom
-   bar and footer in one column filling the viewport. It never scrolls. */
+/* The play screen, phone layout: header, pad, step display, loop strip, the
+   strips' tabs, bottom bar and footer in one column filling the viewport.
+   It never scrolls. */
 
 .play-screen {
   display: flex;
@@ -64,7 +65,7 @@
   touch-action: none;
 }
 
-/* The bpm readout opens and closes the tempo panel. */
+/* The bpm readout; on a phone it opens the tempo tab. */
 .bpm {
   min-height: 44px;
   font-size: 15px;
@@ -76,6 +77,15 @@
   display: inline-block;
   min-width: 3ch;
   text-align: right;
+}
+
+/* Only a readout on the wide layouts: centred on the − and + as the button is. */
+span.bpm {
+  line-height: 44px;
+}
+
+/* Underlined where a tap opens the tempo tab. */
+button.bpm .bpm-value {
   text-decoration: underline dashed var(--text-tertiary);
   text-underline-offset: 4px;
 }
@@ -123,11 +133,6 @@
 .tap-to-play:focus-visible span {
   outline: 2px solid var(--text);
   outline-offset: 4px;
-}
-
-.strips {
-  flex-shrink: 0;
-  padding: 0 16px;
 }
 
 .bottom-bar {

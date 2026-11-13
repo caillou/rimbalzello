@@ -96,7 +96,7 @@ export const tunables = {
     nudgeRunGap: 500,
   },
 
-  /** − and + for tempo and swing repeat while held, in the header and the tempo panel. Tuned by feel. */
+  /** − and + for tempo and swing repeat while held, in the header and in tempo. Tuned by feel. */
   repeat: {
     /** Milliseconds from the press to the first repeat. About 400 ms, so a tap never repeats. */
     delay: 400,
@@ -104,7 +104,7 @@ export const tunables = {
     interval: 80,
   },
 
-  /** Tap tempo in the tempo panel, tuned by feel. */
+  /** Tap tempo, tuned by feel. */
   tapTempo: {
     /** The tempo is the average over this many most recent taps. About 4, one bar of beats. */
     taps: 4,
@@ -144,19 +144,19 @@ export const tunables = {
     wideMinHeight: 580,
     /**
      * About 700 px tall: what the laptop layout's right column needs for the
-     * three sound sections side by side (step display, strips, swing, loop
+     * three sound sections side by side (step display, strips, tempo, loop
      * strip and the sound sections, in 44 px rows) under the header and over
      * the bottom row. A shorter laptop window folds them into the drum tabs.
      */
     soundSectionsMinHeight: 700,
     /**
      * The shortest the pad gets above the compact layout, and so the phone
-     * breakpoints: each phone layout starts where its rows leave the pad this
-     * much. With 200, the phone layout (532 px of rows) starts at 732 px and
-     * the short layout (444 px) at 644 px; below that, the compact layout
-     * (352 px) takes over. About 200 px. design.md asks for about 240, which
-     * does not fit with 44 px rows: 553 px leaves the compact pad 201 px, and
-     * a 240 px pad in the short layout needs 684 px, more than 393×659 has.
+     * breakpoint: the phone layout starts where its rows leave the pad this
+     * much. With 200, the phone layout (444 px of rows) starts at 644 px;
+     * below that, the compact layout (352 px) takes over. About 200 px.
+     * design.md asks for about 240, which does not fit with 44 px rows: 553 px
+     * leaves the compact pad 201 px, and a 240 px pad in the phone layout
+     * needs 684 px, more than 393×659 has.
      */
     padMinHeight: 200,
   },

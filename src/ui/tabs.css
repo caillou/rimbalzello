@@ -1,5 +1,5 @@
-/* A row of tabs: sound mode's drum tabs, and the `mix` / `fx` tabs of the
-   short and compact layouts. The row sits on a hairline; the active tab is
+/* A row of tabs: sound mode's drum tabs, and the `mix` / `fx` / `tempo`
+   tabs of the phone layouts. The row sits on a hairline; the active tab is
    in its `--colour`, and its underline covers the hairline. */
 .tab-row {
   position: relative;

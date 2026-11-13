@@ -24,9 +24,9 @@ import { SoundSections } from './SoundSections';
 import { StepDisplay } from './StepDisplay';
 import { Strip } from './Strip';
 import { StripTabs, type StripTab } from './StripTabs';
-import { SwingRow, TapTempo, TempoPanel } from './TempoPanel';
+import { TempoControls } from './TempoControls';
 import './play-screen.css';
-import './short-and-compact.css';
+import './compact.css';
 import './wide-layouts.css';
 
 interface StripField {
@@ -36,8 +36,8 @@ interface StripField {
   set(setup: Setup, value: number): void;
 }
 
-/** The six strips by tab: `mix` the densities, `fx` chaos, drift and drive. */
-const STRIPS_BY_TAB: Readonly<Record<StripTab, readonly StripField[]>> = {
+/** The six strips by group: `mix` the densities, `fx` chaos, drift and drive. */
+const STRIPS_BY_GROUP: Readonly<Record<Exclude<StripTab, 'tempo'>, readonly StripField[]>> = {
   mix: DRUMS.map((drum) => ({
     label: drum,
     colour: `var(--${drum})`,
@@ -52,8 +52,8 @@ const STRIPS_BY_TAB: Readonly<Record<StripTab, readonly StripField[]>> = {
   })),
 };
 
-/** The six strips of the phone, tablet and laptop layouts, top to bottom (the laptop's in two columns). */
-const STRIPS = [...STRIPS_BY_TAB.mix, ...STRIPS_BY_TAB.fx];
+/** The six strips of the tablet and laptop layouts, top to bottom (the laptop's in two columns). */
+const STRIPS = [...STRIPS_BY_GROUP.mix, ...STRIPS_BY_GROUP.fx];
 
 /** What the kit follows from the store: drift, drive and mutes. */
 interface KitState {
@@ -183,24 +183,27 @@ export function App() {
     store.change((draft) => void (draft.bpm += by));
   }
 
-  // What sits in the strips' place: the strips in play, the drum tabs in
-  // sound mode, or the tempo panel.
-  const [mode, setMode] = createSignal<'play' | 'sound' | 'tempo'>('play');
-
-  // The play screen's layout, from its size. The short and compact layouts
-  // fold the strips into tabs, and the compact layout also moves the step
-  // display into the pad.
+  // The play screen's layout, from its size. The phone layouts fold the
+  // strips and tempo into the `mix`, `fx` and `tempo` tabs, and the compact
+  // layout also moves the step display into the pad. The wide layouts show
+  // the strips and tempo side by side, without tabs.
   const { layout, soundFolded, observe } = createLayout();
   let screen!: HTMLElement;
   onMount(() => observe(screen));
-  const [stripTab, setStripTab] = createSignal<StripTab>('mix');
-  const stripsInTabs = () => layout() === 'short' || layout() === 'compact';
   const wide = () => isWide(layout());
-  // The mode, as the strips' place shows it. Wide layouts show the sound
-  // beside the strips, so sound mode is for phones only. The laptop keeps
-  // its strips when the tempo panel opens: swing is inline there, so the
-  // panel only adds tap tempo next to it.
-  const stripsPlace = () => (layout() === 'laptop' || (wide() && mode() === 'sound') ? 'play' : mode());
+  const [stripTab, setStripTab] = createSignal<StripTab>('mix');
+
+  // What sits in the tabs' place on a phone: the strips and tempo in play,
+  // the drum tabs in sound mode. Wide layouts show the sound beside the
+  // strips, so sound mode is for phones only.
+  const [mode, setMode] = createSignal<'play' | 'sound'>('play');
+  const soundMode = () => !wide() && mode() === 'sound';
+
+  // The bpm readout opens the tempo tab, from either strips tab or from sound mode.
+  function openTempoTab() {
+    setMode('play');
+    setStripTab('tempo');
+  }
 
   // Help: keycap hints on the wide layouts of a screen without touch (a
   // laptop), where the keyboard plays; the help box over the pad elsewhere.
@@ -275,6 +278,15 @@ export function App() {
     />
   );
 
+  const tempoControls = () => <TempoControls setup={setup} onChange={(edit) => store.change(edit)} />;
+
+  const bpmReadout = () => (
+    <>
+      <span class="bpm-value">{setup().bpm}</span>
+      <span class="bpm-unit"> bpm</span>
+    </>
+  );
+
   const stripRow = (strip: StripField) => (
     <Strip
       label={strip.label}
@@ -332,16 +344,13 @@ export function App() {
           <PressButton class="tempo-button" label="tempo down" repeat onPress={() => changeTempo(-1)}>
             −<Keycap>,</Keycap>
           </PressButton>
-          {/* Opens the tempo panel from play or sound mode; closes it back to play. */}
-          <button
-            type="button"
-            class="bpm"
-            aria-expanded={mode() === 'tempo'}
-            onClick={() => setMode(mode() === 'tempo' ? 'play' : 'tempo')}
-          >
-            <span class="bpm-value">{setup().bpm}</span>
-            <span class="bpm-unit"> bpm</span>
-          </button>
+          {/* On a phone the readout opens the tempo tab. The wide layouts always
+              show tempo, so there it has nothing to open and is only a readout. */}
+          <Show when={!wide()} fallback={<span class="bpm">{bpmReadout()}</span>}>
+            <button type="button" class="bpm" onClick={openTempoTab}>
+              {bpmReadout()}
+            </button>
+          </Show>
           <PressButton class="tempo-button" label="tempo up" repeat onPress={() => changeTempo(1)}>
             +<Keycap>.</Keycap>
           </PressButton>
@@ -382,21 +391,19 @@ export function App() {
       />
 
       <Switch>
-        <Match when={stripsPlace() === 'play' && !stripsInTabs()}>
+        <Match when={wide()}>
           <div class="strips">
             <For each={STRIPS}>{stripRow}</For>
           </div>
+          {tempoControls()}
         </Match>
-        <Match when={stripsPlace() === 'play'}>
-          <StripTabs active={stripTab} onSelect={setStripTab}>
-            <For each={STRIPS_BY_TAB[stripTab()]}>{stripRow}</For>
-          </StripTabs>
-        </Match>
-        <Match when={stripsPlace() === 'sound'}>
+        <Match when={soundMode()}>
           <DrumTabs setup={setup} onChange={(edit) => store.change(edit)} />
         </Match>
-        <Match when={stripsPlace() === 'tempo'}>
-          <TempoPanel setup={setup} onChange={(edit) => store.change(edit)} />
+        <Match when={!soundMode()}>
+          <StripTabs active={stripTab} onSelect={setStripTab}>
+            {(tab) => (tab === 'tempo' ? tempoControls() : <For each={STRIPS_BY_GROUP[tab]}>{stripRow}</For>)}
+          </StripTabs>
         </Match>
       </Switch>
 
@@ -405,12 +412,6 @@ export function App() {
           <DrumTabs setup={setup} onChange={(edit) => store.change(edit)} />
         </Match>
         <Match when={layout() === 'laptop'}>
-          <div class="inline-tempo">
-            <SwingRow setup={setup} onChange={(edit) => store.change(edit)} />
-            <Show when={mode() === 'tempo'}>
-              <TapTempo onChange={(edit) => store.change(edit)} />
-            </Show>
-          </div>
           {/* A window too short for the three sound sections folds them into the drum tabs. */}
           <Show when={soundFolded()} fallback={<SoundSections setup={setup} onChange={(edit) => store.change(edit)} />}>
             <DrumTabs setup={setup} onChange={(edit) => store.change(edit)} />
@@ -420,8 +421,8 @@ export function App() {
 
       <div class="bottom-bar">
         {/* One button, so it keeps focus when `→ sound` or `← play` swaps what sits above it.
-            Wide layouts have no sound mode: there it only closes the tempo panel. */}
-        <Show when={!wide() || mode() === 'tempo'}>
+            Wide layouts have no sound mode. */}
+        <Show when={!wide()}>
           <button type="button" class="bar-button" onClick={() => setMode(mode() === 'play' ? 'sound' : 'play')}>
             <span class="marker">{mode() === 'play' ? '→' : '←'}</span> {mode() === 'play' ? 'sound' : 'play'}
           </button>

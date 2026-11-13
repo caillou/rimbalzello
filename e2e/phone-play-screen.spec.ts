@@ -2,9 +2,9 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import { expectLayoutRules } from './layout-rules.ts';
 import { readout } from './pad-readout.ts';
 
-// The play screen in the phone layout, all six strips: Safari on a current
-// iPhone with room for them (design.md: about 660–750 px of height). Shorter
-// phones get the short and compact layouts (short-and-compact-layouts.spec.ts).
+// The play screen in the phone layout: Safari on a tall current iPhone
+// (design.md: about 660–750 px of height). The tabs and the compact layout
+// of shorter phones are in phone-and-compact-layouts.spec.ts.
 test.use({ viewport: { width: 393, height: 750 } });
 
 test.beforeEach(async ({ page }) => {
@@ -49,6 +49,7 @@ test('a drum label in the step display toggles its mute; strip labels do not', a
 });
 
 test('a strip moves by the drag, wherever it starts; a tap does not change it', async ({ page }) => {
+  await page.getByRole('tab', { name: 'fx', exact: true }).click();
   const chaos = strip(page, 'chaos');
   const start = await valueOf(chaos);
   const row = (await chaos.boundingBox())!;

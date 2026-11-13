@@ -13,7 +13,7 @@ Rimbalzello ("skipping stones") is a static web app at `rimbalzello.caillou.ch`.
 - A step display shows the pattern, one bar of 32 steps, as text (`x` and `·`), coloured per drum. Its drum labels are the mute toggles.
 - A touch-strip looper loops 1/4 to 1/32 of a bar while held, then slips back to where the music would have been.
 - An anchor snapshots the current groove and sound; "return" brings it back at the next bar.
-- Swing delays the off-beat 16ths. Tempo, swing and tap tempo live in the tempo panel.
+- Swing delays the off-beat 16ths. Tempo, swing and tap tempo live in the `tempo` tab next to `mix` and `fx` (a group of their own on wide screens).
 - The URL hash always holds the current setup, so a link shares a groove.
 - The look follows caillou.ch: IBM Plex Mono, dark `#202322`, Monokai-style accents, lowercase text, `#` markers.
 
@@ -35,12 +35,12 @@ Where `prd.md` and `design.md` disagree, `prd.md` wins for behaviour and `design
 
 ### Tempo and swing
 
-8. As a player, I want to tap the bpm readout to open the tempo panel, so that tempo, swing and tap tempo sit in one place.
+8. As a player, I want tempo, swing and tap tempo in a `tempo` tab next to `mix` and `fx`, and a tap on the bpm readout to open it, so that I can find them.
 9. As a player, I want − and + for tempo that repeat while held, so that I can get from 128 to 172 without forty taps.
 10. As a player, I want to tap the beat to set the tempo, so that I can match the music around me.
 11. As a player, I want a swing control that delays the off-beat 16ths, so that the groove can shuffle.
 12. As a player, I want a light swing on by default, so that the first groove already feels loose rather than mechanical.
-13. As a laptop player, I want swing shown inline without opening a panel, so that I see everything at once.
+13. As a tablet or laptop player, I want tempo, swing and tap tempo shown beside the strips without opening a tab, so that I see everything at once.
 
 ### The pad
 
@@ -99,7 +99,7 @@ Where `prd.md` and `design.md` disagree, `prd.md` wins for behaviour and `design
 ### Layouts
 
 50. As a phone player, I want the pad on top and everything else below, without scrolling, so that every touch lands on a control.
-51. As a player on a short phone, I want the strips folded into `mix` and `fx` tabs, so that the pad stays big enough to play.
+51. As a phone player, I want the strips and tempo folded into `mix`, `fx` and `tempo` tabs, so that the pad stays big enough to play.
 52. As a player on the smallest phones (iPhone SE in Safari), I want a compact layout that still fits without scrolling, so that the instrument works there too.
 53. As a tablet player, I want two columns like the laptop, so that I use the wider screen.
 54. As a laptop player, I want the pad on the left and all controls on the right, including all three drums' sound controls side by side, so that I see everything at once.
@@ -174,7 +174,7 @@ Where `prd.md` and `design.md` disagree, `prd.md` wins for behaviour and `design
 7. **Tunables.** One module holds every value tuned by ear or feel, each with a comment: initial setup, drift amounts, drive curve and gain compensation, accent velocity, glide length, gesture thresholds and windows, fine-adjust speed, lookahead, layout breakpoints, minimum pad height, tap-tempo averaging. Code reads these values from here and nowhere else.
 8. **Keyboard bindings.** Key down/up → intents, including hold semantics for the looper and the hint toggle. Keys bind by physical position (`event.code`), designed for the US layout. Key repeat is ignored except for tempo. Hint visibility is stored in localStorage (wrapped in try/catch).
 9. **Audio session.** Creates and resumes the AudioContext on the first gesture. Sets `navigator.audioSession.type = 'playback'` where it exists, otherwise starts a silent looping `<audio>` element in the same gesture, so the iOS silent switch does not mute the app. Resumes after interruptions (calls, app switches, `visibilitychange`); when the browser refuses, shows `tap to resume`. Holds a Screen Wake Lock while playing.
-10. **UI (Solid).** Layouts, controls, step display, pad rendering, tempo panel, hints, about page.
+10. **UI (Solid).** Layouts, controls, step display, pad rendering, tabs, hints, about page.
 
 ### Steps, bars and swing
 
@@ -187,8 +187,8 @@ Where `prd.md` and `design.md` disagree, `prd.md` wins for behaviour and `design
 ### Tempo
 
 - Default 128 bpm, range 60–200, whole bpm.
-- Tapping the bpm readout replaces the strips with the tempo panel, `## tempo`: bpm with − and +, swing with − and +, and a tap-tempo button. − and + repeat while held. Tap tempo averages the last few taps (count in tunables), rounds to whole bpm and clamps to the range.
-- On the laptop, swing is shown inline, so the panel is not needed to see or change it.
+- On phones the `tempo` tab, after `mix` and `fx`, holds bpm with − and +, swing with − and +, and a tap-tempo button, in three rows like the other tabs, so the pad keeps its size. Tapping the bpm readout opens it, also from sound mode. − and + repeat while held, there and in the header. Tap tempo averages the last few taps (count in tunables), rounds to whole bpm and clamps to the range.
+- On the tablet and laptop, tempo is a third group beside mix and fx, always shown, so no tab is needed to see or change it.
 
 ### Transport rules
 
@@ -279,15 +279,14 @@ Out-of-range bpm or swing values clamp. A wrong length, bad base64 or an unknown
 
 - Size everything against the real browser viewport (`100dvh`), not the device screen. Safari on an iPhone shows roughly 660–750 px of height in portrait, an iPhone SE about 550 px. Breakpoints are recomputed from measured viewports in the design pass and live in the tunables module.
 - Four layouts:
-  - **Phone**, one column: header (`# rimbalzello`, − bpm +, stop), pad (takes the remaining height), step display, loop strip, strips (bd, sd, hh, chaos, drift, drive), bottom bar (`→ sound`, `set anchor`, `↺ return on bar`), centred footer (`// help  // about  // source`).
-  - **Short phone**: the strips fold into `mix` (bd sd hh) and `fx` (chaos drift drive) tabs. Minimum pad height about 240 px.
-  - **Compact**: the smallest case (iPhone SE in Safari). Tighter rows and a smaller step display so it fits without scrolling. Sound mode is designed for short and compact as well.
-  - **Tablet**, about 700 px wide or more: two columns like the laptop; tabs only for sound.
-  - **Laptop**: pad on the left; on the right the step display, the strips in two columns (bd/chaos, sd/drift, hh/drive) plus swing inline, the loop strip, then `## bd`, `## sd`, `## hh` sound sections side by side.
-- Exact visuals for compact, tablet, the tempo panel, `▶ tap to play` and the rotate hint come from a later design pass; screenshots pending.
+  - **Phone**, one column: header (`# rimbalzello`, − bpm +, stop), pad (takes the remaining height), step display, loop strip, tabs `mix` (bd sd hh), `fx` (chaos drift drive) and `tempo` (bpm, swing, tap tempo), bottom bar (`→ sound`, `set anchor`, `↺ return on bar`), centred footer (`// help  // about  // source`). Minimum pad height about 200 px; 240 does not fit with 44 px rows.
+  - **Compact**: the smallest case (iPhone SE in Safari). Tighter rows and a smaller step display so it fits without scrolling. Sound mode is designed for compact as well.
+  - **Tablet**, about 700 px wide or more: two columns like the laptop; tabs only for sound; tempo in one row across both columns.
+  - **Laptop**: pad on the left; on the right the step display, the strips in two columns (bd/chaos, sd/drift, hh/drive), tempo in one row (bpm, swing, tap tempo), the loop strip, then `## bd`, `## sd`, `## hh` sound sections side by side.
+- Exact visuals for compact, tablet, the tempo tab, `▶ tap to play` and the rotate hint come from a later design pass; screenshots pending.
 - Landscape phones are not a v1 layout. A wide viewport that is tall enough gets the tablet layout; otherwise the app shows a rotate hint.
 - The play screen never scrolls; every touch must land on a control. Loop strip and bottom bar are always visible.
-- Sound mode on phones: the strips are replaced by drum tabs (`bd` `sd` `hh`, active tab in the drum's colour) with that drum's sliders; the pad stays playable; the bottom bar shows `← play`.
+- Sound mode on phones: the `mix` / `fx` / `tempo` tabs are replaced by drum tabs (`bd` `sd` `hh`, active tab in the drum's colour) with that drum's sliders; the pad stays playable; the bottom bar shows `← play`.
 - Wide screens: footer bottom left, sharing the row with `set anchor` and `return`.
 
 ### Input rules

@@ -36,7 +36,7 @@ Use these words, with these meanings, in code, tests, issues and docs. Don't inv
 - **Glide**: the short travel (1–2 steps) of the position toward a new pad target instead of a hard jump. Starts at once on a tap.
 - **Fine adjust**: double-tap-and-slide on the pad, or shift+arrows: relative, slower movement.
 - **Tap to play**: the `▶ tap to play` overlay on the pad at load. One tap unlocks audio and starts the groove.
-- **Tap tempo**: setting the tempo by tapping the beat in the tempo panel.
+- **Tap tempo**: setting the tempo by tapping the beat on the `tap tempo` button, next to bpm and swing.
 
 ## Screen
 
@@ -45,8 +45,7 @@ Use these words, with these meanings, in code, tests, issues and docs. Don't inv
 - **Loop strip**: the four-zone looper control.
 - **Bottom bar**: `sound` / `play`, `set anchor`, `↺ return on bar`.
 - **Footer**: `// help  // about  // source` under the bottom bar.
-- **Tempo panel**: `## tempo`, opened by tapping the bpm readout. It replaces the strips and holds bpm, swing and tap tempo. On the laptop, swing is also shown inline.
-- **Tabs**: narrow-screen folding. **mix** (bd sd hh densities) and **fx** (chaos drift drive) on short and compact phones; **drum tabs** (bd sd hh) in sound mode.
+- **Tabs**: narrow-screen folding. **mix** (bd sd hh densities), **fx** (chaos drift drive) and **tempo** (bpm, swing, tap tempo) on phones, where tapping the bpm readout opens the tempo tab; **drum tabs** (bd sd hh) in sound mode. The tablet and laptop show mix, fx and tempo side by side as groups instead.
 - **Step display**: the text rendering of one bar (`x` hit, `·` rest, 32 characters per drum), current step highlighted yellow. Its drum labels are the mute toggles.
 - **Keycap hints**: small outlined keys next to controls on laptops, toggled with `?`, `h` or `// help`.
 - **Help**: on touch screens, a hint box over the pad explaining gestures and controls; on laptops, the keycap hints.
@@ -54,9 +53,8 @@ Use these words, with these meanings, in code, tests, issues and docs. Don't inv
 
 ## Layouts
 
-- **Phone layout**: one column, pad on top, all six strips below.
-- **Short layout**: the phone layout with strips folded into mix / fx tabs.
-- **Compact layout**: the smallest phone case (iPhone SE in Safari), tighter than the short layout.
+- **Phone layout**: one column, pad on top, the strips and tempo folded into mix / fx / tempo tabs below.
+- **Compact layout**: the smallest phone case (iPhone SE in Safari), tighter than the phone layout.
 - **Tablet layout**: about 700 px wide or more; two columns like the laptop, tabs only for sound.
 - **Laptop layout**: two columns, all sound sections side by side, no tabs.
 - **Rotate hint**: what a landscape phone shows when it is too short for the tablet layout.

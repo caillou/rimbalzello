@@ -8,14 +8,14 @@ The review round in `reviews/` changed the step resolution, the layouts, mutes, 
 
 | File | What it shows | Status |
 | --- | --- | --- |
-| `designs/06-laptop-shortcuts-shown.png` | Laptop (1280×800) with keycap hints shown | outdated, pending design pass: old tempo and help keys, no swing, map nodes drawn inset |
+| `designs/06-laptop-shortcuts-shown.png` | Laptop (1280×800) with keycap hints shown | outdated, pending design pass: old tempo and help keys, no tempo row, map nodes drawn inset |
 | `designs/07-laptop-shortcuts-hidden.png` | Laptop, default state, hints hidden | outdated, pending design pass: as 06 |
 | `designs/08-about.png` | About view | current |
 | `designs/09-404.png` | 404 page | current |
-| `designs/v2-01-phone.png` | Phone in Safari (393×659): mix / fx tabs, mutes on step labels, X/Y readout | current |
+| `designs/v2-01-phone.png` | Phone in Safari (393×659): mix / fx tabs, mutes on step labels, X/Y readout | current, but without the `tempo` tab after `fx` |
 | `designs/v2-02-phone-compact.png` | Compact (SE in Safari, 375×553): slim header, step display inside the pad | current |
 | `designs/v2-03-phone-sound.png` | Sound mode on a phone: drum tabs, sliders in two columns | current |
-| `designs/v2-04-phone-tempo.png` | Tempo panel: bpm, swing 56 %, tap tempo | current |
+| `designs/v2-04-phone-tempo.png` | The former tempo panel: bpm, swing 56 %, tap tempo | outdated: the `tempo` tab holds the same three rows, without the `## tempo` heading and `← play` |
 | `designs/v2-05-phone-tap-to-play.png` | First launch: `▶ tap to play` over the dimmed pad | current |
 | `designs/v2-06-phone-help.png` | Help open: two-finger undo, tap labels to mute | current |
 | `designs/v2-07-tablet.png` | Tablet portrait (820×1106): pad on top, two columns below | current |
@@ -47,8 +47,7 @@ Every layout is sized against the real browser viewport (`100dvh`), not the devi
 
 | Layout | When | Shape |
 | --- | --- | --- |
-| phone | narrow, tall enough for all six strips | one column, as below |
-| short phone | narrow, less height | strips fold into `mix` / `fx` tabs |
+| phone | narrow | one column, strips and tempo in `mix` / `fx` / `tempo` tabs, as below |
 | compact | the smallest case (SE in Safari) | slimmer header, step display moves into the pad as an overlay (`v2-02-phone-compact.png`) |
 | tablet | about 700 px wide or more | portrait: pad on top, two columns below; landscape: like the laptop (`v2-07-tablet.png`) |
 | laptop | wide enough for the three sound sections side by side | two columns, no tabs |
@@ -60,11 +59,11 @@ The play screen never scrolls. Every touch lands on a control. Loop strip and bo
 
 Top to bottom, filling the viewport exactly:
 
-1. **Header**: `# rimbalzello` left; `− 128 bpm +` and `stop`/`play` (italic, underlined) right. Tapping the bpm readout opens the tempo panel. The title is not a link.
+1. **Header**: `# rimbalzello` left; `− 128 bpm +` and `stop`/`play` (italic, underlined) right. Tapping the bpm readout opens the `tempo` tab. The title is not a link.
 2. **Pad**: takes all remaining height. Dark field, thin crosshair through the position, a faint ring around it, the position as a yellow square, and the X/Y readout (0–100). The pad keeps clear of the left 16 px of the screen.
 3. **Step display**: three lines, `bd`, `sd`, `hh`, 32 characters each, one bar: `x` in the drum's colour for a hit, `·` in grey for a rest. Current step highlighted. The drum labels are the mute toggles (see Mutes).
 4. **Loop strip**.
-5. **Strips**: bd, sd, hh densities, then chaos, drift, drive.
+5. **Tabs**: `mix` (the bd, sd and hh density strips), `fx` (chaos, drift and drive) and `tempo` (see Tempo). Each tab holds three 44 px rows, so the pad keeps its size when the tab changes.
 6. **Bottom bar**: `→ sound`, `set anchor`, `↺ return on bar`.
 7. **Footer**: `// help   // about   // source`, centred.
 
@@ -74,15 +73,17 @@ On load the app is stopped. A big `▶ tap to play` sits over the pad; one tap s
 
 ### Sound mode (phone)
 
-Tapping `→ sound` swaps the strips for drum tabs: `bd` `sd` `hh`, the active tab in its drum's colour with an underline and the drum's full name (`bass drum`) in grey italics on the right. Below: that drum's sliders. The pad, step display and loop strip stay. The bottom bar's first item becomes `← play`. On phones the drum's sliders sit in two columns so they fit under the pad (`v2-03-phone-sound.png`).
+Tapping `→ sound` swaps the `mix` / `fx` / `tempo` tabs for drum tabs: `bd` `sd` `hh`, the active tab in its drum's colour with an underline and the drum's full name (`bass drum`) in grey italics on the right. Below: that drum's sliders. The pad, step display and loop strip stay. The bottom bar's first item becomes `← play`. On phones the drum's sliders sit in two columns so they fit under the pad (`v2-03-phone-sound.png`).
 
-### Tempo panel
+### Tempo
 
-Tapping the bpm readout replaces the strips with `## tempo`: bpm with − and +, swing with − and +, and a `tap` button for tap tempo. − and + repeat while held. Tempo runs 60–200 bpm, default 128. Swing runs 50–75 %, default 56 %. Tapping the bpm readout again, or `← play` in the bottom bar, closes the panel. On the laptop, swing is shown inline, so the panel only adds tap tempo there. See the `v2-` screenshots.
+The `tempo` tab, after `mix` and `fx`, holds three rows: bpm with − and +, swing with − and +, and a boxed `tap tempo` button. − and + repeat while held, here and in the header. Tempo runs 60–200 bpm, default 128. Swing runs 50–75 %, default 56 %. Tapping the bpm readout opens the tab, from `mix`, `fx` or sound mode. `v2-04-phone-tempo.png` shows the rows under the former panel's heading.
 
-### Short and compact phones
+The tablet and laptop show tempo as a third group beside mix and fx, always on screen: bpm, swing and `tap tempo` in one row under the strips, `tap tempo` taking the rest of the row. There the bpm readout has nothing to open and is only a readout, without the dashed underline.
 
-On short phones the six strips fold into **mix** (bd sd hh) and **fx** (chaos drift drive) tabs. The pad keeps at least 200 px, with 44 px rows, 240 does not fit the SE. Loop strip, bottom bar and footer stay visible. The compact layout covers the smallest case (iPhone SE in Safari) with tighter rows and a smaller step display. Its exact shape comes from the design pass.
+### Compact phones
+
+On every phone the pad keeps at least 200 px; with 44 px rows, 240 does not fit the SE. Loop strip, bottom bar and footer stay visible. The compact layout covers the smallest case (iPhone SE in Safari) with tighter rows and a smaller step display. Its exact shape comes from the design pass.
 
 ### Landscape phones
 
@@ -90,12 +91,12 @@ Not a v1 layout. A wide viewport that is tall enough gets the tablet layout; oth
 
 ## Tablets
 
-About 700 px wide or more. Portrait: pad on top (takes the remaining height), below it two columns: step display and all six strips on the left; loop strip and sound drum tabs on the right (see `v2-07-tablet.png`). Landscape: pad on the left, everything else on the right, like the laptop. Drum tabs are the only tabs on a tablet.
+About 700 px wide or more. Portrait: pad on top (takes the remaining height), below it two columns: step display and all six strips on the left; loop strip and sound drum tabs on the right (see `v2-07-tablet.png`); then the tempo row across both columns. Landscape: pad on the left, everything else on the right, like the laptop. Drum tabs are the only tabs on a tablet.
 
 ## Laptops
 
 - Pad on the left (about 560 px wide on a 1280 px screen), full height, with the 5×5 map nodes drawn as faint `+` marks and the position readout (`x 34 · y 58`, 0–100). The nodes sit at 0, 64, 128, 192 and 256 on the 0–255 scale, so the outer nodes lie on the pad edges.
-- Right column: step display; strips in two columns (bd / chaos, sd / drift, hh / drive) with swing inline; loop strip; a hairline; then `## bd`, `## sd`, `## hh` side by side with all sound sliders. No tabs.
+- Right column: step display; strips in two columns (bd / chaos, sd / drift, hh / drive); the tempo row (bpm, swing, `tap tempo`); loop strip; a hairline; then `## bd`, `## sd`, `## hh` side by side with all sound sliders. No tabs.
 - Bottom row: footer bottom left (`// help ?  // about  // source`), `set anchor` and `↺ return on bar` bottom right.
 
 ### Keyboard

@@ -119,30 +119,24 @@ test('a direct visit to /about/ shows about over the app; × lands on the play s
   expect(problems).toEqual([]);
 });
 
-test.describe('with all six strips', () => {
-  // Chaos sits behind the `fx` tab at 393×659 (the short layout), so this
-  // test takes a phone tall enough to show it.
-  test.use({ viewport: { width: 393, height: 750 } });
+test('a change just before opening about is what back and a reload give', async ({ page }) => {
+  await page.goto('./');
+  await setupHash(page);
+  const sd = page.getByRole('slider', { name: 'sd', exact: true });
+  // Inside the hash's one-second write gap, so the play screen's entry keeps an older hash.
+  for (let i = 0; i < 3; i++) await sd.press('PageUp');
+  const value = await sd.getAttribute('aria-valuenow');
+  await aboutLink(page).click();
+  await expect(aboutView(page)).toBeVisible();
+  const aboutHash = new URL(page.url()).hash;
+  // The gap ends while about is open, which leaves the hash nothing to write.
+  await page.waitForTimeout(1500);
 
-  test('a change just before opening about is what back and a reload give', async ({ page }) => {
-    await page.goto('./');
-    await setupHash(page);
-    const chaos = page.getByRole('slider', { name: 'chaos', exact: true });
-    // Inside the hash's one-second write gap, so the play screen's entry keeps an older hash.
-    for (let i = 0; i < 3; i++) await chaos.press('PageUp');
-    const value = await chaos.getAttribute('aria-valuenow');
-    await aboutLink(page).click();
-    await expect(aboutView(page)).toBeVisible();
-    const aboutHash = new URL(page.url()).hash;
-    // The gap ends while about is open, which leaves the hash nothing to write.
-    await page.waitForTimeout(1500);
-
-    await page.goBack();
-    await expect(aboutView(page)).toBeHidden();
-    await expect(page).toHaveURL(`./${aboutHash}`);
-    await page.reload();
-    await expect(chaos).toHaveAttribute('aria-valuenow', value!);
-  });
+  await page.goBack();
+  await expect(aboutView(page)).toBeHidden();
+  await expect(page).toHaveURL(`./${aboutHash}`);
+  await page.reload();
+  await expect(sd).toHaveAttribute('aria-valuenow', value!);
 });
 
 test('a held esc steps back to the play screen, not past it', async ({ page }) => {
