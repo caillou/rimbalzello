@@ -7,6 +7,7 @@
 
 import { createEffect, createUniqueId, For, type Accessor } from 'solid-js';
 import type { LoopSteps } from '../engine/transport';
+import { Keycap } from './Keycap';
 import './loop-strip.css';
 
 export interface LoopStripProps {
@@ -20,12 +21,12 @@ export interface LoopStripProps {
   onRelease(): void;
 }
 
-/** The zones, longest on the left: 1/4, 1/8, 1/16 and 1/32 of a bar. */
-const ZONES: readonly { label: string; steps: LoopSteps }[] = [
-  { label: '1/4', steps: 8 },
-  { label: '1/8', steps: 4 },
-  { label: '1/16', steps: 2 },
-  { label: '1/32', steps: 1 },
+/** The zones, longest on the left: 1/4, 1/8, 1/16 and 1/32 of a bar, and the keys that hold them. */
+const ZONES: readonly { label: string; steps: LoopSteps; key: string }[] = [
+  { label: '1/4', steps: 8, key: '1' },
+  { label: '1/8', steps: 4, key: '2' },
+  { label: '1/16', steps: 2, key: '3' },
+  { label: '1/32', steps: 1, key: '4' },
 ];
 
 /** Keys that hold a focused zone, like a button pressed down. */
@@ -123,6 +124,7 @@ export function LoopStrip(props: LoopStripProps) {
               onBlur={blur}
             >
               {zone.label}
+              <Keycap>{zone.key}</Keycap>
             </button>
           )}
         </For>

@@ -16,7 +16,7 @@ function keyboard(storage: HintStorage = memoryStorage()) {
   return createKeyboard({ storage });
 }
 
-/** A key event as the browser sends it; `key` is what the layout prints, which the bindings must ignore. */
+/** A key event as the browser sends it; `key` is what the layout prints, which the bindings ignore except for `?`. */
 function key(code: string, extra: Partial<KeyEventLike> & { key?: string } = {}): KeyEventLike {
   return { code, repeat: false, shiftKey: false, timeStamp: 0, ...extra };
 }
@@ -63,6 +63,31 @@ describe('bindings by physical key', () => {
     expect(keyboard().keyDown(key('KeyQ', { target: input }))).toEqual([]);
     expect(keyboard().keyDown(key('Space', { target: input }))).toEqual([]);
   });
+
+  test('? shows the hints wherever the layout puts it: shift + the key right of 0 on Swiss, of n on AZERTY', () => {
+    expect(keyboard().keyDown(key('Minus', { key: '?', shiftKey: true }))).toEqual([{ type: 'hints', shown: true }]);
+    expect(keyboard().keyDown(key('KeyM', { key: '?', shiftKey: true }))).toEqual([{ type: 'hints', shown: true }]);
+  });
+});
+
+describe('a focused control', () => {
+  const button = { tagName: 'BUTTON' };
+  const strip = { tagName: 'DIV', getAttribute: (name: string) => (name === 'role' ? 'slider' : null) };
+
+  test('a focused button takes space, and every other key still plays', () => {
+    expect(keyboard().keyDown(key('Space', { target: button }))).toEqual([]);
+    expect(keyboard().keyDown(key('KeyQ', { target: button }))).toEqual([{ type: 'toggle-mute', drum: 'bd' }]);
+    expect(keyboard().keyDown(key('ArrowLeft', { target: button }))).toEqual([
+      { type: 'begin' },
+      { type: 'nudge', dx: -step, dy: 0 },
+    ]);
+  });
+
+  test('a focused strip takes the arrows, and space still plays', () => {
+    expect(keyboard().keyDown(key('ArrowUp', { target: strip }))).toEqual([]);
+    expect(keyboard().keyDown(key('ArrowLeft', { target: { tagName: 'INPUT', type: 'range' } }))).toEqual([]);
+    expect(keyboard().keyDown(key('Space', { target: strip }))).toEqual([{ type: 'play-stop' }]);
+  });
 });
 
 describe('key repeat', () => {
@@ -99,6 +124,16 @@ describe('loop keys', () => {
     kb.keyDown(key('Digit3'));
     expect(kb.keyUp(key('Digit1'))).toEqual([]);
     expect(kb.keyUp(key('Digit3'))).toEqual([{ type: 'loop-end' }]);
+  });
+
+  test('a forgotten loop key holds nothing more: releasing it ends nothing, and a new press loops alone', () => {
+    const kb = keyboard();
+    kb.keyDown(key('Digit2'));
+    kb.forgetLoopKeys();
+    expect(kb.keyDown(key('Digit2', { repeat: true }))).toEqual([]);
+    expect(kb.keyDown(key('Digit3'))).toEqual([{ type: 'loop', steps: 2 }]);
+    expect(kb.keyUp(key('Digit3'))).toEqual([{ type: 'loop-end' }]);
+    expect(kb.keyUp(key('Digit2'))).toEqual([]);
   });
 
   test('switching away from the window while holding a loop key ends the loop', () => {

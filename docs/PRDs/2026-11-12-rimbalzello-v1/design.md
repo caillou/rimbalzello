@@ -115,7 +115,9 @@ Designed for the US layout. Keys bind by physical position (`event.code`), so th
 | shift + arrows | fine nudge |
 | `?` or `h` | show / hide keycap hints |
 
-Keycap hints are hidden by default; `?`, `h` or `// help` toggles them, and the choice is remembered on the device. When shown, the pad's corner reads `nudge ←↑↓→  shift fine`.
+Keycap hints are hidden by default; `?`, `h` or `// help` toggles them, and the choice is remembered on the device. When shown, the pad's corner reads `nudge ←↑↓→  shift fine`. They show on the tablet and laptop layouts of a screen without touch; elsewhere `// help` opens the help box. In a tablet layout under about 730 px wide, the step display's text drops from 15 to 14 px while they show, so the `q` `w` `e` keycaps fit beside their drum labels. `?` also works by the character it types, so it works where a layout puts it elsewhere (on a Swiss keyboard, shift and the key right of 0).
+
+Keys play wherever focus is, except in a text input and for the keys a focused control uses itself: space presses a focused button (a focused loop zone holds), and the arrows move a focused strip. A click or drag leaves no focus on a button or strip, so a focused control is one reached with Tab, and its focus ring shows where space and the arrows go. Keys play nothing while about is open or the rotate hint shows. Letting go of Cmd lets go of every held key, since macOS drops the keyup of a key released while Cmd is down.
 
 ## Pad interaction
 

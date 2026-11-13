@@ -2,8 +2,16 @@
 // hint visibility, which is remembered on the device.
 //
 // Keys bind by physical position (`event.code`), designed for the US layout,
-// so they sit in the same place on a Swiss or AZERTY keyboard. Key repeat is
-// ignored except for tempo. Wiring the intents to the app happens elsewhere.
+// so they sit in the same place on a Swiss or AZERTY keyboard. The one
+// exception is `?`, which also matches by the character it types: layouts
+// put it in different places (on a Swiss keyboard, shift and the key right
+// of 0). Key repeat is ignored except for tempo. Wiring the intents to the
+// app happens elsewhere.
+//
+// Keys never reach the bindings from a text input, and keys a focused
+// control uses itself go to that control: space presses a focused button
+// (a focused loop zone holds), and the arrows move a focused slider (a
+// strip). Every other key plays the instrument, wherever focus is.
 
 import type { Drum } from '../engine/setup';
 import type { LoopSteps } from '../engine/transport';
@@ -34,6 +42,8 @@ export type KeyIntent =
 /** The parts of a KeyboardEvent the bindings read. A real KeyboardEvent fits. */
 export interface KeyEventLike {
   code: string;
+  /** The character the layout types; read only to find `?`. */
+  key?: string;
   repeat?: boolean;
   shiftKey?: boolean;
   ctrlKey?: boolean;
@@ -59,6 +69,12 @@ export interface Keyboard {
   tick(now: number): KeyIntent[];
   /** The window lost focus: every held key counts as released and an open nudge run ends. */
   releaseAll(): KeyIntent[];
+  /**
+   * The loop keys down now hold nothing more, not even on release; only a
+   * new press loops. For loop keys pressed while stopped, or held through a
+   * stop: the player must press again.
+   */
+  forgetLoopKeys(): void;
   hintsShown(): boolean;
   /** Toggle the keycap hints, as `?`, `h` or `// help` do. Returns the new visibility. */
   toggleHints(): boolean;
@@ -107,6 +123,15 @@ function isTextEntry(target: unknown): boolean {
   if (element.isContentEditable === true) return true;
   if (element.tagName === 'TEXTAREA') return true;
   return element.tagName === 'INPUT' && !NON_TEXT_INPUTS.has(element.type ?? 'text');
+}
+
+/** Whether the focused control `target` uses this key itself, as a button uses space and a slider the arrows. */
+function controlTakes(code: string, target: unknown): boolean {
+  if (typeof target !== 'object' || target === null) return false;
+  const element = target as { tagName?: string; type?: string; getAttribute?: (name: string) => string | null };
+  if (code === 'Space') return element.tagName === 'BUTTON';
+  if (!ARROWS.has(code)) return false;
+  return element.getAttribute?.('role') === 'slider' || (element.tagName === 'INPUT' && element.type === 'range');
 }
 
 function deviceStorage(): HintStorage | undefined {
@@ -175,12 +200,13 @@ export function createKeyboard({ storage = deviceStorage() }: KeyboardOptions = 
 
   function keyDown(event: KeyEventLike): KeyIntent[] {
     if (event.ctrlKey || event.metaKey || event.altKey) return [];
-    if (isTextEntry(event.target)) return [];
-    const { code } = event;
+    const { code, target } = event;
+    if (isTextEntry(target) || controlTakes(code, target)) return [];
 
     if (code === 'Comma') return [{ type: 'tempo', direction: -1 }];
     if (code === 'Period') return [{ type: 'tempo', direction: 1 }];
     if (event.repeat) return [];
+    if (event.key === '?' || (code === 'Slash' && event.shiftKey)) return [{ type: 'hints', shown: toggleHints() }];
 
     if (LOOP_KEYS.has(code)) {
       const before = heldLoopKeys.at(-1);
@@ -206,8 +232,6 @@ export function createKeyboard({ storage = deviceStorage() }: KeyboardOptions = 
         return [...commitRun(), { type: 'undo' }];
       case 'KeyH':
         return [{ type: 'hints', shown: toggleHints() }];
-      case 'Slash':
-        return event.shiftKey ? [{ type: 'hints', shown: toggleHints() }] : [];
       default:
         return [];
     }
@@ -236,5 +260,9 @@ export function createKeyboard({ storage = deviceStorage() }: KeyboardOptions = 
     return [...intents, ...commitRun()];
   }
 
-  return { keyDown, keyUp, tick, releaseAll, hintsShown: () => hints, toggleHints };
+  function forgetLoopKeys() {
+    heldLoopKeys.length = 0;
+  }
+
+  return { keyDown, keyUp, tick, releaseAll, forgetLoopKeys, hintsShown: () => hints, toggleHints };
 }

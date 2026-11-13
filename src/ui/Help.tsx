@@ -1,15 +1,27 @@
 // Help on the pad. On touch screens `// help` opens a hint box over the lower
 // part of the pad; on first launch a one-line gesture hint sits inside the
 // pad until the first pad move, once per device. Neither takes touches, so
-// the pad stays playable under them. Laptop help (the keycap hints) comes
-// with keyboard play.
+// the pad stays playable under them. Laptop help is the keycap hints
+// (Keycap.tsx), which App shows instead.
 
-import { createSignal, For, type Accessor } from 'solid-js';
+import { createSignal, For, onCleanup, type Accessor } from 'solid-js';
 import './help.css';
+
+const TOUCH_SCREEN = '(pointer: coarse)';
 
 /** A touch screen: the primary pointer is a finger, so `// help` opens the help box. */
 export function touchScreen(): boolean {
-  return matchMedia('(pointer: coarse)').matches;
+  return matchMedia(TOUCH_SCREEN).matches;
+}
+
+/** `touchScreen()` as a signal, following a change of the primary pointer. */
+export function createTouchScreen(): Accessor<boolean> {
+  const query = matchMedia(TOUCH_SCREEN);
+  const [touch, setTouch] = createSignal(query.matches);
+  const change = () => setTouch(query.matches);
+  query.addEventListener('change', change);
+  onCleanup(() => query.removeEventListener('change', change));
+  return touch;
 }
 
 /**

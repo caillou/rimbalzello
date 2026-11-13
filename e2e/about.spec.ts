@@ -65,6 +65,20 @@ test.describe('opened from the play screen', () => {
     'the browser back button': (page) => page.goBack(),
   };
 
+  test('under about the play screen is inert, and keys play nothing', async ({ page }) => {
+    await aboutLink(page).click();
+    await expect(aboutView(page)).toBeVisible();
+    await expect(page.locator('main')).toHaveJSProperty('inert', true);
+
+    // Window listeners still hear keys under an inert play screen.
+    for (const key of ['Space', 'KeyQ', 'Digit2', 'Period']) await page.keyboard.press(key);
+    await page.keyboard.press('Escape');
+    await expect(aboutView(page)).toBeHidden();
+    await expect(page.getByRole('button', { name: 'stop' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'mute bd' })).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.getByText(/^\d+ bpm$/)).toHaveText('128 bpm');
+  });
+
   for (const [way, close] of Object.entries(closes)) {
     test(`about keeps the music playing; ${way} returns to the play screen`, async ({ page }) => {
       await aboutLink(page).click();

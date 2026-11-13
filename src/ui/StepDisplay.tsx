@@ -9,6 +9,7 @@ import { hitsAt, PATTERN_STEPS, type PatternInput } from '../engine/pattern';
 import { DRUMS, type Drum } from '../engine/setup';
 import type { Mutes, SetupSnapshot } from '../engine/setup-store';
 import type { TimedStep } from '../engine/transport';
+import { Keycap } from './Keycap';
 import './step-display.css';
 
 export interface StepDisplayProps {
@@ -21,6 +22,9 @@ export interface StepDisplayProps {
 }
 
 const NO_CHAOS: PatternInput['perturbation'] = { bd: 0, sd: 0, hh: 0 };
+
+/** The keys that mute each drum, for the keycap hints. */
+const MUTE_KEYS: Readonly<Record<Drum, string>> = { bd: 'q', sd: 'w', hh: 'e' };
 
 function samePattern(a: PatternInput, b: PatternInput): boolean {
   return (
@@ -111,6 +115,7 @@ export function StepDisplay(props: StepDisplayProps) {
               onClick={() => props.onToggleMute(drum)}
             >
               {drum}
+              <Keycap>{MUTE_KEYS[drum]}</Keycap>
             </button>
             <span class="step-line" aria-hidden="true" ref={(line) => fill(drum, line)} />
           </div>

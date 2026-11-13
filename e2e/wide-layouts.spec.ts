@@ -218,12 +218,13 @@ test.describe('a phone in landscape', () => {
     await expect(hint).toBeVisible();
     await expect(page.getByRole('button', { name: '▶ tap to play' })).toBeHidden();
 
-    // Neither a tap where the pad would be nor the Tab key reaches the play screen.
+    // Neither a tap where the pad would be, nor the Tab key, nor space reaches the play screen.
     await page.mouse.click(333, 187);
     for (let i = 0; i < 4; i++) {
       await page.keyboard.press('Tab');
       expect(await page.evaluate(() => !!document.activeElement?.closest('main'))).toBe(false);
     }
+    await page.keyboard.press('Space');
 
     // An iPad in landscape: the laptop layout, still waiting for its first tap.
     await page.setViewportSize({ width: 1024, height: 768 });

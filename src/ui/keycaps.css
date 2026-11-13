@@ -1,0 +1,90 @@
+/* Keycap hints (design.md; `designs/06-laptop-shortcuts-shown.png` for the
+   look): small keys with a grey 1 px outline and grey text next to their
+   control. App sets `data-keycaps` on the play screen where they can show
+   (`hidden` or `shown`); the footer's `?` shows either way, so players find
+   them. */
+.keycap {
+  display: none;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 8px;
+  padding: 0 4px;
+  border: 1px solid var(--text-tertiary);
+  border-radius: 3px;
+  color: var(--text-secondary);
+  font-family: var(--font);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: var(--weight-normal);
+  letter-spacing: 0;
+  line-height: 1;
+  text-transform: none;
+  vertical-align: middle;
+}
+
+.play-screen[data-keycaps='shown'] .keycap,
+.play-screen[data-keycaps] .footer .keycap {
+  display: inline-flex;
+}
+
+/* Room for the keycap between a mute label and its step line. */
+.play-screen[data-keycaps='shown'] .step-label {
+  width: 72px;
+}
+
+/* A step display too narrow for a label with its keycap (44 px past the
+   padding) beside 32 steps of 9 px, as in a tablet layout under 728 px wide:
+   the text drops to 14 px, so the keycap stays on its label's line. Keycaps
+   show only on the two-column layouts, where the step display takes its
+   column's width whatever its content. */
+.play-screen[data-keycaps='shown'] .step-display {
+  container: step-display / inline-size;
+}
+
+@container step-display (width < 332px) {
+  .play-screen[data-keycaps='shown'] .step-row {
+    font-size: 14px;
+  }
+}
+
+/* The header's − and + grow around their keycaps, apart from the bpm readout. */
+.play-screen[data-keycaps='shown'] .header .tempo-button {
+  width: auto;
+  padding: 0 10px;
+}
+
+/* `set anchor` and `↺ return on bar` keep their keycap on their line, and
+   inside the button, in a narrow column: in a tablet layout under 706 px
+   wide the two outgrow the bottom bar by up to 3 px, taken from its left
+   padding. */
+.play-screen[data-keycaps='shown'] .bar-button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* On the light backgrounds, the held loop zone and the return button, the keycap turns black. */
+.loop-zone[aria-pressed='true'] .keycap,
+.return-button .keycap {
+  border-color: var(--on-highlight);
+  color: var(--on-highlight);
+}
+
+/* The pad's corner: `nudge ←↑↓→  shift fine`. */
+.pad-keys {
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  display: none;
+  align-items: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+  white-space: pre;
+  pointer-events: none;
+}
+
+.play-screen[data-keycaps='shown'] .pad-keys {
+  display: flex;
+}
