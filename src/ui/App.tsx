@@ -11,6 +11,7 @@ import { syncUrlHash } from '../engine/url-hash';
 import { repositoryUrl } from '../repository';
 import { About } from './About';
 import { ABOUT_PATH, claimLinkClick, createAboutRoute } from './about-route';
+import { DRUM_NAMES } from './drum-names';
 import { DrumTabs } from './DrumTabs';
 import { createFirstLaunchHint, createTouchScreen, FirstLaunchHint, HelpBox } from './Help';
 import { createKeyboard, type KeyIntent } from './keyboard';
@@ -32,6 +33,8 @@ import './wide-layouts.css';
 
 interface StripField {
   label: string;
+  /** A drum's full name, the label on the wide layouts (drum-names.ts). */
+  fullName?: string;
   colour: string;
   get(setup: SetupSnapshot): number;
   set(setup: Setup, value: number): void;
@@ -41,6 +44,7 @@ interface StripField {
 const STRIPS_BY_GROUP: Readonly<Record<Exclude<StripTab, 'tempo'>, readonly StripField[]>> = {
   mix: DRUMS.map((drum) => ({
     label: drum,
+    fullName: DRUM_NAMES[drum],
     colour: `var(--${drum})`,
     get: (setup: SetupSnapshot) => setup.density[drum],
     set: (setup: Setup, value: number) => void (setup.density[drum] = value),
@@ -194,6 +198,8 @@ export function App() {
   onMount(() => observe(screen));
   const wide = () => isWide(layout());
   const [stripTab, setStripTab] = createSignal<StripTab>('mix');
+  // Where the drums' names are written out: drum-names.ts.
+  const fullMuteLabels = () => layout() === 'laptop';
 
   // What sits in the tabs' place on a phone: the strips and tempo in play,
   // the drum tabs in sound mode. Wide layouts show the sound beside the
@@ -276,6 +282,7 @@ export function App() {
       mutes={mutes}
       playing={playing}
       heard={() => scheduler?.heard()}
+      fullNames={fullMuteLabels}
       onToggleMute={(drum) => store.toggleMute(drum)}
     />
   );
@@ -291,7 +298,7 @@ export function App() {
 
   const stripRow = (strip: StripField) => (
     <Strip
-      label={strip.label}
+      label={strip.fullName !== undefined && wide() ? strip.fullName : strip.label}
       colour={strip.colour}
       value={strip.get(setup())}
       onChange={(value) => store.change((draft) => strip.set(draft, value))}
@@ -370,7 +377,7 @@ export function App() {
           <FirstLaunchHint />
         </Show>
         <Show when={helpOpen() && !keycaps()}>
-          <HelpBox />
+          <HelpBox fullNames={fullMuteLabels()} />
         </Show>
         <div class="pad-keys" aria-hidden="true">
           nudge<Keycap>←↑↓→</Keycap>
@@ -400,7 +407,7 @@ export function App() {
           {tempoControls()}
         </Match>
         <Match when={soundMode()}>
-          <DrumTabs setup={setup} onChange={(edit) => store.change(edit)} />
+          <DrumTabs fullNames={false} setup={setup} onChange={(edit) => store.change(edit)} />
         </Match>
         <Match when={!soundMode()}>
           <StripTabs active={stripTab} onSelect={setStripTab}>
@@ -411,12 +418,12 @@ export function App() {
 
       <Switch>
         <Match when={layout() === 'tablet'}>
-          <DrumTabs setup={setup} onChange={(edit) => store.change(edit)} />
+          <DrumTabs fullNames setup={setup} onChange={(edit) => store.change(edit)} />
         </Match>
         <Match when={layout() === 'laptop'}>
           {/* A window too short for the three sound sections folds them into the drum tabs. */}
           <Show when={soundFolded()} fallback={<SoundSections setup={setup} onChange={(edit) => store.change(edit)} />}>
-            <DrumTabs setup={setup} onChange={(edit) => store.change(edit)} />
+            <DrumTabs fullNames setup={setup} onChange={(edit) => store.change(edit)} />
           </Show>
         </Match>
       </Switch>

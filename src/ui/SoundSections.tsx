@@ -1,8 +1,9 @@
-// The laptop's sound: `## bd`, `## sd` and `## hh` side by side under a
-// hairline, each drum's sliders in one column, with no tabs.
+// The laptop's sound: `## bass drum`, `## snare drum` and `## hi-hat` side by
+// side under a hairline, each drum's sliders in one column, with no tabs.
 
 import { createUniqueId, For } from 'solid-js';
 import { DRUMS } from '../engine/setup';
+import { DRUM_NAMES } from './drum-names';
 import { SoundSection, type DrumsSoundProps } from './SoundSection';
 import './sound.css';
 
@@ -18,7 +19,7 @@ export function SoundSections(props: DrumsSoundProps) {
               <span class="marker" aria-hidden="true">
                 ##
               </span>{' '}
-              {drum}
+              {DRUM_NAMES[drum]}
             </h2>
             <SoundSection drum={drum} setup={props.setup} onChange={props.onChange} />
           </section>

@@ -26,7 +26,7 @@ const shownAs = (byte: number) => Math.round((byte / 255) * 100);
 const KNOWN = link([51, 204, 153, 26, 77, 230, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 102, 110, 128, 179, 142, 63]);
 const KNOWN_SHOWN = {
   readout: 'x 20 · y 80',
-  strips: { bd: 10, sd: 30, hh: 90, chaos: 60, drift: 50, drive: 70, accent: 40 },
+  strips: { 'bass drum': 10, 'snare drum': 30, 'hi-hat': 90, chaos: 60, drift: 50, drive: 70, accent: 40 },
   bpm: '142 bpm',
 };
 

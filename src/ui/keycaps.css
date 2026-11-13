@@ -35,6 +35,11 @@
   width: 72px;
 }
 
+/* And after a full name: its 8 px margin and 18 px key. */
+.play-screen[data-keycaps='shown'] .step-display[data-names='full'] .step-label {
+  width: calc(10ch + 54px);
+}
+
 /* A step display too narrow for a label with its keycap (44 px past the
    padding) beside 32 steps of 9 px, as in a tablet layout under 728 px wide:
    the text drops to 14 px, so the keycap stays on its label's line. Keycaps

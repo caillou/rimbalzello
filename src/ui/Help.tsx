@@ -47,18 +47,29 @@ function HintLines(props: { lines: readonly (readonly string[])[] }) {
   );
 }
 
-/** The help box: gestures, then anchor, mutes, loop and sound. */
-const HELP_LINES = [
-  ['tap, drag: move', 'two-finger tap: undo'],
-  ['double-tap + slide: fine', 'tap bd sd hh: mute'],
-  ['anchor: set, noodle, return on bar'],
-  ['loop: hold a size', '→ sound: shape the drums'],
-] as const;
+/**
+ * The help box: gestures, then anchor, mutes, loop and sound. The mutes item
+ * names the step display's labels as they show; `tap a drum name: mute` would
+ * take a fifth line on a 393 px phone.
+ */
+function helpLines(fullNames: boolean) {
+  return [
+    ['tap, drag: move', 'two-finger tap: undo'],
+    ['double-tap + slide: fine', fullNames ? 'tap a drum name: mute' : 'tap bd sd hh: mute'],
+    ['anchor: set, noodle, return on bar'],
+    ['loop: hold a size', '→ sound: shape the drums'],
+  ];
+}
 
-export function HelpBox() {
+export interface HelpBoxProps {
+  /** Whether the step display writes the drums' names out (drum-names.ts). */
+  fullNames: boolean;
+}
+
+export function HelpBox(props: HelpBoxProps) {
   return (
     <div class="help-box" role="note" aria-label="gestures and controls">
-      <HintLines lines={HELP_LINES} />
+      <HintLines lines={helpLines(props.fullNames)} />
     </div>
   );
 }

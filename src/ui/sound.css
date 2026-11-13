@@ -45,8 +45,8 @@
   min-height: calc(3 * 44px);
 }
 
-/* The laptop's sound: `## bd`, `## sd` and `## hh` side by side under a
-   hairline, one column of sliders each. */
+/* The laptop's sound: `## bass drum`, `## snare drum` and `## hi-hat` side
+   by side under a hairline, one column of sliders each. */
 .sound-sections {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

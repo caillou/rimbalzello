@@ -9,7 +9,7 @@ Use these words, with these meanings, in code, tests, issues and docs. Don't inv
 - **Pad**: the X/Y surface the player touches to move through the map. "Position" is the point on the pad, `x` and `y` stored as 0–255, shown as 0–100.
 - **Pattern**: the 32 steps the pattern generator produces for the current position, densities and chaos. One pattern is one bar.
 - **Step**: one 32nd note. A **beat** is 8 steps; a **bar** is 32 steps, one pattern. Steps are numbered 0–31.
-- **Drum**: one of the three voices: **bd** (bass drum), **sd** (snare drum), **hh** (hi-hat). Always lowercase two-letter names in the UI.
+- **Drum**: one of the three voices: **bd** (bass drum), **sd** (snare drum), **hh** (hi-hat). Lowercase in the UI: the two-letter names on phones and in the tablet's step display, the full names where the tablet and laptop layouts have room (strips, drum tabs, sound headings, the laptop's step display). A control's accessible name holds the name it shows (`mute bd`, `mute bass drum`).
 - **Kit**: the set of drum voices behind one interface. The transport triggers drums through the kit and never knows how they make sound. v1 ships one kit of native Web Audio voices; other kits can load later.
 - **Hit**: one drum firing on one step. A hit can be an **accent** (louder; on hh it can also open the hat), which Grids marks when the map level is above 192.
 - **Density**: per-drum fill amount, 0–255. Higher density means more hits.

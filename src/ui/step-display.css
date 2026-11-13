@@ -21,6 +21,12 @@
   text-align: left;
 }
 
+/* Full names (drum-names.ts): room for the longest, `snare drum` (10
+   characters), and a 12 px gap before the step line. */
+.step-display[data-names='full'] .step-label {
+  width: calc(10ch + 28px);
+}
+
 /* Rests are grey; hits are `x` in the drum's colour. */
 .step-line {
   color: var(--text-tertiary);

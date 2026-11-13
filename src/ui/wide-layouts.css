@@ -29,6 +29,12 @@
     padding: 0 16px;
   }
 
+  /* Room for the longest full name, `snare drum` (drum-names.ts). All six
+     labels take it, so the tracks line up in each column. */
+  & > .strips .strip-label {
+    width: 10ch;
+  }
+
   /* Tempo, the third group beside mix and fx: the bpm and swing strips and
      tap tempo in one row under the strips, the two strips sharing what tap
      tempo leaves. Half the usual gaps and labels as wide as their text, so

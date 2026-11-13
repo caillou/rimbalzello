@@ -2,13 +2,15 @@
 // line per drum, the played step highlighted. While a loop is held, the
 // playhead step is also shown, dimmed. While playing it follows the step
 // heard now, written straight to the DOM every animation frame, outside
-// Solid's update cycle. The drum labels are the mute toggles.
+// Solid's update cycle. The drum labels are the mute toggles, `bd` `sd` `hh`
+// or the full names (drum-names.ts).
 
 import { createEffect, For, onCleanup, type Accessor } from 'solid-js';
 import { hitsAt, PATTERN_STEPS, type PatternInput } from '../engine/pattern';
 import { DRUMS, type Drum } from '../engine/setup';
 import type { Mutes, SetupSnapshot } from '../engine/setup-store';
 import type { TimedStep } from '../engine/transport';
+import { DRUM_NAMES } from './drum-names';
 import { Keycap } from './Keycap';
 import './step-display.css';
 
@@ -18,6 +20,8 @@ export interface StepDisplayProps {
   playing: Accessor<boolean>;
   /** The step heard now while playing, or undefined before the first; read every frame. */
   heard: () => TimedStep | undefined;
+  /** Whether the labels write the drums' names out (drum-names.ts). */
+  fullNames: Accessor<boolean>;
   onToggleMute(drum: Drum): void;
 }
 
@@ -102,24 +106,35 @@ export function StepDisplay(props: StepDisplayProps) {
     onCleanup(() => cancelAnimationFrame(frame));
   });
 
+  // A change of layout changes only the labels' text. The rows stay: their
+  // lines are filled once and redrawn only when the pattern changes.
   return (
-    <div class="step-display" role="group" aria-label="step display">
+    <div
+      class="step-display"
+      role="group"
+      aria-label="step display"
+      data-names={props.fullNames() ? 'full' : undefined}
+    >
       <For each={DRUMS}>
-        {(drum) => (
-          <div class="step-row" data-drum={drum} classList={{ muted: props.mutes()[drum] }}>
-            <button
-              type="button"
-              class="step-label"
-              aria-label={`mute ${drum}`}
-              aria-pressed={props.mutes()[drum] ? 'true' : 'false'}
-              onClick={() => props.onToggleMute(drum)}
-            >
-              {drum}
-              <Keycap>{MUTE_KEYS[drum]}</Keycap>
-            </button>
-            <span class="step-line" aria-hidden="true" ref={(line) => fill(drum, line)} />
-          </div>
-        )}
+        {(drum) => {
+          // The mute toggle's name holds the label it shows.
+          const label = () => (props.fullNames() ? DRUM_NAMES[drum] : drum);
+          return (
+            <div class="step-row" data-drum={drum} classList={{ muted: props.mutes()[drum] }}>
+              <button
+                type="button"
+                class="step-label"
+                aria-label={`mute ${label()}`}
+                aria-pressed={props.mutes()[drum] ? 'true' : 'false'}
+                onClick={() => props.onToggleMute(drum)}
+              >
+                {label()}
+                <Keycap>{MUTE_KEYS[drum]}</Keycap>
+              </button>
+              <span class="step-line" aria-hidden="true" ref={(line) => fill(drum, line)} />
+            </div>
+          );
+        }}
       </For>
     </div>
   );

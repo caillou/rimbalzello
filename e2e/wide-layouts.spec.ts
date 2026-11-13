@@ -1,3 +1,4 @@
+import { DRUM_NAMES, DRUMS, type Drum } from './drums.ts';
 import { expect, test, type Locator, type Page } from './fixtures.ts';
 import { expectLayoutRules } from './layout-rules.ts';
 
@@ -6,11 +7,10 @@ import { expectLayoutRules } from './layout-rules.ts';
 // on tablets in landscape, and the rotate hint on phones in landscape. Both
 // show tempo (bpm, swing and tap tempo) as a group of its own, without tabs.
 
-const DRUMS = ['bd', 'sd', 'hh'] as const;
 /** How many sound sliders each drum has (PRD stories 29–31). */
 const SOUND_SLIDERS = { bd: 5, sd: 5, hh: 2 };
 
-const tab = (page: Page, drum: string) => page.getByRole('tab', { name: drum, exact: true });
+const tab = (page: Page, drum: Drum) => page.getByRole('tab', { name: DRUM_NAMES[drum], exact: true });
 const tempo = (page: Page) => page.getByRole('group', { name: 'tempo' });
 
 /** Tempo's controls show, each whole, without opening anything. */
@@ -33,10 +33,12 @@ async function start(page: Page) {
   await page.evaluate(() => document.fonts.ready);
 }
 
+// 1024×768, an iPad in landscape, has the narrowest right column (520 px).
 for (const viewport of [
   { width: 1280, height: 800 },
   { width: 1440, height: 900 },
   { width: 1106, height: 820 },
+  { width: 1024, height: 768 },
 ]) {
   test.describe(`laptop layout at ${viewport.width}×${viewport.height}`, () => {
     test.use({ viewport });
@@ -49,7 +51,7 @@ for (const viewport of [
         page.getByRole('slider', { name: 'chaos' }),
         tempo(page),
         page.getByRole('group', { name: 'loop' }),
-        page.getByRole('region', { name: 'hh' }),
+        page.getByRole('region', { name: DRUM_NAMES.hh }),
       ]) {
         expect((await box(part)).x, `${part.toString()} right of the pad`).toBeGreaterThanOrEqual(pad.right);
       }
@@ -60,12 +62,15 @@ for (const viewport of [
 }
 
 // Laptop windows too short for the three sound sections side by side: a
-// 1366×768 screen under a taskbar, a 1080p laptop at 150 % scaling. They
-// keep the laptop layout, with the sound folded into the drum tabs.
+// 1366×768 screen under a taskbar, a 1080p laptop at 150 % scaling, and
+// small windows with the narrowest right column (520 px). They keep the
+// laptop layout, with the sound folded into the drum tabs.
 for (const viewport of [
   { width: 1366, height: 657 },
   { width: 1280, height: 600 },
   { width: 1280, height: 580 },
+  { width: 800, height: 600 },
+  { width: 700, height: 600 },
 ]) {
   test.describe(`laptop layout at ${viewport.width}×${viewport.height}`, () => {
     test.use({ viewport });
@@ -101,7 +106,7 @@ test.describe('a laptop window made shorter', () => {
 
   test('folds the sound sections into the drum tabs, and unfolds them when it grows back', async ({ page }) => {
     await start(page);
-    const hh = page.getByRole('region', { name: 'hh', exact: true });
+    const hh = page.getByRole('region', { name: DRUM_NAMES.hh, exact: true });
     await expect(hh).toBeInViewport();
 
     await page.setViewportSize({ width: 1280, height: 600 });
@@ -122,7 +127,7 @@ test.describe('laptop layout at 1280×800', () => {
     await start(page);
     await expect(page.getByRole('tab')).toHaveCount(0);
     for (const drum of DRUMS) {
-      const section = page.getByRole('region', { name: drum, exact: true });
+      const section = page.getByRole('region', { name: DRUM_NAMES[drum], exact: true });
       await expect(section.getByRole('slider')).toHaveCount(SOUND_SLIDERS[drum]);
       for (const slider of await section.getByRole('slider').all()) await expect(slider).toBeInViewport();
     }

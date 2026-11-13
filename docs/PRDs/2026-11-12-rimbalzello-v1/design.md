@@ -18,7 +18,7 @@ The review round in `reviews/` changed the step resolution, the layouts, mutes, 
 | `designs/v2-04-phone-tempo.png` | The former tempo panel: bpm, swing 56 %, tap tempo | outdated: the `tempo` tab holds the same three rows with bpm and swing as strips, not − and +, and without the `## tempo` heading and `← play` |
 | `designs/v2-05-phone-tap-to-play.png` | First launch: `▶ tap to play` over the dimmed pad | current |
 | `designs/v2-06-phone-help.png` | Help open: two-finger undo, tap labels to mute | current |
-| `designs/v2-07-tablet.png` | Tablet portrait (820×1106): pad on top, two columns below | current |
+| `designs/v2-07-tablet.png` | Tablet portrait (820×1106): pad on top, two columns below | current, but with `bd` `sd` `hh` where the strips and drum tabs now write the names out |
 | pending | Rotate hint | screenshots pending |
 
 ## Visual language
@@ -31,6 +31,7 @@ Borrowed from caillou.ch, so the app reads as part of the site.
   - text `#ffffff`, secondary `#ababab`, tertiary and markers `#757575`
   - bd `#ffd866` (yellow), sd `#ff61ef` (pink), hh `#bef289` (green), drive `#fc618d` (red), chaos, drift, bpm and swing white
 - **Text**: lowercase labels. `#` before the app title and `##` before section headings, in grey. Italic for text buttons and navigation.
+- **Drum names**: `bd` `sd` `hh` on phones and in the tablet's step display; `bass drum`, `snare drum`, `hi-hat` where the tablet and laptop layouts have room: the strips, the drum tabs, the laptop's sound headings and its step display. A control's accessible name holds the name it shows (`mute bd`, `mute bass drum`), so voice control finds it by what it says.
 - **Current step**: yellow background, black text, like the blog's text selection.
 - **Sliders**: 2 px track; filled part and square thumb in the control's colour; value right-aligned in grey, shown 0–100, except bpm and swing, which show their own values (`128`, `56%`).
 - **Loop strip**: four boxed zones (`1/4 1/8 1/16 1/32`) with hairline borders; the held zone is white with black text.
@@ -73,7 +74,7 @@ On load the app is stopped. A big `▶ tap to play` sits over the pad; one tap s
 
 ### Sound mode (phone)
 
-Tapping `→ sound` swaps the `mix` / `fx` / `tempo` tabs for drum tabs: `bd` `sd` `hh`, the active tab in its drum's colour with an underline and the drum's full name (`bass drum`) in grey italics on the right. Below: that drum's sliders. The pad, step display and loop strip stay. The bottom bar's first item becomes `← play`. On phones the drum's sliders sit in two columns so they fit under the pad (`v2-03-phone-sound.png`).
+Tapping `→ sound` swaps the `mix` / `fx` / `tempo` tabs for drum tabs: `bd` `sd` `hh`, the active tab in its drum's colour with an underline and the drum's full name (`bass drum`) in grey italics on the right. The tablet and a short laptop window write the names out on the tabs instead (`bass drum` `snare drum` `hi-hat`), with nothing on the right. Below: that drum's sliders. The pad, step display and loop strip stay. The bottom bar's first item becomes `← play`. On phones the drum's sliders sit in two columns so they fit under the pad (`v2-03-phone-sound.png`).
 
 The hh tab holds two sliders, `accent` and `level`, in one row. `accent` sets how far an accented hh hit opens the hat: at 0 an accent is only louder, at 100 the hat is fully open; plain hh hits stay closed. Any hh hit cuts off an hh still ringing (the choke).
 
@@ -95,10 +96,12 @@ Not a v1 layout. A wide viewport that is tall enough gets the tablet layout; oth
 
 About 700 px wide or more. Portrait: pad on top (takes the remaining height), below it two columns: step display and all six strips on the left; loop strip and sound drum tabs on the right (see `v2-07-tablet.png`); then the tempo row across both columns. Landscape: pad on the left, everything else on the right, like the laptop. Drum tabs are the only tabs on a tablet.
 
+The strips and the drum tabs write the drum names out; the six strip labels share the width of the longest, `snare drum`, so the tracks line up. The step display keeps `bd` `sd` `hh`: it shares a half-width column with its 32 steps (288 px at 15 px), which leaves 30–97 px for a label, and `snare drum` with its gap needs 102. Only the 12.9″ iPad in portrait would fit it. So on an iPad at 820 or 834 px the step display's `bd` sits right above the `bass drum` strip, in the same order and colours. Turning the tablet to landscape gives the laptop layout, whose step display writes the names out.
+
 ## Laptops
 
 - Pad on the left (about 560 px wide on a 1280 px screen), full height, with the 5×5 map nodes drawn as faint `+` marks and the position readout (`x 34 · y 58`, 0–100). The nodes sit at 0, 64, 128, 192 and 256 on the 0–255 scale, so the outer nodes lie on the pad edges.
-- Right column: step display; strips in two columns (bd / chaos, sd / drift, hh / drive); the tempo row (bpm, swing, `tap tempo`); loop strip; a hairline; then `## bd`, `## sd`, `## hh` side by side with all sound sliders. No tabs.
+- Right column: step display, its labels the full drum names; strips in two columns (bass drum / chaos, snare drum / drift, hi-hat / drive), every label as wide as `snare drum`; the tempo row (bpm, swing, `tap tempo`); loop strip; a hairline; then `## bass drum`, `## snare drum`, `## hi-hat` side by side with all sound sliders. No tabs. On the narrowest right column (520 px) the strip tracks keep about 78 px.
 - Bottom row: footer bottom left (`// help ?  // about  // source`), `set anchor` and `↺ return on bar` bottom right.
 
 ### Keyboard
@@ -155,7 +158,7 @@ On first launch a one-line hint inside the pad shows `tap · drag · two-finger 
 
 ## Mutes
 
-The step display's drum labels (`bd` `sd` `hh`) are the only mute toggles, on every layout and in every mode. Each label has a hit area of at least 44 px. A muted drum's line turns grey and its label is struck through. Strip labels do not mute. Keys `q` `w` `e` also mute.
+The step display's drum labels (`bd` `sd` `hh`, or the full names on the laptop) are the only mute toggles, on every layout and in every mode. Each label has a hit area of at least 44 px; a full name's reaches across the whole name. A muted drum's line turns grey and its label is struck through, a full name across both words. Strip labels do not mute. Keys `q` `w` `e` also mute.
 
 ## Looper display
 
@@ -169,7 +172,7 @@ The step display highlights the played step. While a loop is held, the playhead 
 
 ## Help
 
-- **Touch screens**: `// help` opens a hint box over the lower part of the pad with the gestures (including the two-finger undo) plus a line each on anchor, loop, mutes (tap the step display labels) and sound. `// help` turns white while open; tapping it again closes the box. The pad stays playable.
+- **Touch screens**: `// help` opens a hint box over the lower part of the pad with the gestures (including the two-finger undo) plus a line each on anchor, loop, mutes (tap the step display labels: `tap bd sd hh: mute`, or `tap a drum name: mute` where they are the full names) and sound. `// help` turns white while open; tapping it again closes the box. The pad stays playable.
 - **Laptops**: `// help`, `?` or `h` toggles the keycap hints.
 
 ## About

@@ -70,9 +70,9 @@ test('holding . raises the tempo with key repeat, and , lowers it', async ({ pag
 
 test('q w e mute bd sd hh', async ({ page }) => {
   for (const [key, drum] of [
-    ['KeyQ', 'bd'],
-    ['KeyW', 'sd'],
-    ['KeyE', 'hh'],
+    ['KeyQ', 'bass drum'],
+    ['KeyW', 'snare drum'],
+    ['KeyE', 'hi-hat'],
   ]) {
     await page.keyboard.press(key!);
     await expect(button(page, `mute ${drum}`)).toHaveAttribute('aria-pressed', 'true');
@@ -185,19 +185,19 @@ test('a focused button takes space and a focused strip the arrows; after a click
   const drive = strip(page, 'drive');
 
   // Reached from the keyboard: the control takes the key, the instrument does not.
-  await mute('bd').focus();
+  await mute('bass drum').focus();
   await page.keyboard.press('Space');
-  await expect(mute('bd')).toHaveAttribute('aria-pressed', 'true');
+  await expect(mute('bass drum')).toHaveAttribute('aria-pressed', 'true');
   await expect(button(page, 'stop')).toBeVisible();
 
   // A click leaves no focus behind, on the control clicked or on the one
   // reached from the keyboard before: space plays.
-  await mute('sd').click();
-  await expect(mute('sd')).toHaveAttribute('aria-pressed', 'true');
+  await mute('snare drum').click();
+  await expect(mute('snare drum')).toHaveAttribute('aria-pressed', 'true');
   await page.keyboard.press('Space');
   await expect(button(page, 'play')).toBeVisible();
-  await expect(mute('bd')).toHaveAttribute('aria-pressed', 'true');
-  await expect(mute('sd')).toHaveAttribute('aria-pressed', 'true');
+  await expect(mute('bass drum')).toHaveAttribute('aria-pressed', 'true');
+  await expect(mute('snare drum')).toHaveAttribute('aria-pressed', 'true');
 
   // The same for a strip and the arrows.
   const position = await readout(page);
@@ -287,9 +287,11 @@ test.describe('keycap hints', () => {
   }
 
   // 700 and 727 px: the narrowest tablet layouts, where the mute labels have
-  // the least room for their keycaps beside the step line.
+  // the least room for their keycaps beside the step line. 1024×768: the
+  // narrowest laptop column, with the drums' full names before their keycaps.
   for (const viewport of [
     { width: 1280, height: 800 },
+    { width: 1024, height: 768 },
     { width: 820, height: 1106 },
     { width: 727, height: 900 },
     { width: 700, height: 900 },
@@ -306,7 +308,9 @@ test.describe('keycap hints', () => {
         await page.keyboard.down('Digit2');
         await page.keyboard.press('KeyR');
         await expect.poll(() => heldZones(page)).toEqual(['1/8']);
-        await expect(button(page, 'mute hh').locator('kbd')).toBeVisible();
+        // `hh` on the tablet, written out on the laptop.
+        const hh = page.getByRole('button', { name: /^mute (hh|hi-hat)$/ });
+        await expect(hh.locator('kbd')).toBeVisible();
         expect(await keycapsOutsideTheirButton(page)).toEqual([]);
         await expectLayoutRules(page);
         await page.keyboard.up('Digit2');
