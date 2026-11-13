@@ -1,5 +1,5 @@
 import { resolve } from 'node:path';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './fixtures.ts';
 import { build } from 'vite';
 
 // Renders the kit in each browser's OfflineAudioContext. The engine is

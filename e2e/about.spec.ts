@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './fixtures.ts';
 import { watchForProblems } from './page-problems.ts';
 import { countStartedVoices, expectGrooveRunning } from './started-voices.ts';
 

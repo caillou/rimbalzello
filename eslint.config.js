@@ -26,4 +26,22 @@ export default defineConfig(
       ],
     },
   },
+  {
+    // Specs take `test` from the fixture, which silences a local WebKit run.
+    files: ['e2e/**/*.spec.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@playwright/test',
+              importNames: ['test'],
+              message: "Import test from './fixtures.ts' so a local WebKit run stays silent.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 );

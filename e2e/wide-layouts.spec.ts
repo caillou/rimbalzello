@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from './fixtures.ts';
 import { expectLayoutRules } from './layout-rules.ts';
 
 // The wide layouts (design.md, "Tablets" and "Laptops"): the tablet layout

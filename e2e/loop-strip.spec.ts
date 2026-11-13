@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from './fixtures.ts';
 
 // The loop strip at the phone viewport, driven by a synthetic touch pointer.
 // What the looper plays is read off the step display: the played step is

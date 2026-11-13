@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './fixtures.ts';
 import { expectLayoutRules } from './layout-rules.ts';
 import { readout } from './pad-readout.ts';
 import { countStartedVoices, expectGrooveRunning } from './started-voices.ts';

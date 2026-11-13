@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './fixtures.ts';
 
 // The audio session on a desktop browser: the browser APIs a phone needs are
 // stubbed, removed or driven from the page. A real iPhone (silent switch,

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures.ts';
 import { watchForProblems } from './page-problems.ts';
 
 // GitHub Pages serves 404.html for unknown URLs. It must render on its own,

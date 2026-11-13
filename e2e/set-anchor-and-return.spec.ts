@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from './fixtures.ts';
 import { readout } from './pad-readout.ts';
 
 // Set anchor and return on bar, on the phone play screen with the `fx` tab

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures.ts';
 import { watchForProblems } from './page-problems.ts';
 
 // Catches a deploy that ships a broken bundle or a missing asset.

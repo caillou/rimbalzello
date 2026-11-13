@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from './fixtures.ts';
 
 // Tempo on a phone (design.md, Tempo): the `tempo` tab after `mix` and `fx`
 // holds the bpm and swing strips and tap tempo, and the bpm readout in the

@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './fixtures.ts';
 
 // The setup in the URL hash: a link opens with its groove, the hash follows
 // every change without adding history, and the bare address opens with the
