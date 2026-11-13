@@ -15,12 +15,13 @@ function plain(changes: Partial<TransportSetup> = {}): TransportSetup {
 
 const position = (step: TimedStep) => ({ x: step.pattern.x, y: step.pattern.y });
 
-/** The hits the setup's pattern has on `step`, chaos aside, accents louder. */
+/** The hits the setup's pattern has on `step`, chaos aside, accents louder and marked. */
 function hitsOn(setup: TransportSetup, step: number) {
   const atStep = hitsAt({ x: setup.x, y: setup.y, density: setup.density, perturbation: { bd: 0, sd: 0, hh: 0 } }, step);
   return DRUMS.filter((drum) => atStep[drum].hit).map((drum) => ({
     drum,
     velocity: atStep[drum].accent ? tunables.velocity.accent : tunables.velocity.hit,
+    accent: atStep[drum].accent,
   }));
 }
 

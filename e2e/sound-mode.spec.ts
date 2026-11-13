@@ -18,7 +18,7 @@ test.beforeEach(async ({ page }) => {
 const SLIDERS = {
   bd: ['freq', 'punch', 'tone', 'decay', 'level'],
   sd: ['freq', 'tone', 'snappy', 'decay', 'level'],
-  hh: ['level'],
+  hh: ['accent', 'level'],
 };
 
 /** Where bd decay and sd decay sit in the v1 URL format (PRD, "URL format"). */

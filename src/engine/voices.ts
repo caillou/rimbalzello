@@ -20,6 +20,8 @@ export interface VoiceHit {
   cutoff: number;
   /** Where to start reading the noise, as a fraction 0–1 of its length. */
   noise: number;
+  /** An accent: on hh it opens the hat as far as the sound's accent asks. */
+  accent: boolean;
 }
 
 /** A started voice: its output, cut to cancel it, and when it ends. */
@@ -153,11 +155,14 @@ export function createVoices(context: BaseAudioContext): Voices {
     return { output, end };
   }
 
-  // hh: the metallic cluster of six squares, filtered to its top end.
+  // hh: the metallic cluster of six squares, filtered to its top end. A
+  // plain hit is a closed hat; an accent rings longer as accent goes up, to
+  // a fully open hat at 255.
   function hh(hit: VoiceHit, sound: Sound['hh']): Voice {
     const t = tunables.kit.hh;
     const { time } = hit;
-    const end = time + t.decay * hit.decay;
+    const decay = hit.accent ? byteToRange(sound.accent, { min: t.decay, max: t.openDecay }) : t.decay;
+    const end = time + decay * hit.decay;
     const output = new GainNode(context, { gain: hit.gain * levelGain(sound.level) * t.gain });
     const metal = new GainNode(context, { gain: 1 / t.oscillators.length });
     for (const frequency of t.oscillators) {

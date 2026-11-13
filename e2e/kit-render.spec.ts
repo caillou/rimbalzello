@@ -17,13 +17,25 @@ interface Engine {
     context: BaseAudioContext,
     options: { drift: number; drive: number },
   ): {
-    trigger(drum: Drum, time: number, velocity: number, sound: unknown): void;
-    cancelScheduled(): void;
+    trigger(drum: Drum, time: number, velocity: number, sound: unknown, accent?: boolean): void;
+    cancelScheduled(from?: number): void;
     setMuted(drum: Drum, muted: boolean): void;
   };
-  defaultSetup(): { x: number; y: number; bpm: number; density: Record<Drum, number>; sound: Record<Drum, { level: number }> };
+  defaultSetup(): {
+    x: number;
+    y: number;
+    bpm: number;
+    density: Record<Drum, number>;
+    sound: Record<Drum, { level: number }> & { hh: { accent: number } };
+  };
   hitsAt(input: unknown, step: number): Record<Drum, { hit: boolean; accent: boolean }>;
-  tunables: { kit: { drift: { timing: number }; drive: { loudnessToleranceDb: number } } };
+  tunables: {
+    kit: {
+      drift: { timing: number };
+      drive: { loudnessToleranceDb: number };
+      hh: { decay: number; chokeFade: number };
+    };
+  };
 }
 
 /** The kit, the pattern generator, the default setup and the tunables as one script that sets `window.engine`. */
@@ -55,10 +67,11 @@ async function bundleEngine(): Promise<string> {
   return chunk.code;
 }
 
-/** A hit at full velocity. */
+/** A hit at full velocity, plain unless marked as an accent. */
 interface Hit {
   drum: Drum;
   time: number;
+  accent?: boolean;
 }
 
 /** What to render: everything is triggered before rendering starts, at the default sound. */
@@ -71,10 +84,14 @@ interface Render {
   /** One bar of the default setup's pattern, a plain hit at 0.7 and an accent at 1, as the transport plays them. */
   bar?: boolean;
   hits?: Hit[];
-  /** Every drum's level at 255 instead of the default. */
+  /** Every drum's level at 255 instead of the default, and hh accent at 255: accents open the hat fully. */
   loud?: boolean;
+  /** The hh sound's accent byte instead of the default. */
+  hhAccent?: number;
   /** Cancels after triggering the hits above, then triggers these. */
   afterCancel?: Hit[];
+  /** Cancels the hits triggered for after this time instead of every hit. */
+  cancelFrom?: number;
   /** Mutes a drum at a time mid-render. Needs `OfflineAudioContext.suspend`. */
   mute?: { drum: Drum; time: number };
 }
@@ -85,9 +102,12 @@ async function renderInPage(spec: Render): Promise<number[]> {
   const setup = engine.defaultSetup();
   const step = 60 / setup.bpm / 8;
   const seconds = spec.seconds ?? 32 * step;
-  const sound = Object.fromEntries(
-    Object.entries(setup.sound).map(([drum, parameters]) => [drum, spec.loud ? { ...parameters, level: 255 } : parameters]),
-  );
+  const { sound } = setup;
+  if (spec.loud) {
+    for (const parameters of Object.values(sound)) parameters.level = 255;
+    sound.hh.accent = 255;
+  }
+  if (spec.hhAccent !== undefined) sound.hh.accent = spec.hhAccent;
   const context = new OfflineAudioContext(1, Math.ceil(seconds * spec.sampleRate), spec.sampleRate);
   const kit = engine.createNativeKit(context, { drift: spec.drift, drive: spec.drive });
   if (spec.bar) {
@@ -95,14 +115,15 @@ async function renderInPage(spec: Render): Promise<number[]> {
     for (let n = 0; n < 32; n++) {
       const hits = engine.hitsAt(input, n);
       for (const drum of ['bd', 'sd', 'hh'] as const) {
-        if (hits[drum].hit) kit.trigger(drum, n * step, hits[drum].accent ? 1 : 0.7, sound[drum]);
+        const { hit, accent } = hits[drum];
+        if (hit) kit.trigger(drum, n * step, accent ? 1 : 0.7, sound[drum], accent);
       }
     }
   }
-  for (const hit of spec.hits ?? []) kit.trigger(hit.drum, hit.time, 1, sound[hit.drum]);
+  for (const hit of spec.hits ?? []) kit.trigger(hit.drum, hit.time, 1, sound[hit.drum], hit.accent);
   if (spec.afterCancel) {
-    kit.cancelScheduled();
-    for (const hit of spec.afterCancel) kit.trigger(hit.drum, hit.time, 1, sound[hit.drum]);
+    kit.cancelScheduled(spec.cancelFrom);
+    for (const hit of spec.afterCancel) kit.trigger(hit.drum, hit.time, 1, sound[hit.drum], hit.accent);
   }
   const { mute } = spec;
   if (mute) {
@@ -126,6 +147,10 @@ function peak(samples: number[]): number {
 
 function rmsDb(samples: number[]): number {
   return 10 * Math.log10(samples.reduce((sum, sample) => sum + sample * sample, 0) / samples.length);
+}
+
+function rootMeanSquare(samples: number[]): number {
+  return Math.sqrt(samples.reduce((sum, sample) => sum + sample * sample, 0) / samples.length);
 }
 
 function seconds(from: number, to: number, samples: number[]): number[] {
@@ -166,7 +191,7 @@ test('one bar does not clip at drive 0 or 255, even with every level up, and dri
     rms[drive] = rmsDb(clean);
 
     const loud = await render(page, { drift: 255, drive, bar: true, loud: true });
-    expect(peak(loud), `peak at every level 255, drift 255, drive ${drive}`).toBeLessThan(1);
+    expect(peak(loud), `peak at every level 255, the hh open, drift 255, drive ${drive}`).toBeLessThan(1);
   }
   const change = (rms[255] ?? NaN) - (rms[0] ?? NaN);
   expect(Math.abs(change), `RMS change from drive 0 to 255, dB`).toBeLessThanOrEqual(kit.drive.loudnessToleranceDb);
@@ -248,4 +273,74 @@ test('a cancelled hit does not sound; a hit triggered after cancelling does', as
   });
   expect(peak(seconds(0, 0.49, samples)), 'cancelled bd and sd').toBeLessThan(0.001);
   expect(peak(seconds(0.49, 1, samples)), 'hh after cancelling').toBeGreaterThan(0.05);
+});
+
+test('at hh accent 0 an accented hh sounds like a plain one: the accent is only louder, as before', async ({ page }) => {
+  const hh = (accent: boolean) =>
+    render(page, { seconds: 0.5, drift: 0, drive: 0, hhAccent: 0, hits: [{ drum: 'hh', time: 0.05, accent }] });
+  expect(difference(await hh(true), await hh(false))).toBeLessThan(0.00001);
+});
+
+test('at hh accent 100 an accented hh rings well past the closed decay; a plain hh does not', async ({ page }) => {
+  const { kit } = await page.evaluate(() => (window as unknown as { engine: Engine }).engine.tunables);
+  const time = 0.05;
+  const hh = (accent: boolean) =>
+    render(page, { seconds: 0.6, drift: 0, drive: 0, hhAccent: 255, hits: [{ drum: 'hh', time, accent }] });
+  // From twice to three times the closed decay, against the hit's own peak.
+  const ringing = (samples: number[]) =>
+    peak(seconds(time + 2 * kit.hh.decay, time + 3 * kit.hh.decay, samples)) / peak(samples);
+  expect(ringing(await hh(true)), 'the open hh, against its peak').toBeGreaterThan(0.001);
+  expect(ringing(await hh(false)), 'the plain hh, against its peak').toBeLessThan(0.0001);
+});
+
+test('the next hh hit cuts an open hh within about 10 ms, fading it out instead of dropping it at once', async ({
+  page,
+}) => {
+  const { kit } = await page.evaluate(() => (window as unknown as { engine: Engine }).engine.tunables);
+  const open: Hit = { drum: 'hh', time: 0.05, accent: true };
+  const next: Hit = { drum: 'hh', time: 0.2 };
+  const spec = { seconds: 0.5, drift: 0, drive: 0, hhAccent: 255 };
+  const openOnly = await render(page, { ...spec, hits: [open] });
+  const nextOnly = await render(page, { ...spec, hits: [next] });
+  // Below the drive's knee the kit sums linearly, so taking the next hit
+  // away leaves the open hh as the next hit cut it.
+  const both = await render(page, { ...spec, hits: [open, next] });
+  const cutOpen = both.map((sample, i) => sample - (nextOnly[i] ?? 0));
+  // Where the next hit reaches the output, after the drive's oversampling delay.
+  const cut = onset(nextOnly, next.time, 0.01) / sampleRate;
+
+  const before = (samples: number[]) => seconds(0, next.time, samples);
+  expect(difference(before(cutOpen), before(openOnly)), 'the open hh before the next hit').toBeLessThan(0.00001);
+  const tenMsOn = (samples: number[]) => peak(seconds(cut + 0.01, spec.seconds, samples));
+  expect(tenMsOn(openOnly), 'the open hh left alone, from 10 ms after the next hit').toBeGreaterThan(0.001);
+  expect(tenMsOn(cutOpen), 'the open hh from 10 ms after the next hit').toBeLessThan(tenMsOn(openOnly) / 100);
+
+  // Its level against the open hh alone, which takes out the beating of the
+  // squares, per fifth of the fade: 1 before the cut, then down to 0. A cut
+  // at once, a click, drops by half or more within one fifth wherever it
+  // lands; an even fade drops by about a fifth.
+  const fifth = kit.hh.chokeFade / 5;
+  const levels = Array.from({ length: 12 }, (_, k) => {
+    const from = cut + (k - 2) * fifth;
+    return rootMeanSquare(seconds(from, from + fifth, cutOpen)) / rootMeanSquare(seconds(from, from + fifth, openOnly));
+  });
+  expect(levels[0], 'level before the cut').toBeCloseTo(1, 3);
+  expect(levels.at(-1), 'level after the fade').toBeLessThan(0.01);
+  levels.forEach((level, k) => {
+    if (k > 0) expect((levels[k - 1] ?? NaN) - level, `drop ${k - 2} fifths of the fade from the cut`).toBeLessThan(0.4);
+  });
+});
+
+test('a cancelled hh hit no longer cuts the open hh before it; the next hh hit triggered does', async ({ page }) => {
+  // As when the looper hands steps out again: the hit at 0.15 s is cancelled, the one at 0.3 s queued instead.
+  const open: Hit = { drum: 'hh', time: 0.05, accent: true };
+  const spec = { seconds: 0.6, drift: 0, drive: 0, hhAccent: 255 };
+  const cancelled = await render(page, {
+    ...spec,
+    hits: [open, { drum: 'hh', time: 0.15 }],
+    cancelFrom: 0.1,
+    afterCancel: [{ drum: 'hh', time: 0.3 }],
+  });
+  const neverTriggered = await render(page, { ...spec, hits: [open, { drum: 'hh', time: 0.3 }] });
+  expect(difference(cancelled, neverTriggered)).toBeLessThan(0.00001);
 });

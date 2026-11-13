@@ -67,7 +67,7 @@ Where `prd.md` and `design.md` disagree, `prd.md` wins for behaviour and `design
 28. As a player, I want to open the sound controls without losing the pad, so that I can shape the sound while still playing the map.
 29. As a player, I want bd controls for frequency, punch, tone, decay and level, so that I can shape the kick.
 30. As a player, I want sd controls for frequency, tone, snappy, decay and level, so that I can shape the snare.
-31. As a player, I want a level control for hh, so that I can balance the hats.
+31. As a player, I want level and accent controls for hh, so that I can balance the hats and let accents open them, each new hat cutting off the one still ringing.
 32. As a player, I want a drift control that adds small random variations per hit (pitch, decay, level, timing, tone), so that the machine sounds warm and analog instead of static.
 33. As a player, I want a master drive control, so that I can crunch the whole kit.
 34. As a player, I want drive not to make everything much louder, so that turning it up doesn't blow my ears or my speakers.
@@ -166,12 +166,12 @@ Where `prd.md` and `design.md` disagree, `prd.md` wins for behaviour and `design
 3. **Setup store (deep).** Holds the setup (x, y, chaos, densities, per-drum sound, drift, drive, swing, bpm), plus mutes, the anchor snapshot and the pad's undo slot. Anchor captures pattern, sound, swing, drift and drive; never tempo or mutes. On load the setup comes from the URL hash, and the bare address or a broken hash gives the default setup. The anchor is set to the loaded setup, so return before any `set anchor` restores the link's setup, or the defaults. The anchor is not kept across reloads. Nothing is stored on the device for the setup: a reload keeps the hash, so the setup survives it through the URL. Pad undo is one step and flip/flops.
 4. **URL codec (deep, pure).** Setup ↔ URL hash, encoded as `v1.` plus base64url. Each field is one byte; the byte order below is fixed for v1. Includes bpm and swing; excludes mutes and anchor. An unknown version or a malformed payload falls back to the default setup. A later version appends fields and bumps the version; decoders for older versions stay. The hash updates with `replaceState`, at most once per second, inside try/catch. See URL format below.
 5. **Pad gesture interpreter (deep, pure).** Pointer events with timestamps in, intents out: jump (on tap, at once), drag (glide then follow), undo (two-finger tap), fine adjust (double-tap and slide, relative, about ¼ speed). It owns all gesture timing in milliseconds; the transport owns step timing. The state machine is in `design.md`. Thresholds live in the tunables module.
-6. **Kit, voices and master bus.** The transport plays drums through a **kit** interface: trigger a drum at a time with a velocity and its sound parameters, cancel hits that are scheduled but not started, and set per-drum mute gains. v1 ships one kit of native Web Audio voices:
+6. **Kit, voices and master bus.** The transport plays drums through a **kit** interface: trigger a drum at a time with a velocity, whether it is an accent, and its sound parameters, cancel hits that are scheduled but not started, and set per-drum mute gains. v1 ships one kit of native Web Audio voices:
    - BD: pitched oscillator or high-Q filter ping with pitch envelope and punch.
    - SD: tuned resonators plus filtered noise, snappy.
-   - HH: six detuned square oscillators through band-pass and high-pass, 808-style.
-   Parameters mirror Peaks (frequency, punch/snappy, tone, decay) plus level. Peaks is a starting point; the sound will move towards hard techno, and later kits (including a Peaks port in an AudioWorklet) load through the same interface without touching the rest. Drift scales per-hit random offsets in pitch (cents), decay, level, timing (1–2 ms) and filter cutoff. Accents drive velocity. Mutes are per-drum gains on the bus and act at once. All drums sum into a master drive: a `WaveShaperNode` with a soft-clip curve, 4× oversampling and gain compensation.
-7. **Tunables.** One module holds every value tuned by ear or feel, each with a comment: initial setup, drift amounts, drive curve and gain compensation, accent velocity, glide length, gesture thresholds and windows, fine-adjust speed, lookahead, layout breakpoints, minimum pad height, tap-tempo averaging. Code reads these values from here and nowhere else.
+   - HH: six detuned square oscillators through band-pass and high-pass, 808-style. A plain hit is a closed hat; an accent opens it as far as hh accent asks (0: only louder; 255: a fully open hat, decay about 0.5 s; exponential in between). Any hh hit chokes the hh still ringing with a fade of about 5 ms, scheduled at the new hit's start; cancelling a hit takes its choke back, so the looper's re-hand leaves no phantom choke.
+   Parameters mirror Peaks (frequency, punch/snappy, tone, decay) plus level. Peaks is a starting point; the sound will move towards hard techno, and later kits (including a Peaks port in an AudioWorklet) load through the same interface without touching the rest. Drift scales per-hit random offsets in pitch (cents), decay, level, timing (1–2 ms) and filter cutoff. Accents drive velocity, and on hh the open hat. Mutes are per-drum gains on the bus and act at once. All drums sum into a master drive: a `WaveShaperNode` with a soft-clip curve, 4× oversampling and gain compensation.
+7. **Tunables.** One module holds every value tuned by ear or feel, each with a comment: initial setup, drift amounts, drive curve and gain compensation, accent velocity, open hat decay, choke fade, glide length, gesture thresholds and windows, fine-adjust speed, lookahead, layout breakpoints, minimum pad height, tap-tempo averaging. Code reads these values from here and nowhere else.
 8. **Keyboard bindings.** Key down/up → intents, including hold semantics for the looper and the hint toggle. Keys bind by physical position (`event.code`), designed for the US layout. Key repeat is ignored except for tempo. Hint visibility is stored in localStorage (wrapped in try/catch).
 9. **Audio session.** Creates and resumes the AudioContext on the first gesture. Sets `navigator.audioSession.type = 'playback'` where it exists, otherwise starts a silent looping `<audio>` element in the same gesture, so the iOS silent switch does not mute the app. Resumes after interruptions (calls, app switches, `visibilitychange`); when the browser refuses, shows `tap to resume`. Holds a Screen Wake Lock while playing.
 10. **UI (Solid).** Layouts, controls, step display, pad rendering, tabs, hints, about page.
@@ -257,7 +257,7 @@ Points the behaviour above doesn't settle are implemented as the simplest readin
 
 ### URL format
 
-`v1.` followed by base64url of 21 bytes, in this order:
+`v1.` followed by base64url of 22 bytes, in this order:
 
 | # | Field | Range |
 | --- | --- | --- |
@@ -267,13 +267,13 @@ Points the behaviour above doesn't settle are implemented as the simplest readin
 | 3–5 | density bd, sd, hh | 0–255 |
 | 6–10 | bd freq, punch, tone, decay, level | 0–255 |
 | 11–15 | sd freq, tone, snappy, decay, level | 0–255 |
-| 16 | hh level | 0–255 |
-| 17 | drift | 0–255 |
-| 18 | drive | 0–255 |
-| 19 | bpm | 60–200, stored as the bpm value |
-| 20 | swing | 50–75, stored as the percentage |
+| 16–17 | hh accent, level | 0–255 |
+| 18 | drift | 0–255 |
+| 19 | drive | 0–255 |
+| 20 | bpm | 60–200, stored as the bpm value |
+| 21 | swing | 50–75, stored as the percentage |
 
-Out-of-range bpm or swing values clamp. A wrong length, bad base64 or an unknown version falls back to the default setup.
+Out-of-range bpm or swing values clamp. A wrong length, bad base64 or an unknown version falls back to the default setup. hh accent joined v1 before launch, without a version bump: the 21-byte links from before it are a wrong length and open the default setup.
 
 ### Layout rules
 
@@ -328,7 +328,7 @@ The AudioContext is created on the first gesture (the `▶ tap to play` tap). Sa
   - "Holding 1/4 from step 4, then sliding to 1/32, repeats step 4."
   - "A 1/8 loop started at step 30 plays 30, 31, 0, 1, and holding it across the bar line does not re-roll chaos; the re-roll happens when the playhead crosses step 0."
 - Transport and gestures are tested with an injected fake clock and synthetic timestamped events; no real timers.
-- Audio smoke tests render the kit offline (`OfflineAudioContext`): output is not silent, does not clip, and hits land at the expected times.
+- Audio smoke tests render the kit offline (`OfflineAudioContext`): output is not silent, does not clip, and hits land at the expected times; an accented hh opens at hh accent 100 and not at 0, and the next hh chokes it within about 10 ms without a click.
 - Playwright rule checks at each target viewport: the play screen never scrolls, every control is at least 44 px, no controls overlap. No screenshot comparison yet.
 - How the voices and drive sound, and how the gestures feel, is checked by Pierre on the acceptance devices, including a real iPhone for the audio session, silent switch and wake lock.
 - No prior art: the repo is new. Use Vitest for unit tests and Playwright for browser checks. CI runs both and blocks the deploy on failure.
@@ -339,7 +339,7 @@ The AudioContext is created on the first gesture (the `▶ tap to play` tap). Sa
 - PWA: web manifest, home-screen install, service worker and offline support.
 - Landscape phone layout (a rotate hint instead).
 - Memory slots (m1–m3), presets beyond the shareable URL.
-- Per-drum swing, per-drum drive, per-drum accent controls.
+- Per-drum swing, per-drum drive, accent controls for bd and sd.
 - Accent suppression on loop retriggers (accents repeat as looped).
 - Moving the loop start while holding, a roll mode, MIDI for the loop strip.
 - Ripples on hits, heat map of the drum map, other pad visualisations.

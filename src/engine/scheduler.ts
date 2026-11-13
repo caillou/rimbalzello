@@ -109,7 +109,7 @@ export function createScheduler(context: BaseAudioContext, kit: Kit, transport: 
         store.applyAnchor();
       }
       const { sound } = store.setup();
-      for (const hit of step.hits) kit.trigger(hit.drum, step.time, hit.velocity, sound[hit.drum]);
+      for (const hit of step.hits) kit.trigger(hit.drum, step.time, hit.velocity, sound[hit.drum], hit.accent);
     }
   }
 

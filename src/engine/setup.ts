@@ -41,6 +41,8 @@ export interface SdSound {
 }
 
 export interface HhSound {
+  /** How far an accented hit opens the hat: 0 keeps it closed, only louder; 255 opens it fully. */
+  accent: number;
   level: number;
 }
 

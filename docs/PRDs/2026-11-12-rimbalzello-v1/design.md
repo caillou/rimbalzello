@@ -75,6 +75,8 @@ On load the app is stopped. A big `▶ tap to play` sits over the pad; one tap s
 
 Tapping `→ sound` swaps the `mix` / `fx` / `tempo` tabs for drum tabs: `bd` `sd` `hh`, the active tab in its drum's colour with an underline and the drum's full name (`bass drum`) in grey italics on the right. Below: that drum's sliders. The pad, step display and loop strip stay. The bottom bar's first item becomes `← play`. On phones the drum's sliders sit in two columns so they fit under the pad (`v2-03-phone-sound.png`).
 
+The hh tab holds two sliders, `accent` and `level`, in one row. `accent` sets how far an accented hh hit opens the hat: at 0 an accent is only louder, at 100 the hat is fully open; plain hh hits stay closed. Any hh hit cuts off an hh still ringing (the choke).
+
 ### Tempo
 
 The `tempo` tab, after `mix` and `fx`, holds three rows: the bpm strip, the swing strip and a boxed `tap tempo` button. The two strips work like every other strip, moving relative to the touch, but show their own values: tempo runs 60–200 bpm, default 128; swing runs 50–75 %, default 56 % (shown `56%`). The header's − and + repeat while held. Tapping the bpm readout opens the tab, from `mix`, `fx` or sound mode. `v2-04-phone-tempo.png` shows the rows under the former panel's heading, with − and + where the strips now are.

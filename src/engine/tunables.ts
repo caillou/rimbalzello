@@ -20,10 +20,11 @@ export const tunables = {
     // Fills: bd 63, sd 50, hh 78 on the strips.
     density: { bd: 161, sd: 128, hh: 199 },
     // Voice parameters as shown in the sound sections of the screenshots.
+    // hh accent 0: an accent only makes the hat louder and the hat stays closed.
     sound: {
       bd: { freq: 128, punch: 156, tone: 117, decay: 148, level: 179 },
       sd: { freq: 128, tone: 128, snappy: 140, decay: 117, level: 143 },
-      hh: { level: 112 },
+      hh: { accent: 0, level: 112 },
     },
     // Light drift (22 on the strip) so repeated hits do not sound identical.
     drift: 56,
@@ -234,8 +235,20 @@ export const tunables = {
       bandpassQ: 1,
       /** High-pass after it, in Hz. */
       highpass: 7000,
-      /** Seconds until the hat is silent (−80 dB). About 90 ms: a closed hat. */
+      /** Seconds until a closed hat is silent (−80 dB): every plain hit, and every hit at accent 0. About 90 ms. */
       decay: 0.09,
+      /**
+       * Seconds until an accented hit at accent 255 is silent: a fully open
+       * hat. About 0.5 s, to set by ear in the kit tuning issue. In between,
+       * the accent byte maps from `decay` to this exponentially, like the
+       * other byte parameters.
+       */
+      openDecay: 0.5,
+      /**
+       * Seconds a choke takes to fade out the hat still ringing when the next
+       * hh hit starts. About 5 ms: the cut is heard at once, without a click.
+       */
+      chokeFade: 0.005,
     },
 
     /**

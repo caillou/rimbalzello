@@ -20,7 +20,7 @@ describe('default setup', () => {
     expect(fits(bpm, BPM_RANGE), `bpm ${bpm}`).toBe(true);
     expect(fits(swing, SWING_RANGE), `swing ${swing}`).toBe(true);
     const fields = byteFields(bytes, '');
-    expect(fields).toHaveLength(19);
+    expect(fields).toHaveLength(20);
     for (const [name, value] of fields) {
       expect(fits(value, BYTE_RANGE), `${name} ${value}`).toBe(true);
     }

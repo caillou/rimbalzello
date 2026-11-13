@@ -2,10 +2,10 @@ import { describe, expect, test } from 'vitest';
 import { BPM_RANGE, BYTE_RANGE, SWING_RANGE, defaultSetup, type Range, type Setup } from './setup';
 import { decodeSetup, encodeSetup } from './url-codec';
 
-// A v1 link as shared today. Its bytes are 10, 11, …, 28 for the 19 byte
+// A v1 link as shared today. Its bytes are 10, 11, …, 29 for the 20 byte
 // fields, then bpm 140 and swing 70.
-const LINK = 'v1.CgsMDQ4PEBESExQVFhcYGRobHIxG';
-const LINK_BYTES = [...Array.from({ length: 19 }, (_, i) => 10 + i), 140, 70];
+const LINK = 'v1.CgsMDQ4PEBESExQVFhcYGRobHB2MRg';
+const LINK_BYTES = [...Array.from({ length: 20 }, (_, i) => 10 + i), 140, 70];
 const LINK_SETUP: Setup = {
   x: 10,
   y: 11,
@@ -14,13 +14,17 @@ const LINK_SETUP: Setup = {
   sound: {
     bd: { freq: 16, punch: 17, tone: 18, decay: 19, level: 20 },
     sd: { freq: 21, tone: 22, snappy: 23, decay: 24, level: 25 },
-    hh: { level: 26 },
+    hh: { accent: 26, level: 27 },
   },
-  drift: 27,
-  drive: 28,
+  drift: 28,
+  drive: 29,
   bpm: 140,
   swing: 70,
 };
+
+// A v1 link from before the hh accent byte: 21 bytes, the same fields
+// without it. It no longer fits the v1 layout.
+const OLD_LINK = 'v1.CgsMDQ4PEBESExQVFhcYGRobHIxG';
 
 /** A v1 hash built straight from bytes, bypassing the encoder. */
 function v1Hash(bytes: readonly number[]): string {
@@ -30,8 +34,8 @@ function v1Hash(bytes: readonly number[]): string {
 
 /** The range each v1 byte may hold, by position. */
 function rangeAt(index: number): Range {
-  if (index === 19) return BPM_RANGE;
-  if (index === 20) return SWING_RANGE;
+  if (index === 20) return BPM_RANGE;
+  if (index === 21) return SWING_RANGE;
   return BYTE_RANGE;
 }
 
@@ -68,18 +72,18 @@ describe('url codec', () => {
   });
 
   test.each([
-    { field: 'bpm', index: 19, stored: 30, expected: 60 },
-    { field: 'bpm', index: 19, stored: 250, expected: 200 },
-    { field: 'swing', index: 20, stored: 40, expected: 50 },
-    { field: 'swing', index: 20, stored: 90, expected: 75 },
+    { field: 'bpm', index: 20, stored: 30, expected: 60 },
+    { field: 'bpm', index: 20, stored: 250, expected: 200 },
+    { field: 'swing', index: 21, stored: 40, expected: 50 },
+    { field: 'swing', index: 21, stored: 90, expected: 75 },
   ])('$field $stored in a link clamps to $expected', ({ field, index, stored, expected }) => {
     const link = v1Hash(LINK_BYTES.with(index, stored));
     expect(decodeSetup(link)).toEqual({ ...LINK_SETUP, [field]: expected });
   });
 
   test.each([
-    ['20 bytes', v1Hash(LINK_BYTES.slice(0, 20))],
-    ['22 bytes', v1Hash([...LINK_BYTES, 0])],
+    ['a 21-byte link from before the hh accent byte', OLD_LINK],
+    ['23 bytes', v1Hash([...LINK_BYTES, 0])],
     ['a character outside base64url', LINK.replace('C', '+')],
     ['a base64 length no bytes give', `${LINK}A`],
     ['an unknown version', LINK.replace('v1.', 'v9.')],

@@ -1,8 +1,10 @@
 // URL codec: the setup to and from the URL hash, so a link shares a groove.
-// The hash is a version tag and base64url bytes: `v1.` plus 21 bytes in the
+// The hash is a version tag and base64url bytes: `v1.` plus 22 bytes in the
 // order of the v1 URL format table in the PRD. That order is fixed, because
 // links already shared depend on it. Mutes and the anchor are not part of the
-// setup, so they are not in the hash.
+// setup, so they are not in the hash. (The hh accent byte joined v1 before
+// the app was announced; the 21-byte links from before it open the default
+// setup, like any other wrong length.)
 //
 // A later version appends fields under a new tag: give it its own decoder in
 // `decoders`, let `encodeSetup` write it, and keep the older decoders so old
@@ -55,6 +57,7 @@ function v1Bytes(setup: Setup): number[] {
     sound.sd.snappy,
     sound.sd.decay,
     sound.sd.level,
+    sound.hh.accent,
     sound.hh.level,
     setup.drift,
     setup.drive,
@@ -63,7 +66,7 @@ function v1Bytes(setup: Setup): number[] {
   ];
 }
 
-const V1_LENGTH = 21;
+const V1_LENGTH = 22;
 
 function fromV1Bytes(bytes: Uint8Array): Setup | undefined {
   if (bytes.length !== V1_LENGTH) return undefined;
@@ -77,12 +80,12 @@ function fromV1Bytes(bytes: Uint8Array): Setup | undefined {
     sound: {
       bd: { freq: at(6), punch: at(7), tone: at(8), decay: at(9), level: at(10) },
       sd: { freq: at(11), tone: at(12), snappy: at(13), decay: at(14), level: at(15) },
-      hh: { level: at(16) },
+      hh: { accent: at(16), level: at(17) },
     },
-    drift: at(17),
-    drive: at(18),
-    bpm: clamp(at(19), BPM_RANGE),
-    swing: clamp(at(20), SWING_RANGE),
+    drift: at(18),
+    drive: at(19),
+    bpm: clamp(at(20), BPM_RANGE),
+    swing: clamp(at(21), SWING_RANGE),
   };
 }
 

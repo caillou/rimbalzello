@@ -16,7 +16,7 @@ type Param<D extends Drum> = keyof Sound[D] & string;
 const PARAMS: { readonly [D in Drum]: readonly Param<D>[] } = {
   bd: ['freq', 'punch', 'tone', 'decay', 'level'],
   sd: ['freq', 'tone', 'snappy', 'decay', 'level'],
-  hh: ['level'],
+  hh: ['accent', 'level'],
 };
 
 /** The sound as bytes by drum and parameter, so a parameter of `D` indexes drum `D`'s sound. */

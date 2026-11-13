@@ -28,10 +28,11 @@ export interface TransportOptions {
 /** A loop length in steps: the sizes 1/4, 1/8, 1/16 and 1/32 of a bar. */
 export type LoopSteps = 8 | 4 | 2 | 1;
 
-/** One drum to play, and how hard (0–1). */
+/** One drum to play, how hard (0–1), and whether it is an accent. */
 export interface Hit {
   drum: Drum;
   velocity: number;
+  accent: boolean;
 }
 
 /** One step the transport hands out: when it sounds and what it plays. */
@@ -234,6 +235,7 @@ export function createTransport({ setup: initial, seed }: TransportOptions): Tra
     const hits = DRUMS.filter((drum) => atStep[drum].hit).map((drum) => ({
       drum,
       velocity: atStep[drum].accent ? velocity.accent : velocity.hit,
+      accent: atStep[drum].accent,
     }));
     return { played, hits };
   }

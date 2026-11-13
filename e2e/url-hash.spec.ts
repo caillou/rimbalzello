@@ -4,10 +4,10 @@ import { expect, test, type Page } from '@playwright/test';
 // every change without adding history, and the bare address opens with the
 // default setup.
 
-// The laptop layout, so all six strips show.
+// The laptop layout, so all six strips and the hh accent strip show.
 test.use({ viewport: { width: 1280, height: 800 } });
 
-/** A link to a `v1.` hash with these 21 bytes, built without the app's URL codec. */
+/** A link to a `v1.` hash with these 22 bytes, built without the app's URL codec. */
 function link(bytes: number[]): string {
   return `./#v1.${Buffer.from(bytes).toString('base64url')}`;
 }
@@ -21,12 +21,12 @@ async function hashBytes(page: Page): Promise<number[]> {
 /** A byte as the screen shows it, 0–100. */
 const shownAs = (byte: number) => Math.round((byte / 255) * 100);
 
-// x, y, chaos, bd sd hh density, sound (10 bytes), drift, drive, bpm, swing:
-// picked so the screen shows round numbers.
-const KNOWN = link([51, 204, 153, 26, 77, 230, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 128, 179, 142, 63]);
+// x, y, chaos, bd sd hh density, sound (12 bytes, hh accent 102 among
+// them), drift, drive, bpm, swing: picked so the screen shows round numbers.
+const KNOWN = link([51, 204, 153, 26, 77, 230, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 102, 110, 128, 179, 142, 63]);
 const KNOWN_SHOWN = {
   readout: 'x 20 · y 80',
-  strips: { bd: 10, sd: 30, hh: 90, chaos: 60, drift: 50, drive: 70 },
+  strips: { bd: 10, sd: 30, hh: 90, chaos: 60, drift: 50, drive: 70, accent: 40 },
   bpm: '142 bpm',
 };
 

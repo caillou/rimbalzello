@@ -3,7 +3,8 @@
 //
 // The native kit below plays the voices in voices.ts. Each drum has its own
 // mute gain; the drums sum into the master drive (gain, a soft clip with 4×
-// oversampling, gain compensation) and on to the speakers.
+// oversampling, gain compensation) and on to the speakers. A new hh hit
+// chokes the hh still ringing, as an open hat is cut by the next hat.
 
 import { DRUMS, type Drum, type Sound } from './setup';
 import { tunables } from './tunables';
@@ -13,15 +14,17 @@ export interface Kit {
   /**
    * Plays `drum` at `time` (seconds on the AudioContext clock) with a
    * velocity 0–1 and the drum's sound parameters. The hit draws its own
-   * drift offsets.
+   * drift offsets. An accent on hh opens the hat as far as the sound's
+   * accent asks. An hh hit chokes the hh hit before it from its own start,
+   * so hh hits come in time order, as the scheduler triggers them.
    */
-  trigger<D extends Drum>(drum: D, time: number, velocity: number, sound: Sound[D]): void;
+  trigger<D extends Drum>(drum: D, time: number, velocity: number, sound: Sound[D], accent?: boolean): void;
   /**
    * Cancels every hit triggered for a time after `from` (seconds on the
    * context clock; now when left out). Hits are judged by the time they were
    * triggered for, not by their drifted start, so a caller that queues again
    * from the same `from` neither loses nor doubles a hit. Hits already
-   * sounding ring out.
+   * sounding ring out, and a cancelled hh hit no longer chokes the one before it.
    */
   cancelScheduled(from?: number): void;
   /** Mutes or unmutes a drum at once: a gain on the drum's bus, so it also silences a hit already sounding. */
@@ -99,6 +102,42 @@ function spread(): number {
   return Math.random() * 2 - 1;
 }
 
+/** A hit the kit started that has not ended yet. */
+interface Sounding {
+  drum: Drum;
+  voice: Voice;
+  /** The time the hit was triggered for, which cancelling judges by. */
+  time: number;
+  /** The gain the voice plays through, which a choke fades out. */
+  gate: GainNode;
+  /** When a later hh hit chokes it: that hit's start, drift included. */
+  chokedAt?: number;
+}
+
+/** When a hit has ended: at the end of its voice, or once its choke has faded out. */
+function endOf({ voice, chokedAt }: Sounding): number {
+  return chokedAt === undefined ? voice.end : Math.min(voice.end, chokedAt + tunables.kit.hh.chokeFade);
+}
+
+/**
+ * Fades the hit out over the choke fade from `at`. The gate holds 1 until
+ * then. These are the only events on the gate, so a cancel can take them
+ * back with `cancelScheduledValues`, without `cancelAndHoldAtTime`, which
+ * Firefox does not support reliably.
+ */
+function choke(hit: Sounding, at: number): void {
+  hit.gate.gain.setValueAtTime(1, at);
+  hit.gate.gain.linearRampToValueAtTime(0, at + tunables.kit.hh.chokeFade);
+  hit.chokedAt = at;
+}
+
+/** Takes a choke back: the hit rings on as if the hit that choked it was never triggered. */
+function unchoke(hit: Sounding): void {
+  if (hit.chokedAt === undefined) return;
+  hit.gate.gain.cancelScheduledValues(hit.chokedAt);
+  hit.chokedAt = undefined;
+}
+
 export function createNativeKit(context: BaseAudioContext, options: KitOptions = {}): Kit {
   const gains = driveGains(options.drive ?? 0);
   const driveOutput = new GainNode(context, { gain: gains.output });
@@ -116,32 +155,48 @@ export function createNativeKit(context: BaseAudioContext, options: KitOptions =
   const voices = createVoices(context);
   let drift = options.drift ?? 0;
   let drive = options.drive ?? 0;
-  /** Voices that have not ended, each with the time its hit was triggered for. */
-  let sounding: { voice: Voice; time: number }[] = [];
+  /**
+   * Hits that have not ended, in the order they were triggered. The last hh
+   * among them is the one ringing, which the next hh hit chokes.
+   */
+  let sounding: Sounding[] = [];
 
   return {
-    trigger(drum, time, velocity, sound) {
-      // Forget voices that have ended; cancelling only needs the ones still ahead.
-      sounding = sounding.filter(({ voice }) => voice.end > context.currentTime);
+    trigger(drum, time, velocity, sound, accent = false) {
+      // Forget hits that have ended; cancelling and choking only need the ones still sounding or ahead.
+      sounding = sounding.filter((hit) => endOf(hit) > context.currentTime);
       const amount = drift / 255;
       const max = tunables.kit.drift;
+      const start = time + Math.random() * amount * max.timing;
       const voice = voices[drum](
         {
-          time: time + Math.random() * amount * max.timing,
+          time: start,
           gain: velocity * 10 ** ((spread() * amount * max.levelDb) / 20),
           detune: spread() * amount * max.pitchCents,
           decay: 1 + spread() * amount * max.decay,
           cutoff: spread() * amount * max.cutoffCents,
           noise: Math.random() * amount,
+          accent,
         },
         sound,
       );
-      voice.output.connect(buses[drum]);
-      sounding.push({ voice, time });
+      const gate = new GainNode(context);
+      voice.output.connect(gate).connect(buses[drum]);
+      if (drum === 'hh') {
+        const ringing = sounding.findLast((hit) => hit.drum === 'hh');
+        if (ringing && endOf(ringing) > start) choke(ringing, start);
+      }
+      sounding.push({ drum, voice, time, gate });
     },
     cancelScheduled(from = context.currentTime) {
       for (const { voice, time } of sounding) if (time > from) voice.output.disconnect();
       sounding = sounding.filter(({ time }) => time <= from);
+      // The ringing hh is now the last one kept, so the hits the looper hands
+      // out again choke it, never a cancelled one. If it was choked, the hit
+      // that did it came later and was cancelled: it rings on until the next
+      // hh hit triggered.
+      const ringing = sounding.findLast((hit) => hit.drum === 'hh');
+      if (ringing) unchoke(ringing);
     },
     setMuted(drum, muted) {
       const { gain } = buses[drum];

@@ -11,13 +11,15 @@ Use these words, with these meanings, in code, tests, issues and docs. Don't inv
 - **Step**: one 32nd note. A **beat** is 8 steps; a **bar** is 32 steps, one pattern. Steps are numbered 0–31.
 - **Drum**: one of the three voices: **bd** (bass drum), **sd** (snare drum), **hh** (hi-hat). Always lowercase two-letter names in the UI.
 - **Kit**: the set of drum voices behind one interface. The transport triggers drums through the kit and never knows how they make sound. v1 ships one kit of native Web Audio voices; other kits can load later.
-- **Hit**: one drum firing on one step. A hit can be an **accent** (louder), which Grids marks when the map level is above 192.
+- **Hit**: one drum firing on one step. A hit can be an **accent** (louder; on hh it can also open the hat), which Grids marks when the map level is above 192.
 - **Density**: per-drum fill amount, 0–255. Higher density means more hits.
 - **Chaos**: Grids' randomness applied to the pattern; re-rolled when the playhead crosses step 0, never when a loop wraps.
 - **Swing**: the delay of the off-beat 16ths (steps 2, 6, 10, …), as a percentage: 50 % is straight, range 50–75 %, default 56 %. Part of the setup. Same for all drums. Not the same as chaos.
 - **Drift**: per-hit random variation in the voices (pitch, decay, level, timing, tone) that makes the sound feel analog. It is a sound parameter, not a pattern parameter. Not the same as chaos.
 - **Drive**: master distortion on the sum of all drums.
-- **Sound**: the per-drum voice parameters: bd freq, punch, tone, decay, level; sd freq, tone, snappy, decay, level; hh level.
+- **Sound**: the per-drum voice parameters: bd freq, punch, tone, decay, level; sd freq, tone, snappy, decay, level; hh accent, level.
+- **Open hat**: an accented hh hit that rings longer than the closed hat. The hh `accent` strip sets how far it opens: at 0 an accent is only louder, at 100 the hat is fully open. Plain hh hits stay closed.
+- **Choke**: a new hh hit cutting off the hh still ringing, with a short fade so it does not click. Every hh hit chokes, closed or open.
 - **Tempo**: bpm, 60–200, default 128.
 
 ## State

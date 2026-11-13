@@ -8,7 +8,7 @@ import { expectLayoutRules } from './layout-rules.ts';
 
 const DRUMS = ['bd', 'sd', 'hh'] as const;
 /** How many sound sliders each drum has (PRD stories 29–31). */
-const SOUND_SLIDERS = { bd: 5, sd: 5, hh: 1 };
+const SOUND_SLIDERS = { bd: 5, sd: 5, hh: 2 };
 
 const tab = (page: Page, drum: string) => page.getByRole('tab', { name: drum, exact: true });
 const tempo = (page: Page) => page.getByRole('group', { name: 'tempo' });
