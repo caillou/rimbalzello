@@ -275,7 +275,27 @@ describe('looper', () => {
 
   const played = (steps: TimedStep[]) => steps.map((s) => s.played);
 
-  it('holding 1/8 while step 13 is heard plays 13, 14, 15, 16, 13, … and on release plays the step the playhead has reached', () => {
+  // Beat 2 is steps 8–15. A touch heard on a beat's last step counts for the next beat (the grace step).
+  it.each([
+    { heard: 13, size: '1/4', steps: 8, plays: [14, 15, 8, 9, 10] },
+    { heard: 13, size: '1/8', steps: 4, plays: [10, 11, 8, 9, 10] },
+    { heard: 13, size: '1/32', steps: 1, plays: [8, 8, 8, 8] },
+    { heard: 6, size: '1/8', steps: 4, plays: [3, 0, 1, 2, 3] },
+    { heard: 15, size: '1/4', steps: 8, plays: [16, 17, 18, 19, 20, 21, 22, 23, 16, 17] },
+    { heard: 31, size: '1/8', steps: 4, plays: [0, 1, 2, 3, 0, 1] },
+  ] as const)(
+    "loops the first steps of the beat heard, keeping the grid, the beat's last step counting for the next beat: $size at step $heard",
+    ({ heard, steps, plays }) => {
+      const player = createPlayer(plain());
+      player.to(heard + 0.5);
+      player.hold(steps);
+      player.to(heard + 1 + plays.length);
+
+      expect(played(player.heard(heard + 1, heard + 1 + plays.length))).toEqual(plays);
+    },
+  );
+
+  it('holding 1/8 while step 13 is heard loops steps 8–11 in time with the playhead, and on release plays the step the playhead has reached', () => {
     // Steps are queued about four steps ahead: engage and release are heard
     // from the next step boundary, not a lookahead later.
     const player = createPlayer(plain(), { lookahead: 0.25 });
@@ -285,31 +305,45 @@ describe('looper', () => {
     player.release();
     player.to(28);
 
-    expect(played(player.heard(13, 28))).toEqual([13, 14, 15, 16, 13, 14, 15, 16, 13, 14, 23, 24, 25, 26, 27]);
+    expect(played(player.heard(13, 28))).toEqual([13, 10, 11, 8, 9, 10, 11, 8, 9, 10, 23, 24, 25, 26, 27]);
   });
 
-  it('starts on the step heard, not on the step being scheduled ahead', () => {
-    // Steps are queued about four steps ahead, and the speakers lag the clock by two.
+  it('takes the beat of the step heard, not of the step being scheduled ahead', () => {
+    // Steps are queued about four steps ahead, and the speakers lag the clock
+    // by two: step 13 is heard (beat 8–15) while step 19 is queued (beat 16–23).
     const player = createPlayer(plain(), { lookahead: 0.25, latency: 2 });
     player.to(15.5);
     expect(player.heard(0, 20).at(-1)?.playhead, 'queued ahead').toBe(19);
     player.hold(4);
     player.to(22);
 
-    expect(played(player.heard(13, 22))).toEqual([13, 14, 15, 16, 13, 14, 15, 16, 13]);
+    expect(played(player.heard(13, 22))).toEqual([13, 14, 15, 8, 9, 10, 11, 8, 9]);
+  });
+
+  it('plays the pattern on until the playhead reaches the loop, when the step heard lies ahead of the clock', () => {
+    // The speakers run two steps ahead of the clock: step 8 is heard at 6.5, and step 7 is still to sound.
+    // The app caps the heard time at the clock, so this stands in for the case it guards there: a grace of
+    // more than one step puts the loop's start ahead of steps that get handed out again.
+    // A 1/32 loop plays 8 on every step it covers, so step 7 playing 7 shows the pattern still runs there.
+    const player = createPlayer(plain(), { lookahead: 0.25, latency: -2 });
+    player.to(6.5);
+    player.hold(1);
+    player.to(14);
+
+    expect(played(player.heard(6, 14))).toEqual([6, 7, 8, 8, 8, 8, 8, 8]);
   });
 
   it('reports the steps handed out again after a loop change as heard, not the ones they replaced', () => {
-    // Steps are queued about four steps ahead; a 1/32 loop engaged on step 12 hands them out again, all playing 12.
+    // Steps are queued about four steps ahead; a 1/32 loop engaged on step 12 hands them out again, all playing 8.
     const player = createPlayer(plain(), { lookahead: 0.25 });
     const step = stepLength(plain().bpm);
     player.to(12.5);
     player.hold(1);
 
-    expect([12.5, 13.5, 14.5, 15.5].map((n) => player.transport.stepHeardAt(n * step)?.played)).toEqual([12, 12, 12, 12]);
+    expect([12.5, 13.5, 14.5, 15.5].map((n) => player.transport.stepHeardAt(n * step)?.played)).toEqual([12, 8, 8, 8]);
   });
 
-  it('holding 1/4 from step 4, then sliding to 1/8 when the playhead is at step 10, plays 6, 7, 4, 5, 6, …', () => {
+  it('holding 1/4 at step 4, then sliding to 1/8 when the playhead is in the next beat, keeps the first beat', () => {
     const player = createPlayer(plain());
     player.to(4.5);
     player.hold(8);
@@ -317,10 +351,10 @@ describe('looper', () => {
     player.hold(4);
     player.to(15);
 
-    expect(played(player.heard(4, 15))).toEqual([4, 5, 6, 7, 8, 9, 6, 7, 4, 5, 6]);
+    expect(played(player.heard(4, 15))).toEqual([4, 5, 6, 7, 0, 1, 2, 3, 0, 1, 2]);
   });
 
-  it('holding 1/4 from step 4, then sliding to 1/32, repeats step 4', () => {
+  it("holding 1/4 at step 4, then sliding to 1/32, repeats the beat's first step", () => {
     const player = createPlayer(plain());
     player.to(4.5);
     player.hold(8);
@@ -328,20 +362,20 @@ describe('looper', () => {
     player.hold(1);
     player.to(15);
 
-    expect(played(player.heard(4, 15))).toEqual([4, 5, 6, 7, 8, 9, 4, 4, 4, 4, 4]);
+    expect(played(player.heard(4, 15))).toEqual([4, 5, 6, 7, 0, 1, 0, 0, 0, 0, 0]);
   });
 
-  it('a 1/8 loop started at step 30 plays 30, 31, 0, 1, and re-rolls chaos when the playhead crosses step 0, not when the loop wraps', () => {
+  it('a loop on the first beat repeats step 0 without re-rolling chaos; the re-roll happens when the playhead crosses step 0', () => {
     const player = createPlayer(plain({ chaos: 255 }), { seed: 7 });
-    player.to(30.5);
+    player.to(1.5);
     player.hold(4);
     player.to(66);
-    const steps = player.heard(30, 66);
+    const steps = player.heard(1, 66);
 
-    expect(played(steps.slice(0, 8))).toEqual([30, 31, 0, 1, 30, 31, 0, 1]);
-    // The loop wraps through step 0 eight times in the second bar; chaos
-    // rolls only where the playhead crosses step 0, at the second and third bars.
-    const bars = [steps.slice(0, 2), steps.slice(2, 34), steps.slice(34)];
+    // The loop plays step 0 eight times in the second bar (playheads 32–63);
+    // chaos rolls only where the playhead crosses step 0, at the second and third bars.
+    const bars = [steps.slice(0, 31), steps.slice(31, 63), steps.slice(63)];
+    expect(played(bars[1]!)).toEqual(Array(8).fill([0, 1, 2, 3]).flat());
     const rolls = bars.map((bar) => {
       const first = bar[0]!.pattern.perturbation;
       bar.forEach((s) => expect(s.pattern.perturbation, `playhead ${s.playhead}`).toEqual(first));
@@ -364,14 +398,14 @@ describe('looper', () => {
     const after = player.heard(32, 40);
     before.forEach((s) => expect(s.hits, `playhead ${s.playhead}`).toEqual(hitsOn(start, s.played)));
     expect(after.map((s) => [s.playhead, s.played, s.returned])).toEqual([
-      [0, 16, true],
-      [1, 13, false],
-      [2, 14, false],
-      [3, 15, false],
-      [4, 16, false],
-      [5, 13, false],
-      [6, 14, false],
-      [7, 15, false],
+      [0, 8, true],
+      [1, 9, false],
+      [2, 10, false],
+      [3, 11, false],
+      [4, 8, false],
+      [5, 9, false],
+      [6, 10, false],
+      [7, 11, false],
     ]);
     after.forEach((s) => expect(s.hits, `playhead ${s.playhead}`).toEqual(hitsOn(anchor, s.played)));
     expect(after.map((s) => s.hits), 'the anchor sounds different').not.toEqual(after.map((s) => hitsOn(start, s.played)));
@@ -390,24 +424,23 @@ describe('looper', () => {
     transport.start(10);
     transport.stepsBefore(10 + 13.5 * step);
     transport.hold(1, { now: 10 + 13.5 * step, heard: 10 + 13.5 * step });
-    expect(played(transport.stepsBefore(10 + 15.5 * step))).toEqual([13, 13]);
+    expect(played(transport.stepsBefore(10 + 15.5 * step))).toEqual([8, 8]);
     transport.stop();
     transport.start(20);
     expect(played(transport.stepsBefore(20 + 31.5 * step))).toEqual(straight);
   });
 
-  it('keeps an accented step accented on every 1/32 retrigger', () => {
+  it('keeps an accented beat start accented on every 1/32 retrigger', () => {
     const setup = plain();
-    const accented = [...Array(PATTERN_STEPS).keys()].find((n) =>
-      hitsOn(setup, n).some((hit) => hit.velocity === tunables.velocity.accent),
-    )!;
+    const accented = [0, 8, 16, 24].find((n) => hitsOn(setup, n).some((hit) => hit.velocity === tunables.velocity.accent));
+    expect(accented, 'a beat start of the default pattern is accented').toBeDefined();
     const player = createPlayer(setup);
-    player.to(accented + 0.5);
+    player.to(accented! + 0.5);
     player.hold(1);
-    player.to(accented + 10);
+    player.to(accented! + 10);
 
-    for (const s of player.heard(accented, accented + 10)) {
-      expect(s.hits, `playhead ${s.playhead}`).toEqual(hitsOn(setup, accented));
+    for (const s of player.heard(accented!, accented! + 10)) {
+      expect(s.hits, `playhead ${s.playhead}`).toEqual(hitsOn(setup, accented!));
     }
   });
 
@@ -420,7 +453,7 @@ describe('looper', () => {
     player.to(9);
 
     const steps = player.heard(5, 9);
-    expect(played(steps)).toEqual([4, 4, 4, 4]);
+    expect(played(steps)).toEqual([0, 0, 0, 0]);
     expect(steps.map((s, n) => (s.time - (5 + n) * step) * 1000)).toEqual([7.5, 15, 7.5, 0].map((ms) => expect.closeTo(ms, 6)));
   });
 });

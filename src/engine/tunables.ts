@@ -63,6 +63,17 @@ export const tunables = {
    */
   glideSteps: 2,
 
+  /** The looper, tuned by feel. */
+  looper: {
+    /**
+     * Steps at the end of a beat whose touch counts for the next beat, so a
+     * touch a hair early for the next downbeat still loops it: step 15 loops
+     * from step 16, step 31 the next bar's first beat. 0 turns the grace off;
+     * below 8. About 1.
+     */
+    graceSteps: 1,
+  },
+
   /** Pad gesture thresholds, tuned by feel on the acceptance devices. */
   padGestures: {
     /** Finger travel in CSS px before a touch counts as moving. About 10 px. */

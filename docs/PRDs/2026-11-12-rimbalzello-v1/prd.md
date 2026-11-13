@@ -75,7 +75,7 @@ Where `prd.md` and `design.md` disagree, `prd.md` wins for behaviour and `design
 ### Looper
 
 35. As a player, I want to hold a loop size (1/4, 1/8, 1/16, 1/32 of a bar) to loop that slice of the pattern, so that I can perform stutters and fills.
-36. As a player, I want the loop to start on the step I am hearing when I touch, so that I catch the moment I like.
+36. As a player, I want the loop to repeat the start of the beat I am hearing when I touch, so that I catch the moment I like and the loop stays on the grid.
 37. As a player, I want to slide between loop sizes while holding, so that I can build rolls that stay in time.
 38. As a player, I want the pattern to jump to where it would have been when I release, so that I always land back on the grid.
 39. As a player, I want pad moves to stay live inside a loop, so that I can morph a looped beat.
@@ -198,7 +198,7 @@ Where `prd.md` and `design.md` disagree, `prd.md` wins for behaviour and `design
 
 ### Looper rules
 
-Terms: the **playhead** is the transport's real position, which keeps running while playing. The **played step** is the step whose hits sound at a step boundary. With no loop held, played step = playhead step. Steps are numbered 0–31.
+Terms: the **playhead** is the transport's real position, which keeps running while playing. The **played step** is the step whose hits sound at a step boundary. With no loop held, played step = playhead step. Steps are numbered 0–31. A **beat** is 8 steps: 0–7, 8–15, 16–23 and 24–31.
 
 | Zone | Loop length |
 | --- | --- |
@@ -214,16 +214,16 @@ Zones:
 Engage:
 
 1. The looper works only while the transport is playing.
-2. Touching a zone engages a loop. The start step `s` is the step the player hears at the moment of touch: the latest step boundary that has already sounded, with output latency taken into account. It is not the step being scheduled ahead.
-3. The start is on the step grid, not snapped to a multiple of the loop length. A 1/8 loop touched while step 13 sounds covers steps 13–16.
+2. Touching a zone engages a loop. The heard step `h` is the step the player hears at the moment of touch: the latest step boundary that has already sounded, with output latency taken into account. It is not the step being scheduled ahead. The loop start `s` is the first step of `h`'s beat, or of the next beat after a grace step (3).
+3. The loop is the first `L` steps of that beat, not a window from the touched step. A 1/8 loop touched while step 13 sounds covers steps 8–11. A touch heard in a beat's last step counts for the next beat (the grace step, `tunables.looper.graceSteps`, 1): step 15 loops from 16, step 31 from the next bar's step 0. Until the playhead gets there, the pattern plays on.
 4. The loop takes effect from the next step boundary. No hit is cut or retriggered mid-step.
-5. The window is steps `s … s+L−1`, counted modulo 32. A window may cross the bar line: a 1/4 loop started at step 28 plays 28, 29, 30, 31, 0, 1, 2, 3.
+5. The window is steps `s … s+L−1`, inside one beat, so it never crosses the bar line.
 
 While held:
 
 6. The playhead keeps advancing one step per step boundary, exactly as if no loop were held.
-7. At each step boundary, with playhead step `p` counted without wrapping, the played step is (s + ((p − s) mod L)) mod 32. A 1/8 loop at step 13 plays 13, 14, 15, 16, 13, …; a 1/32 loop repeats `s` on every step boundary.
-8. Sliding to another zone while holding keeps `s` and the phase; it changes `L` only. Because all sizes are powers of two, a shorter loop plays a sub-slice of the longer one, in time with it. Sliding never restarts the loop.
+7. At each step boundary, with playhead step `p` counted without wrapping, the played step is (s + ((p − s) mod L)) mod 32. A 1/8 loop touched at step 13 plays 10, 11, 8, 9, … from playhead 14: the played step sits at the same place in the loop as the playhead, so 1/4 never jumps and 1/32 repeats the beat's first step.
+8. Sliding to another zone while holding keeps `s`: the loop stays in its beat, and only `L` changes. Because all sizes are powers of two dividing 8, a shorter loop plays a sub-slice of the longer one, in time with it. Sliding never restarts the loop and never applies the grace step.
 9. Sliding off the strip or lifting the finger is a release. With keys, the zone key pressed most recently wins; releasing it falls back to another held zone key. The loop ends only when no zone is held.
 
 Release:
@@ -234,11 +234,11 @@ What stays live inside a loop:
 
 11. The looper changes which step index is read, not what the pattern contains. Each played step is read from the current pattern:
     - Pad moves, densities and chaos amount change what the looped steps contain; the change is heard on the next pass.
-    - Accents repeat as stored in the looped steps. A held 1/32 on an accented step accents every retrigger.
+    - Accents repeat as stored in the looped steps. A held 1/32 on an accented beat start accents every retrigger.
     - Mutes apply at once.
     - Sound, drift and drive apply at once. Every retrigger is a new hit and draws its own drift.
-12. Chaos re-rolls when the playhead crosses step 0. A loop wrapping through step 0 does not re-roll.
-13. Swing follows the playhead slot a hit lands in, not the played step.
+12. Chaos re-rolls when the playhead crosses step 0. A looped step 0 does not re-roll.
+13. Swing follows the playhead slot a hit lands in, not the played step. For 1/4 and 1/8 the two slots are the same.
 14. A pending return lands when the playhead crosses step 0, even while a loop is held. The loop keeps running and reads the restored setup.
 15. Tempo changes apply to the playhead, and the loop follows.
 
@@ -320,13 +320,13 @@ The AudioContext is created on the first gesture (the `▶ tap to play` tap). Sa
 
 ## Testing Decisions
 
-- Tests check external behaviour through each module's public interface, never internal state or private helpers. A good test reads like a statement about the instrument: "holding 1/8 while step 13 is heard plays steps 13, 14, 15, 16, 13, … and on release plays the step the playhead has reached".
+- Tests check external behaviour through each module's public interface, never internal state or private helpers. A good test reads like a statement about the instrument: "holding 1/8 while step 13 is heard loops steps 8–11 in time with the playhead, and on release plays the step the playhead has reached".
 - Tested modules: pattern generator, transport (looper, swing, chaos re-roll, return quantisation, glide timing), setup store (anchor, undo), URL codec (round-trip, byte order, clamping, malformed input), pad gesture interpreter, keyboard bindings.
 - Pattern generator: tests check behaviour with perturbations given as input: node placement, interpolation at node positions and in between, 8-bit wraparound, density thresholds, accents. Golden fixtures from the original C++ are optional, not required.
 - Looper test statements, at least:
-  - "Holding 1/4 from step 4, then sliding to 1/8 when the playhead is at step 10, plays 6, 7, 4, 5, 6, …"
-  - "Holding 1/4 from step 4, then sliding to 1/32, repeats step 4."
-  - "A 1/8 loop started at step 30 plays 30, 31, 0, 1, and holding it across the bar line does not re-roll chaos; the re-roll happens when the playhead crosses step 0."
+  - "Holding 1/4 at step 4, then sliding to 1/8 when the playhead is in the next beat, keeps the first beat: 4, 5, 6, 7, 0, 1, 2, 3, 0, …"
+  - "Holding 1/4 at step 4, then sliding to 1/32, repeats the beat's first step."
+  - "A loop on the first beat repeats step 0 without re-rolling chaos; the re-roll happens when the playhead crosses step 0."
 - Transport and gestures are tested with an injected fake clock and synthetic timestamped events; no real timers.
 - Audio smoke tests render the kit offline (`OfflineAudioContext`): output is not silent, does not clip, and hits land at the expected times; an accented hh opens at hh accent 100 and not at 0, and the next hh chokes it within about 10 ms without a click.
 - Playwright rule checks at each target viewport: the play screen never scrolls, every control is at least 44 px, no controls overlap. No screenshot comparison yet.

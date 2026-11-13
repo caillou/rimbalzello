@@ -36,17 +36,17 @@ export interface Scheduler {
    */
   stop(): void;
   /**
-   * Holds a loop of `steps` steps: engages it on the step heard now, or
-   * slides a held loop to that size. Heard from the next step boundary.
-   * Does nothing while stopped.
+   * Holds a loop of `steps` steps: engages it on the beat heard now (see
+   * `Transport.hold`), or slides a held loop to that size. Heard from the
+   * next step boundary. Does nothing while stopped.
    */
   hold(steps: LoopSteps): void;
   /** Releases the loop: from the next step boundary the playhead step plays again (the slip). */
   release(): void;
   /**
    * The step reaching the speakers now, by the same latency a loop engages
-   * from, so a loop starts on the step shown. Undefined while stopped and
-   * before step 0 sounds. Cheap enough to read every frame.
+   * from, so a loop takes the beat of the step shown. Undefined while
+   * stopped and before step 0 sounds. Cheap enough to read every frame.
    */
   heard(): TimedStep | undefined;
 }

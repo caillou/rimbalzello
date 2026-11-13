@@ -1,5 +1,4 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { PATTERN_STEPS } from './pattern';
 import { createScheduler } from './scheduler';
 import { createSetupStore } from './setup-store';
 import { createTransport, type TimedStep } from './transport';
@@ -68,15 +67,17 @@ describe('heard step', () => {
     expect(times).toEqual([...times].sort((a, b) => a - b));
   });
 
-  it('starts a loop held right after the rise on the step the display shows', () => {
+  it('loops the beat of the step the display shows when held right after the rise', () => {
     const { scheduler, frames, playedAt } = playingThroughLatencyRise();
     const shown = frames(1.03).at(-1)!.step.played;
     scheduler.hold(4);
-    // Once a loop pass has gone by, only the four steps from the one shown sound.
+    // Once a loop pass has gone by, only the first four steps of the shown step's beat sound.
+    expect(shown % 8, 'the display rests on a beat start, so a loop on the newest latency read lands a beat earlier').toBe(0);
+    const beat = shown - (shown % 8);
     const heard = frames(2.5)
       .filter(({ step }) => step.time > playedAt + 2)
       .map(({ step }) => step.played);
-    expect(new Set(heard)).toEqual(new Set([0, 1, 2, 3].map((n) => (shown + n) % PATTERN_STEPS)));
+    expect(new Set(heard)).toEqual(new Set([0, 1, 2, 3].map((n) => beat + n)));
   });
 
   it('follows the speakers within half a second when play comes before the context runs, not after a second', () => {

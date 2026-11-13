@@ -25,7 +25,7 @@ export interface TransportOptions {
   seed: number;
 }
 
-/** A loop length in steps: the sizes 1/4, 1/8, 1/16 and 1/32 of a bar. */
+/** A loop length in steps: the sizes 1/4, 1/8, 1/16 and 1/32 of a bar, the first 8, 4, 2 or 1 steps of a beat. */
 export type LoopSteps = 8 | 4 | 2 | 1;
 
 /** One drum to play, how hard (0–1), and whether it is an accent. */
@@ -82,13 +82,16 @@ export interface Transport {
    */
   requestReturn(setup: ReturnSetup): void;
   /**
-   * Holds a loop of `steps` steps. Engaging starts it on the step heard at
-   * `now`: the last step that sounded by `heard`, the clock time reaching
-   * the speakers then (`now` minus the output latency), not the step being
-   * scheduled ahead, and not snapped to the loop length. While a loop is
-   * held, another length keeps its start and phase: only the length changes.
-   * While the loop is held the playhead runs on, and the playhead at `p`
-   * steps from play start plays step (start + ((p − start) mod length)) mod 32.
+   * Holds a loop of `steps` steps: the first `steps` steps of the beat heard
+   * at `now`. The heard step is the last step that sounded by `heard`, the
+   * clock time reaching the speakers then (`now` minus the output latency),
+   * not the step being scheduled ahead. A step in the last
+   * `tunables.looper.graceSteps` of a beat counts for the next beat, and the
+   * playhead step plays on until the playhead gets there. While a loop is
+   * held, another length keeps its beat: only the length changes. The
+   * playhead runs on, and from the loop's start the playhead at `p` steps
+   * from play start plays step (start + ((p − start) mod length)) mod 32, so
+   * the played step sits at the same place in the loop as the playhead.
    *
    * Does nothing while stopped. The steps handed out that sound after `now`
    * are handed out again with the change, so it is heard from the next step
@@ -129,9 +132,24 @@ interface Glide {
   steps: number;
 }
 
-/** Length of one step in seconds: a beat is 8 steps. */
+/** Steps in a beat, a quarter note: steps are 32nd notes. */
+const BEAT_STEPS = 8;
+
+/** Length of one step in seconds. */
 function stepDuration(bpm: number): number {
-  return 60 / bpm / 8;
+  return 60 / bpm / BEAT_STEPS;
+}
+
+/**
+ * The start of a loop engaged while step `heardCount` is heard, both counted
+ * from play start without wrapping: the first step of that step's beat, or of
+ * the next beat when it is one of the last `tunables.looper.graceSteps` of its
+ * beat.
+ */
+function loopStart(heardCount: number): number {
+  const offset = heardCount % BEAT_STEPS;
+  const beat = heardCount - offset;
+  return offset < BEAT_STEPS - tunables.looper.graceSteps ? beat : beat + BEAT_STEPS;
 }
 
 /**
@@ -150,7 +168,11 @@ function glidePosition({ from, to, steps }: Glide): Position {
   return { x: from.x + (to.x - from.x) * done, y: from.y + (to.y - from.y) * done };
 }
 
-/** A held loop: the step it started on, counted from play start without wrapping, and its length. */
+/**
+ * A held loop: its first step, a beat start counted from play start without
+ * wrapping, and its length. The start lies ahead of the playhead until the
+ * playhead reaches it after a grace step.
+ */
 interface Loop {
   start: number;
   steps: LoopSteps;
@@ -219,11 +241,12 @@ export function createTransport({ setup: initial, seed }: TransportOptions): Tra
 
   /**
    * The step whose hits play when the playhead is at step `count`, counted
-   * without wrapping. `count` is past the loop's start unless a caller hears
-   * a step after `now`; the modulo stays positive even then.
+   * without wrapping. Before the loop's start the playhead step plays: the
+   * loop has not begun. Steps land there with a grace of more than one step,
+   * or when a caller hears a step after `now`.
    */
   function playedStep(count: number): number {
-    if (!loop) return count % PATTERN_STEPS;
+    if (!loop || count < loop.start) return count % PATTERN_STEPS;
     const { start, steps } = loop;
     return (start + ((((count - start) % steps) + steps) % steps)) % PATTERN_STEPS;
   }
@@ -328,8 +351,8 @@ export function createTransport({ setup: initial, seed }: TransportOptions): Tra
     },
     hold(steps, { now, heard }) {
       if (!playing) return;
-      // Sliding to another size keeps the start, and so the phase.
-      loop = { start: loop?.start ?? heardStep(heard), steps };
+      // Sliding to another size keeps the start: the loop stays in its beat.
+      loop = { start: loop?.start ?? loopStart(heardStep(heard)), steps };
       handOutAgainAfter(now);
     },
     release(now) {

@@ -84,11 +84,12 @@ test('a held zone loops; sliding changes the size and keeps the start; sliding o
   await expect.poll(() => heldZones(page)).toEqual(['1/8']);
   await expect(zone(page, '1/8')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
 
-  // 1/8 is 4 steps from the step heard at the touch, while the playhead runs on.
+  // 1/8 is the first 4 steps of the beat heard at the touch, while the playhead runs on.
   let looped: Seen | undefined;
   await expect
     .poll(async () => (looped = await watch(page)))
     .toEqual({ start: expect.any(Number), steps: 4, playhead: true });
+  expect(looped!.start! % 8, 'the loop starts on a beat').toBe(0);
 
   // Across 1/16 to 1/32: the held zone follows the finger, and 1/32 repeats the loop's first step.
   await touch.slideTo(await centre(zone(page, '1/16')));
