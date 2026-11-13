@@ -32,7 +32,7 @@ Use these words, with these meanings, in code, tests, issues and docs. Don't inv
 
 ## Performance
 
-- **Looper**: hold a loop size to repeat that slice of the pattern from the step you heard when you touched. Sizes: 1/4, 1/8, 1/16, 1/32 = 8, 4, 2, 1 steps. Sliding between sizes keeps the start. On release the pattern **slips**: it continues where the **playhead** would have been.
+- **Looper**: hold a loop size to repeat the start of the beat you heard when you touched: the loop is the first 8, 4, 2 or 1 steps of that beat (sizes 1/4, 1/8, 1/16, 1/32). A touch in a beat's last step counts for the next beat (the grace step). The loop stays in that beat while held, also when sliding between sizes. It keeps the grid: the played step sits at the same place in the loop as the playhead, so 1/4 never jumps and 1/32 repeats the beat's first step. On release the pattern **slips**: it continues where the **playhead** would have been.
 - **Playhead**: the transport's real position, which keeps running while the looper repeats.
 - **Played step**: the step whose hits sound. Equal to the playhead step unless a loop is held.
 - **Glide**: the short travel (1–2 steps) of the position toward a new pad target instead of a hard jump. Starts at once on a tap.
