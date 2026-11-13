@@ -6,10 +6,6 @@ A Grids-style drum machine for the browser: a live instrument, phone first, stat
 
 Commit straight to `main`. Every push to `main` deploys once CI is green, so keep `main` green. Use a worktree only when trying alternative approaches side by side.
 
-## Plans
-
-Every implementation starts with a written plan, reviewed by two independent read-only subagents, one on `opus` and one on `fable`, launched in parallel. Fold in their findings before writing any code, small tasks included.
-
 ## Tooling
 
 Node comes from asdf in legacy mode: the version lives in `.nvmrc` (asdf reads it via `legacy_version_file`); keep `.tool-versions` out of the repo. pnpm is the package manager, pinned in `package.json` `packageManager` as `pnpm@<version>` and run through corepack. Node 25 and later no longer bundle corepack: install it with `npm install --global corepack`, then `corepack enable pnpm`. Use `pnpm` for every install and script, in CI too; CI reads Node from `.nvmrc` and enables pnpm the same way. TypeScript stays on 6.0 until typescript-eslint supports 7.
