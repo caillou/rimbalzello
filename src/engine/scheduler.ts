@@ -18,6 +18,14 @@ const START_DELAY = 0.05;
 /** How often the output latency is read again, in seconds of context time. */
 const LATENCY_REFRESH = 1;
 
+/**
+ * How long the context clock runs before the output latency is first read,
+ * in seconds. Firefox can hang the page on a read while the audio device
+ * starts (seen with several browsers starting audio at once); a quarter
+ * second in, it has not.
+ */
+const LATENCY_SETTLE = 0.25;
+
 export interface Scheduler {
   /** Starts playback at step 0. Does nothing while playing. */
   play(): void;
@@ -49,15 +57,17 @@ export function createScheduler(context: BaseAudioContext, kit: Kit, transport: 
   // Seconds from the context clock to the speakers: what sounds now was
   // scheduled this long ago. Browsers without `outputLatency` (Safari) count
   // the base latency only. Browsers report the output latency as 0 until the
-  // context runs, so it is read again every second of context time, from the
-  // timer: in Firefox the getters can stall the page while the audio device
-  // is busy, so never every frame.
+  // context runs, and the play tap comes before it does, so it is only read
+  // while the context runs: first once its clock has run `LATENCY_SETTLE`,
+  // then every second of context time, from the timer. In Firefox the
+  // getters can stall the page while the audio device is busy, above all
+  // while it starts, so never every frame.
   let latency = 0;
   let latencyReadAt = -Infinity;
 
   function readLatency() {
     const now = context.currentTime;
-    if (now - latencyReadAt < LATENCY_REFRESH) return;
+    if (context.state !== 'running' || now < LATENCY_SETTLE || now - latencyReadAt < LATENCY_REFRESH) return;
     const { baseLatency = 0, outputLatency = 0 } = context as Partial<AudioContext>;
     latency = baseLatency + outputLatency;
     latencyReadAt = now;

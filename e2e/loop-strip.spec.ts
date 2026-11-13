@@ -117,8 +117,20 @@ test('lifting the finger releases the loop', async ({ page }) => {
   await expect.poll(() => heldZones(page)).toEqual([]);
 });
 
+/** The step the step display highlights as played, or -1 while none is. */
+const playedStep = (page: Page) =>
+  page.evaluate(() =>
+    [...document.querySelector('[aria-label="step display"] .step-line')!.children].findIndex((cell) =>
+      cell.classList.contains('now'),
+    ),
+  );
+
 /** The pattern plays on with no loop: the played step runs on and is the playhead step. */
 async function expectNoLoop(page: Page) {
+  // After a play tap the step display shows nothing until step 0 reaches the
+  // speakers, and a slow machine may still be starting the audio device:
+  // watch only once a played step shows.
+  await expect.poll(() => playedStep(page)).toBeGreaterThanOrEqual(0);
   let seen: Seen | undefined;
   await expect.poll(async () => (seen = await watch(page))).toMatchObject({ start: expect.any(Number) });
   expect(seen).toMatchObject({ playhead: false });
