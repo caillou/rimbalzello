@@ -80,3 +80,20 @@ test('a hit turns bold when it becomes an accent, and back', async ({ page }) =>
   await expect(first).toHaveText('x');
   await expect.poll(() => weightOf(first)).toBe(plain);
 });
+
+test('the steps fall into four beats of 8, with a gap before steps 8, 16 and 24', async ({ page }) => {
+  await page.goto('./');
+  // Measured in the app's own font, not a fallback.
+  await page.evaluate(() => document.fonts.ready);
+  const lefts = await page
+    .locator('[data-drum="bd"] .step-line > span')
+    .evaluateAll((cells) => cells.map((cell) => cell.getBoundingClientRect().left));
+  expect(lefts).toHaveLength(32);
+  const distances = lefts.slice(1).map((left, i) => left - lefts[i]!);
+  // distances[i] runs from step i to step i + 1: step 7 → 8 is distances[7].
+  const step = distances[0]!;
+  for (const [i, distance] of distances.entries()) {
+    if (i % 8 === 7) expect(distance, `steps ${i} → ${i + 1}`).toBeGreaterThan(step + 1);
+    else expect(distance, `steps ${i} → ${i + 1}`).toBeCloseTo(step, 1);
+  }
+});

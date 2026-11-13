@@ -287,25 +287,28 @@ test.describe('keycap hints', () => {
     );
   }
 
-  // 700 and 727 px: the narrowest tablet layouts, where the mute labels have
-  // the least room for their keycaps beside the step line. 1024×768: the
-  // narrowest laptop column, with the drums' full names before their keycaps.
-  // 2560×1440: the laptop layout zoomed by 1.8, where the keycaps grow with
-  // the labels they sit beside.
+  // 700, 727 and 744 px: the narrowest tablet layouts, where the mute labels
+  // have the least room, with or without their keycaps, beside the step line
+  // and its beat gaps: the step text drops to 13 or 14 px there. 1024×768:
+  // the narrowest laptop column, with the drums' full names before their
+  // keycaps. 2560×1440: the laptop layout zoomed by 1.8, where the keycaps
+  // grow with the labels they sit beside.
   for (const viewport of [
     { width: 1280, height: 800 },
     { width: 2560, height: 1440 },
     { width: 1024, height: 768 },
     { width: 820, height: 1106 },
+    { width: 744, height: 1133 },
     { width: 727, height: 900 },
     { width: 700, height: 900 },
   ]) {
     test.describe(`at ${viewport.width}×${viewport.height}`, () => {
       test.use({ viewport });
 
-      test('the layout rules hold and each keycap sits inside its button, with the hints shown, a loop held and a return pending', async ({
+      test('the layout rules hold with the hints hidden, and each keycap sits inside its button with them shown, a loop held and a return pending', async ({
         page,
       }) => {
+        await expectLayoutRules(page);
         await page.keyboard.press('KeyH');
         await page.keyboard.press('Space');
         await expect(corner(page)).toBeVisible();

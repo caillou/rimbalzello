@@ -2,7 +2,8 @@ import { expect, type Page } from '@playwright/test';
 
 // The play screen's layout rules, checked at the page's current viewport:
 // it never scrolls, every control lies inside the viewport and is at least
-// 44 px, and no two controls overlap. Reused at every layout's viewports.
+// 44 px, no two controls overlap, and every step line ends inside its step
+// display. Reused at every layout's viewports.
 
 /** Controls: buttons, links, inputs and sliders, plus touch surfaces marked `data-control` (the pad). */
 export const CONTROLS = 'button, a[href], input, select, textarea, [role="slider"], [data-control]';
@@ -13,7 +14,8 @@ export const CONTROLS = 'button, a[href], input, select, textarea, [role="slider
  * checked at 44 px wide and at least this tall instead (the WCAG minimum),
  * until https://github.com/caillou/rimbalzello/issues/3 settles their size.
  */
-const ROW_TARGETS = '[aria-label="step display"] button';
+const STEP_DISPLAY = '[aria-label="step display"]';
+const ROW_TARGETS = `${STEP_DISPLAY} button`;
 const ROW_TARGET_HEIGHT = 24;
 
 const MIN_TARGET = 44;
@@ -30,7 +32,7 @@ interface Box {
 
 export async function expectLayoutRules(page: Page): Promise<void> {
   const layout = await page.evaluate(
-    ({ controls, rowTargets }) => {
+    ({ controls, rowTargets, stepDisplay }) => {
       const screen = document.querySelector('main');
       const rows = new Set(document.querySelectorAll(rowTargets));
       const elements = [...document.querySelectorAll(controls)].filter((element) => {
@@ -64,6 +66,18 @@ export async function expectLayoutRules(page: Page): Promise<void> {
           if (width > 0.5 && height > 0.5) pairs.push([p.name, q.name, Math.round(width * height)]);
         });
       });
+      // The last step of each line against its step display's content box:
+      // steps running past it would sit under the loop strip or off the
+      // column, where the play screen's own overflow does not see them.
+      const display = document.querySelector(stepDisplay);
+      const lines = display ? [...display.querySelectorAll('.step-line')] : [];
+      const spilledSteps = lines.flatMap((line) => {
+        const last = line.lastElementChild;
+        if (!display || !last) return [];
+        const edge = display.getBoundingClientRect().right - parseFloat(getComputedStyle(display).paddingRight);
+        const over = last.getBoundingClientRect().right - edge;
+        return over > 0.5 ? [`${line.closest('[data-drum]')?.getAttribute('data-drum')} by ${over.toFixed(1)} px`] : [];
+      });
       const page = document.scrollingElement!;
       return {
         viewport: { width: innerWidth, height: innerHeight },
@@ -75,9 +89,10 @@ export async function expectLayoutRules(page: Page): Promise<void> {
         },
         boxes,
         overlapping: pairs,
+        spilledSteps,
       };
     },
-    { controls: CONTROLS, rowTargets: ROW_TARGETS },
+    { controls: CONTROLS, rowTargets: ROW_TARGETS, stepDisplay: STEP_DISPLAY },
   );
 
   const { viewport, boxes } = layout;
@@ -95,5 +110,6 @@ export async function expectLayoutRules(page: Page): Promise<void> {
   expect(small, 'controls under 44 px').toEqual([]);
 
   expect(layout.overlapping, 'overlapping controls').toEqual([]);
+  expect(layout.spilledSteps, 'step lines running past their step display').toEqual([]);
   expect(boxes.length, 'controls found').toBeGreaterThan(0);
 }

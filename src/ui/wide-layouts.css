@@ -16,8 +16,11 @@
     grid-area: pad;
   }
 
+  /* A size container: it takes its column's width whatever its content,
+     and its text steps down on a narrow tablet (below; keycaps.css). */
   & > .step-display {
     grid-area: step;
+    container: step-display / inline-size;
   }
 
   & > .loop-strip {
@@ -150,6 +153,15 @@
 
 .play-screen[data-layout='laptop'] > :is(.drum-tabs, .sound-sections) {
   align-self: start;
+}
+
+/* A step display too narrow for a 44 px label beside 32 steps and their
+   beat gaps (299.25 px at 15 px), as in a tablet layout under about 720 px
+   wide: the text drops to 14 px, so the label keeps 44 px. */
+@container step-display (width < 328px) {
+  .step-row {
+    font-size: 14px;
+  }
 }
 
 /* The rotate hint covers the screen; the play screen under it is inert. */

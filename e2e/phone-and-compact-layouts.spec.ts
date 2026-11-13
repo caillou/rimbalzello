@@ -37,6 +37,9 @@ const VIEWPORTS = [
   // Safari on current iPhones, short and tall: the phone layout.
   { width: 393, height: 659 },
   { width: 393, height: 750 },
+  // A 360 px Android phone, the narrowest phone layout: the mute labels keep
+  // 44 px beside 32 steps and their beat gaps, but barely.
+  { width: 360, height: 680 },
   // A shorter phone, and an SE in Safari: the compact layout.
   { width: 393, height: 600 },
   { width: 375, height: 553 },

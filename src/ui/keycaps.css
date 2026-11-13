@@ -40,18 +40,22 @@
   width: calc(10ch + 54px * var(--zoom));
 }
 
-/* A step display too narrow for a label with its keycap (44 px past the
-   padding) beside 32 steps of 9 px, as in a tablet layout under 728 px wide:
-   the text drops to 14 px, so the keycap stays on its label's line. Keycaps
-   show only on the two-column layouts, where the step display takes its
-   column's width whatever its content. */
-.play-screen[data-keycaps='shown'] .step-display {
-  container: step-display / inline-size;
-}
-
-@container step-display (width < 332px) {
+/* A step display too narrow for a label with its keycap (56 px past the
+   padding) beside 32 steps and their beat gaps (299.25 px at 15 px), as in a
+   tablet layout under about 750 px wide: the text drops to 14 px, and under
+   about 710 px to 13 px, so the keycap stays on its label's line. Each step
+   lets the label shrink by 12 px, as far as its keycap allows. The step
+   display is a size container on the two-column layouts (wide-layouts.css),
+   where it takes its column's width whatever its content. */
+@container step-display (width < 344px) {
   .play-screen[data-keycaps='shown'] .step-row {
     font-size: 14px;
+  }
+}
+
+@container step-display (width < 323px) {
+  .play-screen[data-keycaps='shown'] .step-row {
+    font-size: 13px;
   }
 }
 
