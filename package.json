@@ -14,7 +14,8 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "licences:check": "node scripts/check-licences.ts"
+    "licences:check": "node scripts/check-licences.ts",
+    "icons": "node scripts/render-icons.ts"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.3.0",

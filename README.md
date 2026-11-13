@@ -22,6 +22,7 @@ pnpm install
 | `pnpm test` | Unit tests (Vitest) |
 | `pnpm test:e2e` | Browser checks (Playwright: Chromium, WebKit, Firefox) against a fresh build |
 | `pnpm licences:check` | Fails on any dependency that breaks the licence rule below |
+| `pnpm icons` | Redraws the icon (`public/icon.svg`) and its PNGs from `scripts/render-icons.ts` |
 
 Every push runs the checks in GitHub Actions. On `main`, a green run deploys `dist/` to GitHub Pages; a red run does not deploy.
 

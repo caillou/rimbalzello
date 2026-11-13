@@ -63,7 +63,8 @@ IBM Plex Mono
 -------------
 
 The font is self-hosted from the files of the @fontsource/ibm-plex-mono
-package.
+package. The icon's `x` (public/icon.svg, its PNGs and
+scripts/render-icons.ts) is drawn from the outline of IBM Plex Mono Bold.
 
 Copyright 2017 IBM Corp. All rights reserved.
 Source: https://github.com/IBM/plex

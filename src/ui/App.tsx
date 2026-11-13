@@ -2,6 +2,7 @@ import { createSignal, For, Match, onCleanup, onMount, Show, Switch } from 'soli
 import { Portal } from 'solid-js/web';
 import { createAudioSession, type AudioSessionState } from '../engine/audio-session';
 import { createNativeKit, type Kit } from '../engine/kit';
+import { createLockScreen } from '../engine/media-session';
 import { createScheduler, type Scheduler } from '../engine/scheduler';
 import { DRUMS, type Setup } from '../engine/setup';
 import { createSetupStore, type Mutes, type SetupSnapshot } from '../engine/setup-store';
@@ -107,12 +108,16 @@ export function App() {
     onCleanup(() => void shown.then((shownReadout) => shownReadout.remove()));
   }
 
+  // The lock screen's title, tempo and icon (media-session.ts).
+  const lockScreen = createLockScreen(store.setup().bpm);
+
   let before: KitState = { ...store.setup(), mutes: store.mutes() };
   onCleanup(
     store.subscribe(() => {
       const next = store.setup();
       const nextMutes = store.mutes();
       transport.update(next);
+      lockScreen.setTempo(next.bpm);
       const after = { ...next, mutes: nextMutes };
       if (kit) updateKit(kit, before, after);
       before = after;
