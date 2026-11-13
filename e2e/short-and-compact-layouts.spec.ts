@@ -45,7 +45,7 @@ for (const viewport of VIEWPORTS) {
     test.use({ viewport });
 
     test('the layout rules hold in play, sound, tempo and help, with room for the pad', async ({ page }) => {
-      await page.goto('/');
+      await page.goto('./');
       await page.evaluate(() => document.fonts.ready);
       // `▶ tap to play` leaves the mute labels free, in the pad too.
       await expectLayoutRules(page);
@@ -90,7 +90,7 @@ test.describe('at 393×659', () => {
   test.use({ viewport: { width: 393, height: 659 } });
 
   test('the strips fold into mix and fx tabs, with the step display under the pad', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('./');
     const strips = page.getByRole('tabpanel').getByRole('slider');
     async function expectStrips(names: string[]) {
       await expect(strips).toHaveCount(names.length);
@@ -114,7 +114,7 @@ test.describe('at 375×553', () => {
   test('the step display sits in the pad: its labels mute, and a touch between them lands on the pad', async ({
     page,
   }) => {
-    await page.goto('/');
+    await page.goto('./');
     await page.getByRole('button', { name: '▶ tap to play' }).click();
     const padBox = await box(pad(page));
     const steps = await box(stepDisplay(page));
@@ -146,7 +146,7 @@ test.describe('at 375×553', () => {
   });
 
   test('the X/Y readout keeps above the step display', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('./');
     await page.getByRole('button', { name: '▶ tap to play' }).click();
     const padBox = await box(pad(page));
     const steps = await box(stepDisplay(page));
@@ -171,7 +171,7 @@ test.describe('at 375×553', () => {
 
 test('from an SE in Safari up to a tall phone, the pad never gets shorter than its minimum', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 800 });
-  await page.goto('/');
+  await page.goto('./');
   const heights: Record<number, number> = {};
   for (let height = 553; height <= 800; height++) {
     await page.setViewportSize({ width: 375, height });

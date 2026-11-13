@@ -1,6 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const port = Number(process.env.PW_PORT) || 4173;
+// The path the site is served under, as vite.config.ts reads it: tests
+// navigate relative to it ('./', './about/').
+const base = process.env.BASE_PATH || '/';
+const siteUrl = `http://localhost:${port}${base}`;
 const ci = !!process.env.CI;
 
 // Browser checks run against the built site on the preview server.
@@ -10,7 +14,7 @@ export default defineConfig({
   forbidOnly: ci,
   reporter: ci ? [['github'], ['list']] : 'list',
   use: {
-    baseURL: `http://localhost:${port}`,
+    baseURL: siteUrl,
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
@@ -19,7 +23,7 @@ export default defineConfig({
   ],
   webServer: {
     command: `${ci ? '' : 'pnpm build && '}pnpm preview --port ${port} --strictPort`,
-    url: `http://localhost:${port}`,
+    url: siteUrl,
     reuseExistingServer: !ci,
   },
 });

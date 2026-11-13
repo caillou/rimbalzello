@@ -16,6 +16,11 @@ concurrency:
 env:
   # Corepack downloads the pnpm version pinned in package.json without asking.
   COREPACK_ENABLE_DOWNLOAD_PROMPT: 0
+  # The path the site is served under. GitHub's project page serves it at
+  # caillou.github.io/rimbalzello/; the build and the browser checks both
+  # read it, so the checks test the artifact that deploys. Drop this line to
+  # go back to the root once rimbalzello.caillou.ch serves the site.
+  BASE_PATH: /rimbalzello/
 
 jobs:
   check:
@@ -75,7 +80,7 @@ jobs:
           pactl load-module module-null-sink sink_name=speakers
           pactl set-default-sink speakers
 
-      # Runs against the build above on the preview server.
+      # Runs against the build above on the preview server, under BASE_PATH.
       - name: Browser checks
         run: pnpm test:e2e
 

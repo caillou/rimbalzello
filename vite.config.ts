@@ -20,18 +20,30 @@ function commitHash(): string {
 const CREDITS_SLOT = '<!-- credits: prerendered by vite.config.ts -->';
 
 /** Prerenders the credits into about/index.html, so /about/ shows them before any JavaScript runs. */
-function prerenderCredits(commit: string): Plugin {
+function prerenderCredits(commit: string, basePath: string): Plugin {
   return {
     name: 'prerender-credits',
     // A function, so `$` in the credits stays text rather than a replacement pattern.
-    transformIndexHtml: (html) => html.replace(CREDITS_SLOT, () => creditsHtml({ commitHash: commit, repositoryUrl })),
+    transformIndexHtml: (html) =>
+      html.replace(CREDITS_SLOT, () => creditsHtml({ commitHash: commit, repositoryUrl, basePath })),
   };
+}
+
+/**
+ * The path the site is served under: '/' by default, '/rimbalzello/' for
+ * GitHub's project page (BASE_PATH in ci.yml). The app's own links and the
+ * HTML pages read it as import.meta.env.BASE_URL and %BASE_URL%.
+ */
+const base = process.env.BASE_PATH || '/';
+if (!base.startsWith('/') || !base.endsWith('/')) {
+  throw new Error(`BASE_PATH must start and end with a slash, got ${base}`);
 }
 
 const commit = commitHash();
 
 export default defineConfig({
-  plugins: [solid(), prerenderCredits(commit)],
+  base,
+  plugins: [solid(), prerenderCredits(commit, base)],
   define: {
     __COMMIT_HASH__: JSON.stringify(commit),
   },

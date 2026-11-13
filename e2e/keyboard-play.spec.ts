@@ -10,7 +10,7 @@ test.use({ viewport: { width: 1280, height: 800 } });
 
 test.beforeEach(async ({ page }) => {
   await countStartedVoices(page);
-  await page.goto('/');
+  await page.goto('./');
   await page.evaluate(() => document.fonts.ready);
 });
 

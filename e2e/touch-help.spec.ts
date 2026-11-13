@@ -24,7 +24,7 @@ async function tapPad(page: Page, x: number, y: number) {
 }
 
 test('// help opens a box over the pad, the pad plays under it, and // help closes it', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   await page.getByRole('button', { name: '▶ tap to play' }).tap();
 
   const help = page.getByRole('button', { name: 'help', exact: true });
@@ -54,7 +54,7 @@ test('// help opens a box over the pad, the pad plays under it, and // help clos
 });
 
 test('the first-launch hint shows until the first pad tap and stays gone after a reload', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   const hint = page.getByText(FIRST_LAUNCH_HINT);
   await expect(hint).toBeVisible();
 

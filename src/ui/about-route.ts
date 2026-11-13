@@ -1,17 +1,20 @@
 // About as an app state with its own URL (design.md, About). Opening it from
 // the play screen pushes /about/; `← back to play`, `×`, `esc` and the
 // browser's back button return to /. Both URLs carry the setup hash, so the
-// music never changes on the way in or out.
+// music never changes on the way in or out. Both paths sit under the site's
+// base (/rimbalzello/about/ on GitHub's project page).
 
 import { createSignal, onCleanup, type Accessor } from 'solid-js';
 import type { SetupStore } from '../engine/setup-store';
 import { encodeSetup } from '../engine/url-codec';
 
-const PLAY_PATH = '/';
-const ABOUT_PATH = '/about/';
+/** The play screen's path: the site's base, '/' or '/rimbalzello/' (vite.config.ts). */
+export const PLAY_PATH = import.meta.env.BASE_URL;
+export const ABOUT_PATH = `${PLAY_PATH}about/`;
 
 /** /about/, also without the slash or with its index.html. */
-const isAboutPath = (path: string) => /^\/about(\/(index\.html)?)?$/.test(path);
+const isAboutPath = (path: string) =>
+  path === ABOUT_PATH || path === ABOUT_PATH.slice(0, -1) || path === `${ABOUT_PATH}index.html`;
 
 /** The history state of the about entry pushed from the play screen. */
 const OPENED_FROM_PLAY = { about: 'opened from play' } as const;

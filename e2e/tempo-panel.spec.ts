@@ -19,7 +19,7 @@ async function swing(page: Page): Promise<number> {
 test('the bpm readout opens the tempo panel in place of the strips; the readout or ← play closes it', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('./');
   const strips = page.getByRole('slider', { name: 'bd', exact: true });
   const firstBarItem = page.locator('.bottom-bar button').first();
   await expect(firstBarItem).toHaveText('→ sound');
@@ -47,7 +47,7 @@ for (const [where, name] of [
   test(`holding + ${where} raises bpm step after step, stops on release and never passes 200`, async ({ page }) => {
     // Time stands still unless the test moves it, so the hold lasts exactly as long as asked.
     await page.clock.install({ time: 0 });
-    await page.goto('/');
+    await page.goto('./');
     await page.clock.pauseAt(1000);
     await readout(page).click();
     const plus = button(page, name);
@@ -77,7 +77,7 @@ for (const [where, name] of [
 }
 
 test('swing stays at 50 % on − and at 75 % on +', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   await readout(page).click();
   const minus = button(panel(page), 'swing down');
   const plus = button(panel(page), 'swing up');
@@ -94,7 +94,7 @@ test('swing stays at 50 % on − and at 75 % on +', async ({ page }) => {
 });
 
 test('tapping faster than 200 bpm sets the tempo to 200', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   await readout(page).click();
   const tap = (await button(panel(page), 'tap tempo').boundingBox())!;
   await page.mouse.move(tap.x + tap.width / 2, tap.y + tap.height / 2);
@@ -106,7 +106,7 @@ test('tapping faster than 200 bpm sets the tempo to 200', async ({ page }) => {
 });
 
 test('the play screen keeps the layout rules with the tempo panel open', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   await page.getByRole('button', { name: '▶ tap to play' }).click();
   await readout(page).click();
   await expect(panel(page)).toBeVisible();

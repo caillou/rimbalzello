@@ -19,7 +19,7 @@ async function box(locator: Locator) {
 }
 
 async function start(page: Page) {
-  await page.goto('/');
+  await page.goto('./');
   await page.getByRole('button', { name: '▶ tap to play' }).click();
   await page.evaluate(() => document.fonts.ready);
 }
@@ -137,7 +137,7 @@ test.describe('laptop layout at 1280×800', () => {
   });
 
   test('the outermost map node marks sit on the pad edges', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('./');
     const pad = await box(page.locator('[data-control="pad"]'));
     const centres = await page
       .locator('[data-control="pad"] .map-node')
@@ -213,7 +213,7 @@ test.describe('a phone in landscape', () => {
   test('shows the rotate hint with no play control reachable; a wide, tall-enough viewport shows the laptop layout', async ({
     page,
   }) => {
-    await page.goto('/');
+    await page.goto('./');
     const hint = page.getByRole('status').filter({ hasText: 'turn the phone upright' });
     await expect(hint).toBeVisible();
     await expect(page.getByRole('button', { name: '▶ tap to play' })).toBeHidden();

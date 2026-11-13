@@ -9,7 +9,7 @@ import { createTransport, type LoopSteps } from '../engine/transport';
 import { startingSetup, syncUrlHash } from '../engine/url-hash';
 import { repositoryUrl } from '../repository';
 import { About } from './About';
-import { claimLinkClick, createAboutRoute } from './about-route';
+import { ABOUT_PATH, claimLinkClick, createAboutRoute } from './about-route';
 import { DrumTabs } from './DrumTabs';
 import { createFirstLaunchHint, createTouchScreen, FirstLaunchHint, HelpBox } from './Help';
 import { createKeyboard, type KeyIntent } from './keyboard';
@@ -457,7 +457,7 @@ export function App() {
         </button>
         <a
           class="footer-item"
-          href="/about/"
+          href={ABOUT_PATH}
           aria-label="about"
           onClick={(event) => {
             if (claimLinkClick(event)) about.show();

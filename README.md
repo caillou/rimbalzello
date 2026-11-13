@@ -1,6 +1,6 @@
 # rimbalzello
 
-A drum machine for the browser that you play by moving through a map of drum patterns. Phone first, a live instrument, a static site at [rimbalzello.caillou.ch](https://rimbalzello.caillou.ch).
+A drum machine for the browser that you play by moving through a map of drum patterns. Phone first, a live instrument, a static site at [caillou.github.io/rimbalzello](https://caillou.github.io/rimbalzello/), moving to rimbalzello.caillou.ch.
 
 ## Development
 
@@ -25,13 +25,15 @@ pnpm install
 
 Every push runs the checks in GitHub Actions. On `main`, a green run deploys `dist/` to GitHub Pages; a red run does not deploy.
 
+`BASE_PATH` sets the path the site is served under, `/` by default. CI builds and tests with `/rimbalzello/`, for GitHub's project page at [caillou.github.io/rimbalzello](https://caillou.github.io/rimbalzello/); run `BASE_PATH=/rimbalzello/ pnpm test:e2e` to check that build locally.
+
 ## Setup outside the repo
 
 These steps are manual and done once:
 
 1. Create the public GitHub repo and push `main`.
 2. In the repo settings, under Pages, set the source to "GitHub Actions".
-3. Add a DNS record for `rimbalzello.caillou.ch`: a `CNAME` pointing at `caillou.github.io`. The `CNAME` file in the build output tells Pages which domain to serve.
+3. The custom domain `rimbalzello.caillou.ch` is not live yet. The domain, its DNS record and `public/CNAME` come back in the order set out in issues [#1](https://github.com/caillou/rimbalzello/issues/1) and [#9](https://github.com/caillou/rimbalzello/issues/9), and `BASE_PATH` in `.github/workflows/ci.yml` goes back to `/`.
 
 ## Licence
 

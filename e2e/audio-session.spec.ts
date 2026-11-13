@@ -42,7 +42,7 @@ test('a refused resume shows tap to resume; one tap resumes and hides it', async
       }
     };
   });
-  await page.goto('/');
+  await page.goto('./');
   const contextState = () => page.evaluate(() => window.audioContext?.state);
 
   await tapToPlay(page);
@@ -79,7 +79,7 @@ test('a wake lock is held while playing and released on stop', async ({ page }) 
     };
     Object.defineProperty(navigator, 'wakeLock', { configurable: true, value: wakeLock });
   });
-  await page.goto('/');
+  await page.goto('./');
   const locks = () => page.evaluate(() => window.wakeLocks.map((lock) => (lock.released ? 'released' : 'held')));
 
   await tapToPlay(page);
@@ -93,7 +93,7 @@ test('the tap sets a playback audio session where the browser has one', async ({
   await page.addInitScript(() => {
     Object.defineProperty(navigator, 'audioSession', { configurable: true, value: { type: 'auto' } });
   });
-  await page.goto('/');
+  await page.goto('./');
 
   await tapToPlay(page);
   const type = await page.evaluate(() => (navigator as Navigator & { audioSession: { type: string } }).audioSession.type);
@@ -103,7 +103,7 @@ test('the tap sets a playback audio session where the browser has one', async ({
 
 test('without an audio session API, the tap starts a looping silent audio element', async ({ page }) => {
   await withoutApis(page, 'audioSession');
-  await page.goto('/');
+  await page.goto('./');
 
   await tapToPlay(page);
   const playing = () =>
@@ -121,7 +121,7 @@ test('a browser without audioSession or wakeLock plays and stops without errors'
   });
   page.on('pageerror', (error) => problems.push(`page: ${error.message}`));
   await withoutApis(page, 'audioSession', 'wakeLock');
-  await page.goto('/');
+  await page.goto('./');
 
   await tapToPlay(page);
   await page.getByRole('button', { name: 'stop' }).click();

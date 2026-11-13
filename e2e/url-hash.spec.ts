@@ -9,7 +9,7 @@ test.use({ viewport: { width: 393, height: 750 } });
 
 /** A link to a `v1.` hash with these 21 bytes, built without the app's URL codec. */
 function link(bytes: number[]): string {
-  return `/#v1.${Buffer.from(bytes).toString('base64url')}`;
+  return `./#v1.${Buffer.from(bytes).toString('base64url')}`;
 }
 
 /** The bytes in the page's `v1.` hash. */
@@ -51,7 +51,7 @@ test('a link opens with the setup it holds', async ({ page }) => {
 });
 
 test('a change reaches the hash within about a second, without adding history', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   await expect.poll(() => page.evaluate(() => location.hash)).toMatch(/^#v1\./);
   const entries = await page.evaluate(() => history.length);
 
@@ -65,10 +65,10 @@ test('a change reaches the hash within about a second, without adding history', 
 });
 
 test('the bare address brings back the last setup; a link wins over it', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   await strip(page, 'chaos').press('End');
 
-  await page.goto('/');
+  await page.goto('./');
   await expect(strip(page, 'chaos')).toHaveAttribute('aria-valuenow', '100');
 
   // From another page, so the link loads the app instead of changing the hash.
@@ -85,18 +85,18 @@ test('a malformed hash loads the default setup without errors', async ({ page })
   page.on('pageerror', (error) => problems.push(`page: ${error.message}`));
 
   // A first visit shows the default setup; the device then remembers another one.
-  await page.goto('/');
+  await page.goto('./');
   const defaults = await shown(page);
   await strip(page, 'chaos').press('End');
 
   await page.goto('about:blank');
-  await page.goto('/#v1.!!!');
+  await page.goto('./#v1.!!!');
   await expect.poll(() => shown(page)).toEqual(defaults);
   expect(problems).toEqual([]);
 });
 
 test('a link opened in the tab that plays replaces the setup and keeps playing', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   await page.getByRole('button', { name: '▶ tap to play' }).click();
   await expect.poll(() => page.evaluate(() => location.hash)).toMatch(/^#v1\./);
 

@@ -7,11 +7,11 @@ import { onCleanup, onMount, Show } from 'solid-js';
 import { commitHash } from '../build-info';
 import { repositoryUrl } from '../repository';
 import { creditsHtml } from './about-credits';
-import { claimLinkClick } from './about-route';
+import { claimLinkClick, PLAY_PATH } from './about-route';
 import './blog.css';
 import './about.css';
 
-const credits = creditsHtml({ commitHash, repositoryUrl });
+const credits = creditsHtml({ commitHash, repositoryUrl, basePath: import.meta.env.BASE_URL });
 
 export interface AboutProps {
   playing: boolean;
@@ -48,14 +48,14 @@ export function About(props: AboutProps) {
     <section ref={view} class="about" aria-label="about" tabindex="-1">
       <nav class="about-nav">
         <span>
-          <a class="about-back" href="/" onClick={onLinkClick}>
+          <a class="about-back" href={PLAY_PATH} onClick={onLinkClick}>
             <span class="marker">←</span> back to play
           </a>
           <Show when={props.playing}>
             <span class="still-playing"> · still playing</span>
           </Show>
         </span>
-        <a class="about-close" href="/" aria-label="close" onClick={onLinkClick}>
+        <a class="about-close" href={PLAY_PATH} aria-label="close" onClick={onLinkClick}>
           ×
         </a>
       </nav>

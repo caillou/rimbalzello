@@ -6,7 +6,7 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 test.use({ viewport: { width: 393, height: 659 } });
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   await page.getByRole('button', { name: '▶ tap to play' }).click();
 });
 

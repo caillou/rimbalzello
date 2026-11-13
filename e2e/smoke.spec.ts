@@ -5,7 +5,7 @@ import { watchForProblems } from './page-problems.ts';
 test('the app starts without errors or failed requests', async ({ page }) => {
   const problems = watchForProblems(page);
 
-  await page.goto('/');
+  await page.goto('./');
   await expect(page.getByRole('heading', { name: '# rimbalzello' })).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
 

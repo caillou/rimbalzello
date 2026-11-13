@@ -21,9 +21,9 @@ async function setupHash(page: Page): Promise<string> {
 test.describe('without JavaScript', () => {
   test.use({ javaScriptEnabled: false });
 
-  test('/about/ shows the credits and links to the source at the deployed commit', async ({ page, request }) => {
+  test('/about/ shows the credits and links to the source at the deployed commit', async ({ page, request, baseURL }) => {
     const problems = watchForProblems(page);
-    await page.goto('/about/');
+    await page.goto('./about/');
     const view = aboutView(page);
 
     await expect(view.getByRole('heading', { level: 1, name: '# rimbalzello' })).toBeVisible();
@@ -32,6 +32,11 @@ test.describe('without JavaScript', () => {
       await expect(view.getByRole('link', { name, exact: true }).first()).toBeVisible();
     }
     await expect(view.getByText('GPL-3.0-or-later')).toBeVisible();
+    // Both lead to the play screen under the base; checked on the links, as
+    // the preview server redirects / to the base and would hide a link to /.
+    for (const name of ['back to play', 'close']) {
+      await expect(view.getByRole('link', { name })).toHaveAttribute('href', new URL(baseURL!).pathname);
+    }
     await expect(view.getByText('not affiliated with Mutable Instruments.', { exact: false })).toBeVisible();
     await expect(view.getByRole('link', { name: /^source at [0-9a-f]{7}$/ })).toHaveAttribute(
       'href',
@@ -53,7 +58,7 @@ test.describe('opened from the play screen', () => {
 
   test.beforeEach(async ({ page }) => {
     await countStartedVoices(page);
-    await page.goto('/');
+    await page.goto('./');
     hash = await setupHash(page);
     await page.getByRole('button', { name: '▶ tap to play' }).click();
   });
@@ -84,14 +89,14 @@ test.describe('opened from the play screen', () => {
       await aboutLink(page).click();
       const view = aboutView(page);
       await expect(view.getByRole('heading', { level: 1, name: '# rimbalzello' })).toBeVisible();
-      await expect(page).toHaveURL(`/about/${hash}`);
+      await expect(page).toHaveURL(`./about/${hash}`);
       await expect(view.getByText('still playing')).toBeVisible();
       await expectGrooveRunning(page);
       const entries = await historyLength(page);
 
       await close(page);
       await expect(view).toBeHidden();
-      await expect(page).toHaveURL(`/${hash}`);
+      await expect(page).toHaveURL(`./${hash}`);
       await expect(page.getByRole('button', { name: 'stop' })).toBeVisible();
       await expectGrooveRunning(page);
       // Closing steps back rather than piling up entries for the back button.
@@ -100,15 +105,15 @@ test.describe('opened from the play screen', () => {
   }
 });
 
-test('a direct visit to /about/ shows about over the app; × lands on the play screen', async ({ page }) => {
+test('a direct visit to /about/ shows about over the app; × lands on the play screen', async ({ page, baseURL }) => {
   const problems = watchForProblems(page);
-  await page.goto('/about/');
+  await page.goto('./about/');
   const view = aboutView(page);
   await expect(view.getByText('still playing')).toBeHidden();
 
   await view.getByRole('link', { name: 'close' }).click();
   await expect(view).toBeHidden();
-  expect(new URL(page.url()).pathname).toBe('/');
+  expect(new URL(page.url()).pathname).toBe(new URL(baseURL!).pathname);
   await expect(page.getByRole('button', { name: '▶ tap to play' })).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
   expect(problems).toEqual([]);
@@ -120,7 +125,7 @@ test.describe('with all six strips', () => {
   test.use({ viewport: { width: 393, height: 750 } });
 
   test('a change just before opening about is what back and a reload give', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('./');
     await setupHash(page);
     const chaos = page.getByRole('slider', { name: 'chaos', exact: true });
     // Inside the hash's one-second write gap, so the play screen's entry keeps an older hash.
@@ -134,7 +139,7 @@ test.describe('with all six strips', () => {
 
     await page.goBack();
     await expect(aboutView(page)).toBeHidden();
-    await expect(page).toHaveURL(`/${aboutHash}`);
+    await expect(page).toHaveURL(`./${aboutHash}`);
     await page.reload();
     await expect(chaos).toHaveAttribute('aria-valuenow', value!);
   });
@@ -142,8 +147,8 @@ test.describe('with all six strips', () => {
 
 test('a held esc steps back to the play screen, not past it', async ({ page }) => {
   // A page before the app, where a second step back would land.
-  await page.goto('/404.html');
-  await page.goto('/');
+  await page.goto('./404.html');
+  await page.goto('./');
   const hash = await setupHash(page);
   await aboutLink(page).click();
   await expect(aboutView(page)).toBeVisible();
@@ -153,6 +158,6 @@ test('a held esc steps back to the play screen, not past it', async ({ page }) =
     for (let i = 0; i < 2; i++) window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
   });
   await expect(aboutView(page)).toBeHidden();
-  await expect(page).toHaveURL(`/${hash}`);
+  await expect(page).toHaveURL(`./${hash}`);
   await expect(page.getByRole('heading', { name: '# rimbalzello' })).toBeVisible();
 });

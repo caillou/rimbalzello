@@ -8,7 +8,7 @@ import { readout } from './pad-readout.ts';
 test.use({ viewport: { width: 393, height: 750 } });
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   await page.getByRole('button', { name: '▶ tap to play' }).click();
 });
 

@@ -3,7 +3,7 @@ import { countStartedVoices, expectGrooveRunning, startedVoices } from './starte
 
 test.beforeEach(async ({ page }) => {
   await countStartedVoices(page);
-  await page.goto('/');
+  await page.goto('./');
 });
 
 test('one tap on the overlay starts the groove and the overlay goes away', async ({ page }) => {

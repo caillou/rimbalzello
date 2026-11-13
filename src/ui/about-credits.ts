@@ -8,6 +8,8 @@ export interface CreditsBuild {
   /** The commit the site was built from. */
   commitHash: string;
   repositoryUrl: string;
+  /** The path the site is served under, with both slashes: '/' or '/rimbalzello/'. */
+  basePath: string;
 }
 
 const COMMIT = /^[0-9a-f]{7,40}$/;
@@ -32,7 +34,7 @@ function link(href: string, text: string): string {
 }
 
 /** The credits: what the app is, what it is made from, who made it, its licence and source. */
-export function creditsHtml({ commitHash, repositoryUrl }: CreditsBuild): string {
+export function creditsHtml({ commitHash, repositoryUrl, basePath }: CreditsBuild): string {
   // A build without git history links to the repository instead of a commit.
   const source = COMMIT.test(commitHash)
     ? link(`${repositoryUrl}/tree/${commitHash}`, `source at ${commitHash.slice(0, 7)}`)
@@ -48,7 +50,7 @@ export function creditsHtml({ commitHash, repositoryUrl }: CreditsBuild): string
 <p>Pierre Spring ${link(CAILLOU, 'caillou.ch')}</p>
 <h2><span class="marker">##</span> licence</h2>
 <p>GPL-3.0-or-later, like Grids.</p>
-<p>read the ${source} and the ${link('/third-party-notices.txt', 'third-party notices')}.</p>
+<p>read the ${source} and the ${link(`${basePath}third-party-notices.txt`, 'third-party notices')}.</p>
 <footer class="about-footer">
   <a href="${repositoryUrl}" target="_blank" rel="noopener" aria-label="source">// source</a>
   <a href="${CAILLOU}" target="_blank" rel="noopener" aria-label="caillou.ch">// caillou.ch</a>
