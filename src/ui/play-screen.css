@@ -8,8 +8,17 @@
   flex-direction: column;
   height: 100dvh;
   overflow: hidden;
-  /* Standalone from the home screen, the page runs under the translucent
-     status bar: the top inset keeps the header clear of it. */
+  /* Sticky on an opaque background, and never taller than the viewport, so
+     iOS 26 and 27 show a solid colour extension under the status bar and
+     Safari's bars instead of the scroll-edge blur. WebKit's rule: a fixed or
+     sticky box under the top centre, at least 90 % of the viewport wide,
+     more than 10 px and at most 1.05 viewports tall, with an opaque
+     background (e2e/top-edge.spec.ts). Nothing scrolls, so it stays in place
+     and in flow. */
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  /* 0 under an opaque status bar; kept for old black-translucent installs. */
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
   /* An instrument, not a page: no text selection, callouts or double-tap zoom. */

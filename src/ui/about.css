@@ -39,9 +39,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  /* Sticky, on the page's background, with the top inset: standalone from the
-     home screen, the page runs under the translucent status bar, and the
-     credits would otherwise scroll under the clock. */
+  /* Sticky, on the page's background, with the top inset (0 under an opaque
+     status bar; kept for old black-translucent installs), so the credits
+     never scroll under the clock. The nav is narrower than WebKit's 90 %
+     rule for the colour extension; WebKit walks past it to .about, which is
+     fixed, viewport-sized and on the same background (e2e/top-edge.spec.ts). */
   position: sticky;
   top: 0;
   z-index: 1;

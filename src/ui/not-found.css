@@ -3,9 +3,21 @@
 @import './base.css';
 @import './blog.css';
 
-/* The insets, as on the about view: standalone from the home screen, the
-   page runs under the translucent status bar. */
+/* The body is the page's pinned top, as .about is on the about view: fixed,
+   viewport-sized and on the page's background (base.css), so iOS shows a
+   solid band under the status bar instead of the scroll-edge blur
+   (e2e/top-edge.spec.ts). It scrolls itself; html stays put, so the body's
+   overflow is not handed to the viewport. The insets clear the home
+   indicator, landscape notches and old black-translucent installs. */
+html {
+  overflow: hidden;
+}
+
 body {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: env(safe-area-inset-top) max(20px, env(safe-area-inset-right)) env(safe-area-inset-bottom)
     max(20px, env(safe-area-inset-left));
 }

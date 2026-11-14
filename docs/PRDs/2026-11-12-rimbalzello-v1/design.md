@@ -189,14 +189,15 @@ The step display highlights the played step. While a loop is held, the playhead 
 - `/about/` also exists as a real, prerendered file, so a direct visit or reload works on static hosting and shows the credits before any JavaScript runs.
 - The about view may scroll; the play screen may not.
 - The nav (`← back to play`, `×`) stays at the top while the credits scroll.
+- The view's top is pinned on `#202322`, so iOS shows a solid band under the status bar instead of a blur.
 
 ## 404
 
-A plain static page served by GitHub Pages for unknown URLs: h1 `# 404` (italic, yellow), `this stone sank.`, and a blog-style link `[back to rimbalzello]`. No app code.
+A plain static page served by GitHub Pages for unknown URLs: h1 `# 404` (italic, yellow), `this stone sank.`, and a blog-style link `[back to rimbalzello]`. No app code. The page is pinned on `#202322` and scrolls inside itself, so iOS shows a solid band under the status bar instead of a blur.
 
 ## Home screen
 
-Added to the home screen, rimbalzello opens standalone at the bare address with the default setup, the apple-touch-icon as its iOS icon. The status bar is translucent over `#202322`; the play screen, the about view and the 404 page keep clear of it and of the home indicator with the safe-area insets.
+Added to the home screen, rimbalzello opens standalone at the bare address with the default setup, the apple-touch-icon as its iOS icon. The status bar is opaque and takes `#202322` from the pinned top of each page (the play screen, the about view, the 404 page), so iOS shows a solid band under it instead of a blur; the three keep clear of the home indicator, and of any top inset, with the safe-area insets.
 
 ## Later (not in v1)
 
