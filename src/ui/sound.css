@@ -47,7 +47,8 @@
 }
 
 /* The laptop's sound: `## bass drum`, `## snare drum` and `## hi-hat` side
-   by side under a hairline, one column of sliders each. */
+   by side under a hairline, one column of sliders each. A tall phone window
+   stacks them instead; stacked.css undoes these rules there. */
 .sound-sections {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

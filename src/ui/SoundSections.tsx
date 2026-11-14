@@ -1,5 +1,6 @@
 // The laptop's sound: `## bass drum`, `## snare drum` and `## hi-hat` side by
-// side under a hairline, each drum's sliders in one column, with no tabs.
+// side under a hairline, each drum's sliders in one column, with no tabs. A
+// tall phone window's sound mode stacks them, two columns each (stacked.css).
 
 import { createUniqueId, For } from 'solid-js';
 import { DRUMS } from '../engine/setup';

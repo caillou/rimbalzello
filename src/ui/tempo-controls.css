@@ -1,7 +1,8 @@
 /* Tempo: the bpm and swing strips and the boxed `tap tempo` button. On
    phones they are the `tempo` tab's three 44 px rows, as tall as the three
-   strips of `mix` and `fx`, so the pad keeps its size when the tab changes;
-   wide-layouts.css sets them in one row. */
+   strips of `mix` and `fx`, so the pad keeps its size when the tab changes,
+   and the same rows under `## tempo` in a tall window; wide-layouts.css
+   sets them in one row. */
 .tap-tempo {
   width: 100%;
   height: calc(44px * var(--zoom));

@@ -9,7 +9,7 @@ Use these words, with these meanings, in code, tests, issues and docs. Don't inv
 - **Pad**: the X/Y surface the player touches to move through the map. "Position" is the point on the pad, `x` and `y` stored as 0–255, shown as 0–100.
 - **Pattern**: the 32 steps the pattern generator produces for the current position, densities and chaos. One pattern is one bar.
 - **Step**: one 32nd note. A **beat** is 8 steps; a **bar** is 32 steps, one pattern. Steps are numbered 0–31.
-- **Drum**: one of the three voices: **bd** (bass drum), **sd** (snare drum), **hh** (hi-hat). Lowercase in the UI: the two-letter names on phones and in the tablet's step display, the full names where the tablet and laptop layouts have room (strips, drum tabs, sound headings, the laptop's step display). A control's accessible name holds the name it shows (`mute bd`, `mute bass drum`).
+- **Drum**: one of the three voices: **bd** (bass drum), **sd** (snare drum), **hh** (hi-hat). Lowercase in the UI: the two-letter names on phones and in the tablet's step display, the full names where the tablet and laptop layouts have room (strips, drum tabs, sound headings, the laptop's step display) and on the sound headings of a tall phone window. A control's accessible name holds the name it shows (`mute bd`, `mute bass drum`).
 - **Kit**: the set of drum voices behind one interface. The transport triggers drums through the kit and never knows how they make sound. v1 ships one kit of native Web Audio voices; other kits can load later.
 - **Hit**: one drum firing on one step. A hit can be an **accent** (louder; on hh it can also open the hat), which Grids marks when the map level is above 192.
 - **Density**: per-drum fill amount, 0–255. Higher density means more hits.
@@ -47,7 +47,7 @@ Use these words, with these meanings, in code, tests, issues and docs. Don't inv
 - **Loop strip**: the four-zone looper control.
 - **Bottom bar**: `sound` / `play`, `set anchor`, `↺ return on bar`.
 - **Footer**: `// help  // about  // source` under the bottom bar.
-- **Tabs**: narrow-screen folding. **mix** (bd sd hh densities), **fx** (chaos drift drive) and **tempo** (bpm, swing, tap tempo) on phones, where tapping the bpm readout opens the tempo tab; **drum tabs** (bd sd hh) in sound mode. The tablet and laptop show mix, fx and tempo side by side as groups instead.
+- **Tabs**: narrow-screen folding. Phones fold the strips into **mix** (bd sd hh densities), **fx** (chaos drift drive) and **tempo** (bpm, swing, tap tempo), where tapping the bpm readout opens the tempo tab, and the sound into **drum tabs** (bd sd hh) in sound mode; a phone-width window tall enough stacks both as groups instead (see Phone layout). The tablet and a short laptop window keep the drum tabs for sound; the tablet and laptop show mix, fx and tempo side by side as groups.
 - **Step display**: the text rendering of one bar (`x` hit, bold `x` accent, `·` rest, 32 characters per drum), current step highlighted yellow. Its drum labels are the mute toggles.
 - **Keycap hints**: small outlined keys next to controls on laptops, toggled with `?`, `h` or `// help`.
 - **Help**: on touch screens, a hint box over the pad explaining gestures and controls; on laptops, the keycap hints.
@@ -55,7 +55,7 @@ Use these words, with these meanings, in code, tests, issues and docs. Don't inv
 
 ## Layouts
 
-- **Phone layout**: one column, pad on top, the strips and tempo folded into mix / fx / tempo tabs below.
+- **Phone layout**: one column, pad on top, the strips and tempo folded into mix / fx / tempo tabs below. In a window tall enough for the pad to stay at least square, mix, fx and tempo stack as groups under `## mix`, `## fx`, `## tempo` headings, and sound mode stacks `## bass drum`, `## snare drum`, `## hi-hat`, with no tabs; only `→ sound` / `← play` switches.
 - **Compact layout**: the smallest phone case (iPhone SE in Safari), tighter than the phone layout.
 - **Tablet layout**: about 700 px wide or more; two columns like the laptop, tabs only for sound.
 - **Laptop layout**: two columns, all sound sections side by side, no tabs; on a window larger than 1280×800 every size in it grows with the window, up to twice.

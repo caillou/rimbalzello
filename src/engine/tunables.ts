@@ -142,10 +142,11 @@ export const tunables = {
    * At least `wideMinWidth` wide and `wideMinHeight` tall, it has two
    * columns: the tablet layout in portrait, the laptop layout in landscape
    * (tablets in landscape too). Short of either, a portrait screen gets a
-   * phone layout by its height and a landscape one the rotate hint.
-   * Starting points until the design pass measures the acceptance devices:
-   * Safari leaves about 660–750 px on a current iPhone and about 553 px on
-   * an SE.
+   * phone layout by its height and a landscape one the rotate hint; a phone
+   * layout tall enough stacks its groups instead of tabbing them
+   * (`stackedPadMinShape`). Starting points until the design pass measures
+   * the acceptance devices: Safari leaves about 660–750 px on a current
+   * iPhone and about 553 px on an SE.
    */
   layouts: {
     /**
@@ -192,6 +193,15 @@ export const tunables = {
      * needs 684 px, more than 393×659 has.
      */
     padMinHeight: 200,
+    /**
+     * The pad's height ÷ width below which the phone layout keeps its tabs:
+     * with 1, a phone-width window stacks mix, fx and tempo (and the sound
+     * sections) only where the pad stays at least square under them. Tall
+     * enough means about 1100 px at 375 wide, 1120 at 393, 1280 at 550 and
+     * 1430 at 699, so no phone in Safari (660–750 px) stacks; a desktop window
+     * or a tall foldable does. Lower it to stack sooner with a flatter pad.
+     */
+    stackedPadMinShape: 1,
   },
 
   /**

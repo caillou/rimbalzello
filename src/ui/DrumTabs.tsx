@@ -1,9 +1,10 @@
 // Sound mode's drum tabs: `bd` `sd` `hh`, the active tab in its drum's colour
 // and underlined, the drum's full name on the right, and below them that
-// drum's sound in two columns, so it fits under the pad on a phone. The
-// tablet layout shows them all the time, beside the strips, in one column;
-// a laptop window too short for the three sound sections, in two. Where
-// the tabs write the names out (drum-names.ts), nothing shows on the right.
+// drum's sound in two columns, so it fits under the pad on a phone (a tall
+// phone window stacks the drums instead: SoundSections). The tablet layout
+// shows them all the time, beside the strips, in one column; a laptop
+// window too short for the three sound sections, in two. Where the tabs
+// write the names out (drum-names.ts), nothing shows on the right.
 
 import { createSignal, createUniqueId, For, Show } from 'solid-js';
 import { DRUMS, type Drum } from '../engine/setup';

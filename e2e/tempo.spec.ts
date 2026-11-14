@@ -7,7 +7,7 @@ import { expect, test, type Locator, type Page } from './fixtures.ts';
 test.use({ viewport: { width: 393, height: 659 }, hasTouch: true });
 
 const readout = (page: Page) => page.getByRole('button', { name: /^\d+ bpm$/ });
-const tempo = (page: Page) => page.getByRole('group', { name: 'tempo' });
+const tempo = (page: Page) => page.getByRole('tabpanel', { name: 'tempo' });
 const tab = (page: Page, name: string) => page.getByRole('tab', { name, exact: true });
 const strip = (page: Page, name: string) => tempo(page).getByRole('slider', { name, exact: true });
 const button = (scope: Page | Locator, name: string) => scope.getByRole('button', { name, exact: true });

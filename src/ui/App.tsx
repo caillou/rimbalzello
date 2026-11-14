@@ -29,10 +29,12 @@ import { RotateHint } from './RotateHint';
 import { SoundSections } from './SoundSections';
 import { StepDisplay } from './StepDisplay';
 import { Strip } from './Strip';
+import { StripGroups } from './StripGroups';
 import { StripTabs, type StripTab } from './StripTabs';
 import { TempoControls } from './TempoControls';
 import './play-screen.css';
 import './compact.css';
+import './stacked.css';
 import './wide-layouts.css';
 
 interface StripField {
@@ -215,11 +217,12 @@ export function App() {
   }
 
   // The play screen's layout, from its size. The phone layouts fold the
-  // strips and tempo into the `mix`, `fx` and `tempo` tabs, and the compact
-  // layout also moves the step display into the pad. The wide layouts show
-  // the strips and tempo side by side, without tabs. A large window zooms
-  // the laptop layout: the stylesheets multiply their sizes by `--zoom`.
-  const { layout, soundFolded, zoom, observe } = createLayout();
+  // strips and tempo into the `mix`, `fx` and `tempo` tabs, unless a tall
+  // window stacks them (`stacked`), and the compact layout also moves the
+  // step display into the pad. The wide layouts show the strips and tempo
+  // side by side, without tabs. A large window zooms the laptop layout: the
+  // stylesheets multiply their sizes by `--zoom`.
+  const { layout, soundFolded, stacked, zoom, observe } = createLayout();
   let screen!: HTMLElement;
   onMount(() => observe(screen));
   const wide = () => isWide(layout());
@@ -228,12 +231,15 @@ export function App() {
   const fullMuteLabels = () => layout() === 'laptop';
 
   // What sits in the tabs' place on a phone: the strips and tempo in play,
-  // the drum tabs in sound mode. Wide layouts show the sound beside the
-  // strips, so sound mode is for phones only.
+  // the drum tabs in sound mode; stacked groups in both, in a tall window.
+  // Wide layouts show the sound beside the strips, so sound mode is for
+  // phones only.
   const [mode, setMode] = createSignal<'play' | 'sound'>('play');
   const soundMode = () => !wide() && mode() === 'sound';
 
-  // The bpm readout opens the tempo tab, from either strips tab or from sound mode.
+  // The bpm readout opens the tempo tab, from either strips tab or from sound
+  // mode. A tall window stacks tempo on screen, so there the readout opens
+  // nothing.
   function openTempoTab() {
     setMode('play');
     setStripTab('tempo');
@@ -313,7 +319,9 @@ export function App() {
     />
   );
 
-  const tempoControls = () => <TempoControls setup={setup} onChange={(edit) => store.change(edit)} />;
+  const tempoControls = () => (
+    <TempoControls setup={setup} named={wide()} onChange={(edit) => store.change(edit)} />
+  );
 
   const bpmReadout = () => (
     <>
@@ -330,6 +338,10 @@ export function App() {
       onChange={(value) => store.change((draft) => strip.set(draft, value))}
     />
   );
+
+  // A group's rows on a phone, in its tab or under its stacked heading.
+  const groupRows = (group: StripTab) =>
+    group === 'tempo' ? tempoControls() : <For each={STRIPS_BY_GROUP[group]}>{stripRow}</For>;
 
   // No long-press menus on the instrument; links keep theirs.
   function noContextMenu(event: MouseEvent) {
@@ -353,6 +365,7 @@ export function App() {
       class="play-screen"
       data-layout={layout()}
       data-sound-folded={soundFolded() ? '' : undefined}
+      data-stacked={stacked() ? '' : undefined}
       style={{ '--zoom': String(zoom()) }}
       data-keycaps={keycaps() ? (hintsShown() ? 'shown' : 'hidden') : undefined}
       inert={about.open() || layout() === 'rotate'}
@@ -380,9 +393,10 @@ export function App() {
           <PressButton class="tempo-button" label="tempo down" repeat onPress={() => changeTempo(-1)}>
             −<Keycap>,</Keycap>
           </PressButton>
-          {/* On a phone the readout opens the tempo tab. The wide layouts always
-              show tempo, so there it has nothing to open and is only a readout. */}
-          <Show when={!wide()} fallback={<span class="bpm">{bpmReadout()}</span>}>
+          {/* On a phone the readout opens the tempo tab. The wide layouts and a
+              tall phone window always show tempo, so there it has nothing to
+              open and is only a readout. */}
+          <Show when={!wide() && !stacked()} fallback={<span class="bpm">{bpmReadout()}</span>}>
             <button type="button" class="bpm" onClick={openTempoTab}>
               {bpmReadout()}
             </button>
@@ -433,12 +447,18 @@ export function App() {
           </div>
           {tempoControls()}
         </Match>
+        <Match when={stacked() && soundMode()}>
+          <SoundSections setup={setup} onChange={(edit) => store.change(edit)} />
+        </Match>
+        <Match when={stacked()}>
+          <StripGroups>{groupRows}</StripGroups>
+        </Match>
         <Match when={soundMode()}>
           <DrumTabs fullNames={false} setup={setup} onChange={(edit) => store.change(edit)} />
         </Match>
         <Match when={!soundMode()}>
           <StripTabs active={stripTab} onSelect={setStripTab}>
-            {(tab) => (tab === 'tempo' ? tempoControls() : <For each={STRIPS_BY_GROUP[tab]}>{stripRow}</For>)}
+            {groupRows}
           </StripTabs>
         </Match>
       </Switch>

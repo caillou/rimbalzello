@@ -1,6 +1,7 @@
 /* The play screen, phone layout: header, pad, step display, loop strip, the
-   strips' tabs, bottom bar and footer in one column filling the viewport.
-   It never scrolls. */
+   strips' tabs (or, in a tall window, the stacked groups: stacked.css),
+   bottom bar and footer in one column filling the viewport. It never
+   scrolls. */
 
 .play-screen {
   display: flex;
@@ -70,7 +71,8 @@
   touch-action: none;
 }
 
-/* The bpm readout; on a phone it opens the tempo tab. */
+/* The bpm readout; on a phone it opens the tempo tab, unless a tall window
+   stacks tempo on screen. */
 .bpm {
   min-height: calc(44px * var(--zoom));
   font-size: calc(15px * var(--zoom));
@@ -84,7 +86,8 @@
   text-align: right;
 }
 
-/* Only a readout on the wide layouts: centred on the − and + as the button is. */
+/* Only a readout on the wide layouts and a tall phone window: centred on the
+   − and + as the button is. */
 span.bpm {
   line-height: calc(44px * var(--zoom));
 }

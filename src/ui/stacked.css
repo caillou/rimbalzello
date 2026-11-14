@@ -1,0 +1,44 @@
+/* A tall phone window (`data-stacked`, layout.ts): the groups stack in the
+   tabs' place. Play mode shows `## mix`, `## fx` and `## tempo`, sound mode
+   `## bass drum`, `## snare drum` and `## hi-hat`, each under a 32 px
+   hairline heading over its 44 px rows. STACKED_ROWS in layout.ts mirrors
+   these heights: play mode's three headings and nine rows (492 px). Zoom is
+   1 in the phone layout, so the sizes stay plain px. */
+.strip-groups {
+  flex-shrink: 0;
+  padding: 0 16px;
+}
+
+.group-heading,
+[data-stacked] .sound-heading {
+  height: 32px;
+  margin: 0;
+  border-top: 1px solid var(--hairline);
+  font-size: 15px;
+  line-height: 31px;
+}
+
+/* The laptop's sound sections, in one column: what sound.css sets for the
+   laptop (side by side, a margin, a hairline and padding over them, 28 px
+   headings) undone. Each drum's sliders in two columns, as under the drum
+   tabs: bd 3 rows, sd 3, hh 1, 404 px with the headings. As tall as the play
+   stack, so `→ sound` and `← play` leave the pad its size. */
+[data-stacked] .sound-sections {
+  flex-shrink: 0;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  min-height: calc(3 * 32px + 9 * 44px);
+  margin: 0;
+  padding: 0 16px;
+  border-top: 0;
+}
+
+/* The loop strip's zones already draw the rule above the first group. */
+.strip-groups > :first-child > .group-heading,
+[data-stacked] .sound-sections > :first-child > .sound-heading {
+  border-top-color: transparent;
+}
+
+[data-stacked] .sound-section {
+  --sound-columns: 2;
+}

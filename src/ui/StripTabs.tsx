@@ -1,13 +1,14 @@
 // The strips of the phone layouts, folded into tabs: `mix` (the bd, sd and
 // hh densities), `fx` (chaos, drift and drive) and `tempo` (bpm, swing and
 // tap tempo), on a tab row like sound mode's drum tabs. Each tab holds three
-// 44 px rows, so the pad keeps its size when the tab changes.
+// 44 px rows, so the pad keeps its size when the tab changes. A tall phone
+// window stacks the three groups instead (StripGroups).
 
 import { createUniqueId, For, type Accessor, type JSX } from 'solid-js';
 import './tabs.css';
 import './strip-tabs.css';
 
-const STRIP_TABS = ['mix', 'fx', 'tempo'] as const;
+export const STRIP_TABS = ['mix', 'fx', 'tempo'] as const;
 export type StripTab = (typeof STRIP_TABS)[number];
 
 export interface StripTabsProps {

@@ -4,8 +4,9 @@ import { readout } from './pad-readout.ts';
 
 // The phone and compact layouts: the strips folded into `mix`, `fx` and
 // `tempo` tabs (design.md; `designs/v2-01-phone.png`,
-// `designs/v2-02-phone-compact.png`). On a touch screen, so `// help` opens
-// the help box.
+// `designs/v2-02-phone-compact.png`), and a tall phone-width window, which
+// stacks the groups instead. On a touch screen, so `// help` opens the help
+// box.
 test.use({ hasTouch: true });
 
 /**
@@ -16,6 +17,12 @@ test.use({ hasTouch: true });
  */
 const PAD_MIN_HEIGHT = 200;
 
+/**
+ * The pad's height ÷ width below which the phone layout keeps its tabs. A
+ * copy of `tunables.layouts.stackedPadMinShape`: change both together.
+ */
+const STACKED_PAD_MIN_SHAPE = 1;
+
 const pad = (page: Page) => page.locator('[data-control="pad"]');
 const stepDisplay = (page: Page) => page.getByRole('group', { name: 'step display' });
 const tab = (page: Page, name: string) => page.getByRole('tab', { name, exact: true });
@@ -23,6 +30,13 @@ const tab = (page: Page, name: string) => page.getByRole('tab', { name, exact: t
 async function box(locator: Locator) {
   const { x, y, width, height } = (await locator.boundingBox())!;
   return { left: x, top: y, right: x + width, bottom: y + height, width, height };
+}
+
+/** The sliders' accessible names in a region, top to bottom. */
+async function expectSliders(region: Locator, names: string[]) {
+  const sliders = region.getByRole('slider');
+  await expect(sliders).toHaveCount(names.length);
+  for (const [i, name] of names.entries()) await expect(sliders.nth(i)).toHaveAccessibleName(name);
 }
 
 /** The pad keeps its minimum, and the loop strip, bottom bar and footer show whole without scrolling. */
@@ -96,18 +110,12 @@ test.describe('at 393×659', () => {
 
   test('the strips fold into mix and fx tabs, with the step display under the pad', async ({ page }) => {
     await page.goto('./');
-    const strips = page.getByRole('tabpanel').getByRole('slider');
-    async function expectStrips(names: string[]) {
-      await expect(strips).toHaveCount(names.length);
-      for (const [i, name] of names.entries()) await expect(strips.nth(i)).toHaveAccessibleName(name);
-    }
-
     await expect(tab(page, 'mix')).toHaveAttribute('aria-selected', 'true');
-    await expectStrips(['bd', 'sd', 'hh']);
+    await expectSliders(page.getByRole('tabpanel'), ['bd', 'sd', 'hh']);
 
     await tab(page, 'fx').click();
     await expect(tab(page, 'mix')).toHaveAttribute('aria-selected', 'false');
-    await expectStrips(['chaos', 'drift', 'drive']);
+    await expectSliders(page.getByRole('tabpanel'), ['chaos', 'drift', 'drive']);
 
     expect((await box(stepDisplay(page))).top).toBeGreaterThanOrEqual((await box(pad(page))).bottom);
   });
@@ -190,4 +198,95 @@ test('from an SE in Safari up to a tall phone, the pad never gets shorter than i
   }
   const short = Object.entries(heights).filter(([, padHeight]) => padHeight < PAD_MIN_HEIGHT);
   expect(short, 'viewport heights and their pads under the minimum').toEqual([]);
+});
+
+// Tall enough for the pad to stay square under every group: the owner's
+// desktop window, and a phone-width one just past the threshold.
+for (const viewport of [
+  { width: 550, height: 1800 },
+  { width: 393, height: 1200 },
+]) {
+  test.describe(`at ${viewport.width}×${viewport.height}`, () => {
+    test.use({ viewport });
+
+    test('a tall window stacks mix, fx and tempo, and in sound mode the three drums, with no tabs, the pad at least square and the same size in both modes', async ({
+      page,
+    }) => {
+      await page.goto('./');
+      await page.evaluate(() => document.fonts.ready);
+      await page.getByRole('button', { name: '▶ tap to play' }).click();
+      const region = (name: string) => page.getByRole('region', { name, exact: true });
+
+      await expect(page.getByRole('tablist')).toHaveCount(0);
+      await expectSliders(region('mix'), ['bd', 'sd', 'hh']);
+      await expectSliders(region('fx'), ['chaos', 'drift', 'drive']);
+      await expectSliders(region('tempo'), ['bpm', 'swing']);
+      await expect(region('tempo').getByRole('button', { name: 'tap tempo' })).toBeVisible();
+      // Tempo is on screen, so the readout opens nothing.
+      await expect(page.getByRole('button', { name: /\d+ bpm$/ })).toHaveCount(0);
+      await expectLayoutRules(page);
+      await expectFits(page);
+      const padBox = await box(pad(page));
+      expect(padBox.height, 'pad height').toBeGreaterThanOrEqual(STACKED_PAD_MIN_SHAPE * padBox.width - 0.5);
+
+      await page.getByRole('button', { name: '→ sound' }).click();
+      await expect(page.getByRole('tablist')).toHaveCount(0);
+      await expect(region('bass drum').getByRole('slider')).toHaveCount(5);
+      await expect(region('snare drum').getByRole('slider')).toHaveCount(5);
+      await expect(region('hi-hat').getByRole('slider')).toHaveCount(2);
+      await expectLayoutRules(page);
+      await expectFits(page);
+      expect((await box(pad(page))).height, 'pad height in sound mode').toBe(padBox.height);
+
+      // Shorter than the threshold, the tabs come back.
+      await page.getByRole('button', { name: '← play' }).click();
+      await page.setViewportSize({ width: viewport.width, height: 700 });
+      await expect(tab(page, 'mix')).toHaveAttribute('aria-selected', 'true');
+      await expect(page.getByRole('region', { name: 'mix', exact: true })).toHaveCount(0);
+      await expectLayoutRules(page);
+      await expectFits(page);
+    });
+  });
+}
+
+test('at 375 wide the groups stack from the height where the pad is square, never flatter', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 1115 });
+  await page.goto('./');
+  const shown: { height: number; tabs: boolean; padWidth: number; padHeight: number }[] = [];
+  // Brackets the threshold: 760 px of rows + 1 × (375 − 32) px of pad = 1103.
+  for (let height = 1090; height <= 1115; height++) {
+    await page.setViewportSize({ width: 375, height });
+    // The layout follows the play screen's size on the next frame.
+    const state = await pad(page).evaluate(
+      (element) =>
+        new Promise<{ tabs: boolean; padWidth: number; padHeight: number }>((done) =>
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => {
+              const rect = element.getBoundingClientRect();
+              done({
+                tabs: document.querySelector('[role="tablist"]') !== null,
+                padWidth: rect.width,
+                padHeight: rect.height,
+              });
+            }),
+          ),
+        ),
+    );
+    shown.push({ height, ...state });
+  }
+
+  const first = shown.findIndex((state) => !state.tabs);
+  expect(first, 'the first height that stacks').toBeGreaterThan(0);
+  const tabbed = shown.filter((state, i) => state.tabs !== i < first).map(({ height }) => height);
+  expect(tabbed, 'heights on the wrong side of the threshold').toEqual([]);
+  const flat = shown
+    .filter((state) => !state.tabs && state.padHeight < STACKED_PAD_MIN_SHAPE * state.padWidth - 0.5)
+    .map(({ height }) => height);
+  expect(flat, 'stacked heights with the pad flatter than square').toEqual([]);
+  const { padWidth, padHeight } = shown[first]!;
+  // Square within a pixel where it first stacks: STACKED_ROWS and
+  // PAD_SIDE_MARGINS (layout.ts) match the stylesheets, neither too low nor
+  // too high.
+  const off = Math.abs(padHeight - STACKED_PAD_MIN_SHAPE * padWidth);
+  expect(off, 'pad off square where it first stacks').toBeLessThanOrEqual(1);
 });

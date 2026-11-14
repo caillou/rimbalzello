@@ -130,6 +130,6 @@ test('the bpm readout in sound mode opens the tempo tab', async ({ page }) => {
   await page.getByRole('button', { name: /^\d+ bpm$/ }).click();
   await expect(page.getByRole('tablist', { name: 'sound' })).toHaveCount(0);
   await expect(tab(page, 'tempo')).toHaveAttribute('aria-selected', 'true');
-  await expect(page.getByRole('group', { name: 'tempo' })).toBeVisible();
+  await expect(page.getByRole('tabpanel', { name: 'tempo' }).getByRole('slider', { name: 'bpm' })).toBeVisible();
   await expect(page.getByRole('button', { name: '→ sound' })).toBeVisible();
 });

@@ -31,7 +31,7 @@ Borrowed from caillou.ch, so the app reads as part of the site.
   - text `#ffffff`, secondary `#ababab`, tertiary and markers `#757575`
   - bd `#ffd866` (yellow), sd `#ff61ef` (pink), hh `#bef289` (green), drive `#fc618d` (red), chaos, drift, bpm and swing white
 - **Text**: lowercase labels. `#` before the app title and `##` before section headings, in grey. Italic for text buttons and navigation.
-- **Drum names**: `bd` `sd` `hh` on phones and in the tablet's step display; `bass drum`, `snare drum`, `hi-hat` where the tablet and laptop layouts have room: the strips, the drum tabs, the laptop's sound headings and its step display. A control's accessible name holds the name it shows (`mute bd`, `mute bass drum`), so voice control finds it by what it says.
+- **Drum names**: `bd` `sd` `hh` on phones and in the tablet's step display; `bass drum`, `snare drum`, `hi-hat` where the tablet and laptop layouts have room: the strips, the drum tabs, the laptop's sound headings and its step display; and the sound headings of a tall phone window. A control's accessible name holds the name it shows (`mute bd`, `mute bass drum`), so voice control finds it by what it says.
 - **Current step**: yellow background, black text, like the blog's text selection.
 - **Sliders**: 2 px track; filled part and square thumb in the control's colour; value right-aligned in grey, shown 0–100, except bpm and swing, which show their own values (`128`, `56%`).
 - **Loop strip**: four boxed zones (`1/4 1/8 1/16 1/32`) with hairline borders; the held zone is white with black text.
@@ -48,7 +48,7 @@ Every layout is sized against the real browser viewport (`100dvh`), not the devi
 
 | Layout | When | Shape |
 | --- | --- | --- |
-| phone | narrow | one column, strips and tempo in `mix` / `fx` / `tempo` tabs, as below |
+| phone | narrow | one column, strips and tempo in `mix` / `fx` / `tempo` tabs, as below, or stacked as groups in a tall window (see Tall phone windows) |
 | compact | the smallest case (SE in Safari) | slimmer header, step display moves into the pad as an overlay (`v2-02-phone-compact.png`) |
 | tablet | about 700 px wide or more | portrait: pad on top, two columns below; landscape: like the laptop (`v2-07-tablet.png`) |
 | laptop | wide enough for the three sound sections side by side | two columns, no tabs |
@@ -60,11 +60,11 @@ The play screen never scrolls. Every touch lands on a control. Loop strip and bo
 
 Top to bottom, filling the viewport exactly:
 
-1. **Header**: `# rimbalzello` left; `− 128 bpm +` and `stop`/`play` (italic, underlined) right. Tapping the bpm readout opens the `tempo` tab. The title is not a link.
+1. **Header**: `# rimbalzello` left; `− 128 bpm +` and `stop`/`play` (italic, underlined) right. Tapping the bpm readout opens the `tempo` tab, unless the groups are stacked. The title is not a link.
 2. **Pad**: takes all remaining height. Dark field, thin crosshair through the position, a faint ring around it, the position as a yellow square, and the X/Y readout (0–100). The pad keeps clear of the left 16 px of the screen.
 3. **Step display**: three lines, `bd`, `sd`, `hh`, 32 characters each, one bar: `x` in the drum's colour for a hit, bold for an accent, `·` in grey for a rest. The bold is the screen's bold weight (see Font) and stays on a muted line and under the highlight. Current step highlighted. The drum labels are the mute toggles (see Mutes).
 4. **Loop strip**.
-5. **Tabs**: `mix` (the bd, sd and hh density strips), `fx` (chaos, drift and drive) and `tempo` (see Tempo). Each tab holds three 44 px rows, so the pad keeps its size when the tab changes.
+5. **Tabs**: `mix` (the bd, sd and hh density strips), `fx` (chaos, drift and drive) and `tempo` (see Tempo). Each tab holds three 44 px rows, so the pad keeps its size when the tab changes. A tall window stacks them instead (see Tall phone windows).
 6. **Bottom bar**: `→ sound`, `set anchor`, `↺ return on bar`.
 7. **Footer**: `// help   // about   // source`, centred.
 
@@ -74,19 +74,23 @@ On load the app is stopped. A big `▶ tap to play` sits over the pad; one tap s
 
 ### Sound mode (phone)
 
-Tapping `→ sound` swaps the `mix` / `fx` / `tempo` tabs for drum tabs: `bd` `sd` `hh`, the active tab in its drum's colour with an underline and the drum's full name (`bass drum`) in grey italics on the right. The tablet and a short laptop window write the names out on the tabs instead (`bass drum` `snare drum` `hi-hat`), with nothing on the right. Below: that drum's sliders. The pad, step display and loop strip stay. The bottom bar's first item becomes `← play`. On phones the drum's sliders sit in two columns so they fit under the pad (`v2-03-phone-sound.png`).
+Tapping `→ sound` swaps the `mix` / `fx` / `tempo` tabs for drum tabs: `bd` `sd` `hh`, the active tab in its drum's colour with an underline and the drum's full name (`bass drum`) in grey italics on the right. The tablet and a short laptop window write the names out on the tabs instead (`bass drum` `snare drum` `hi-hat`), with nothing on the right. Below: that drum's sliders. The pad, step display and loop strip stay. The bottom bar's first item becomes `← play`. On phones the drum's sliders sit in two columns so they fit under the pad (`v2-03-phone-sound.png`). A tall phone window stacks the three drums instead of tabbing them (see Tall phone windows).
 
 The hh tab holds two sliders, `accent` and `level`, in one row. `accent` sets how far an accented hh hit opens the hat: at 0 an accent is only louder, at 100 the hat is fully open; plain hh hits stay closed. Any hh hit cuts off an hh still ringing (the choke).
 
 ### Tempo
 
-The `tempo` tab, after `mix` and `fx`, holds three rows: the bpm strip, the swing strip and a boxed `tap tempo` button. The two strips work like every other strip but show their own values: tempo runs 60–200 bpm, default 128; swing runs 50–75 %, default 56 % (shown `56%`). The header's − and + repeat while held. Tapping the bpm readout opens the tab, from `mix`, `fx` or sound mode. `v2-04-phone-tempo.png` shows the rows under the former panel's heading, with − and + where the strips now are.
+The `tempo` tab, after `mix` and `fx`, holds three rows: the bpm strip, the swing strip and a boxed `tap tempo` button. The two strips work like every other strip but show their own values: tempo runs 60–200 bpm, default 128; swing runs 50–75 %, default 56 % (shown `56%`). The header's − and + repeat while held. Tapping the bpm readout opens the tab, from `mix`, `fx` or sound mode; a tall phone window stacks tempo under `## tempo` instead (see Tall phone windows). `v2-04-phone-tempo.png` shows the rows under the former panel's heading, with − and + where the strips now are.
 
 The tablet and laptop show tempo as a third group beside mix and fx, always on screen: the bpm and swing strips and `tap tempo` in one 44 px row under the strips, the two strips sharing what `tap tempo` leaves. The row has half the usual gaps and labels only as wide as their text, so the tracks keep about 75–90 px on the narrowest laptop column. There the bpm readout has nothing to open and is only a readout, without the dashed underline.
 
 ### Compact phones
 
 On every phone the pad keeps at least 200 px; with 44 px rows, 240 does not fit the SE. Loop strip, bottom bar and footer stay visible. The compact layout covers the smallest case (iPhone SE in Safari) with tighter rows and a smaller step display. Its exact shape comes from the design pass.
+
+### Tall phone windows
+
+A phone-width window (under about 700 px wide) tall enough for the pad to stay at least square drops the tabs and stacks the groups, each under a 32 px hairline heading in the tabs' place (bold, as the laptop's sound headings; the loop strip's zones draw the first group's rule): `## mix`, `## fx`, `## tempo` in play mode (grey `##`, the name in the text colour), with the same rows as the tabs (tempo keeps its three rows); `## bass drum`, `## snare drum`, `## hi-hat` in sound mode, in the drums' colours, each drum's sliders in two columns. Square means about 1100 px tall at 375 wide, 1120 at 393, 1280 at 550 and 1430 at 699 (`tunables.layouts.stackedPadMinShape`), so no phone in Safari stacks; a desktop window or a tall foldable does. The sound block is as tall as the play stack, so `→ sound` and `← play` leave the pad its size. The bpm readout is only a readout there, without the dashed underline, as on the wide layouts. The strips' labels and the step display keep `bd` `sd` `hh`. No screenshot yet.
 
 ### Landscape phones
 

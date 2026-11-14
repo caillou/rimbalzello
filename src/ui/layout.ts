@@ -1,15 +1,16 @@
 // Which layout the play screen takes, from its own size. The play screen is
 // 100dvh tall, so its size, less the safe areas, is what the rows have
 // to share. The breakpoints live in `tunables.layouts`; App sets the result
-// on the play screen as `data-layout` and `data-sound-folded`, and the layout
-// stylesheets key on them. It also sets the laptop layout's zoom as `--zoom`,
-// which the stylesheets multiply their px sizes by.
+// on the play screen as `data-layout`, `data-sound-folded` and `data-stacked`,
+// and the layout stylesheets key on them. It also sets the laptop layout's
+// zoom as `--zoom`, which the stylesheets multiply their px sizes by.
 
 import { createMemo, createSignal, onCleanup, type Accessor } from 'solid-js';
 import { tunables } from '../engine/tunables';
 
 /**
- * - phone: one column, pad on top, the strips in `mix`, `fx` and `tempo` tabs.
+ * - phone: one column, pad on top, the strips in `mix`, `fx` and `tempo` tabs,
+ *   or, in a window tall enough, stacked as groups without tabs (`stacked`).
  * - compact: the phone layout tightened, with the step display inside the pad.
  * - tablet: wide and portrait: pad on top, two columns below.
  * - laptop: wide and landscape, tablets in landscape included: pad on the
@@ -26,6 +27,22 @@ export type Layout = 'phone' | 'compact' | 'tablet' | 'laptop' | 'rotate';
  * viewport heights catches a stylesheet change that makes them wrong.
  */
 const PHONE_ROWS = 444;
+
+/**
+ * The phone layout's rows besides the pad when it stacks its groups: the
+ * phone rows with the tab row and its three rows (176) replaced by three
+ * 32 px group headings and nine 44 px rows (mix 3, fx 3, tempo 3; 492).
+ * They mirror stacked.css. With PAD_SIDE_MARGINS they set where the pad is
+ * square at the threshold; the e2e sweep around 1103 px at 375 wide catches
+ * either one going wrong.
+ */
+const STACKED_ROWS = PHONE_ROWS - 176 + 492;
+
+/**
+ * The pad's 16 px margin on each side (pad.css): the pad is the play
+ * screen's width less this.
+ */
+const PAD_SIDE_MARGINS = 32;
 
 // Below the phone layout, the compact layout: a 44 px header and bottom bar
 // and the step display inside the pad leave 352 px of rows. It is the
@@ -61,6 +78,13 @@ export interface PlayScreenLayout {
    * side by side: the sound folds into the drum tabs and the rows close up.
    */
   soundFolded: Accessor<boolean>;
+  /**
+   * The phone layout in a window tall enough for the pad to stay at least
+   * `tunables.layouts.stackedPadMinShape` (height ÷ width) with every group
+   * on screen: mix, fx and tempo, and in sound mode the three sound
+   * sections, stack under their headings instead of folding into tabs.
+   */
+  stacked: Accessor<boolean>;
   /** The factor every size of the laptop layout grows by on a large window: 1 to 2, 1 elsewhere. */
   zoom: Accessor<number>;
   /** Follow the play screen's element. Until it is laid out, the window's size stands in. */
@@ -78,6 +102,11 @@ export function createLayout(): PlayScreenLayout {
   const soundFolded = createMemo(
     () => layout() === 'laptop' && size().height < tunables.layouts.soundSectionsMinHeight,
   );
+  const stacked = createMemo(
+    () =>
+      layout() === 'phone' &&
+      size().height >= STACKED_ROWS + tunables.layouts.stackedPadMinShape * (size().width - PAD_SIDE_MARGINS),
+  );
   const zoom = createMemo(() => zoomFor(layout(), soundFolded(), size().width, size().height));
-  return { layout, soundFolded, zoom, observe: (element) => resize.observe(element) };
+  return { layout, soundFolded, stacked, zoom, observe: (element) => resize.observe(element) };
 }
