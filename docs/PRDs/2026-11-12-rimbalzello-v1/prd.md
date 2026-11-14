@@ -135,7 +135,7 @@ Where `prd.md` and `design.md` disagree, `prd.md` wins for behaviour and `design
 
 - TypeScript throughout. UI in Solid with Vite. The hot paths (pad, step display animation) render on a `<canvas>` or with direct DOM writes, outside the framework's update cycle.
 - Engine and state are framework-free TypeScript; the UI only subscribes to them. Swapping the UI framework must not touch the engine.
-- Static site on GitHub Pages from a public GitHub repo, custom subdomain `rimbalzello.caillou.ch`. Plain site in v1, with no web manifest and no service worker.
+- Static site on GitHub Pages from a public GitHub repo, custom subdomain `rimbalzello.caillou.ch`. A web manifest for home-screen install, no service worker.
 - GitHub Actions runs typecheck, unit tests and Playwright checks on every push. A failing run blocks the deploy. Every push to `main` deploys once CI is green.
 - Acceptance devices: Pierre's iPhone (Safari) and laptop (Chrome, Safari, Firefox). No Android device is a target.
 
@@ -336,7 +336,7 @@ The AudioContext is created on the first gesture (the `▶ tap to play` tap). Sa
 ## Out of Scope
 
 - MIDI clock in/out and MIDI controller mapping.
-- PWA: web manifest, home-screen install, service worker and offline support.
+- PWA: service worker and offline support.
 - Landscape phone layout (a rotate hint instead).
 - Memory slots (m1–m3), presets beyond the shareable URL.
 - Per-drum swing, per-drum drive, accent controls for bd and sd.

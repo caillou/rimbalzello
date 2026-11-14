@@ -1,5 +1,5 @@
 // Which layout the play screen takes, from its own size. The play screen is
-// 100dvh tall, so its size, less the bottom safe area, is what the rows have
+// 100dvh tall, so its size, less the safe areas, is what the rows have
 // to share. The breakpoints live in `tunables.layouts`; App sets the result
 // on the play screen as `data-layout` and `data-sound-folded`, and the layout
 // stylesheets key on them. It also sets the laptop layout's zoom as `--zoom`,

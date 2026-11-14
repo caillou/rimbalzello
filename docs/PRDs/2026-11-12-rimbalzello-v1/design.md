@@ -184,11 +184,16 @@ The step display highlights the played step. While a loop is held, the playhead 
 - Behaviour: about is an app state, not a separate app. Opening it from the footer keeps the music playing and changes the URL to `/about/` (history push). `← back to play`, `×`, `esc` and the browser's back button all return to the play screen at `/`. The setup hash stays on both URLs.
 - `/about/` also exists as a real, prerendered file, so a direct visit or reload works on static hosting and shows the credits before any JavaScript runs.
 - The about view may scroll; the play screen may not.
+- The nav (`← back to play`, `×`) stays at the top while the credits scroll.
 
 ## 404
 
 A plain static page served by GitHub Pages for unknown URLs: h1 `# 404` (italic, yellow), `this stone sank.`, and a blog-style link `[back to rimbalzello]`. No app code.
 
+## Home screen
+
+Added to the home screen, rimbalzello opens standalone at the bare address with the default setup, the apple-touch-icon as its iOS icon. The status bar is translucent over `#202322`; the play screen, the about view and the 404 page keep clear of it and of the home indicator with the safe-area insets.
+
 ## Later (not in v1)
 
-Ripples on hits, a heat map of the map, per-drum drive, per-drum swing, accent suppression on loop retriggers, memory slots, landscape phone layout, web manifest and home-screen install.
+Ripples on hits, a heat map of the map, per-drum drive, per-drum swing, accent suppression on loop retriggers, memory slots, landscape phone layout.

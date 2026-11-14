@@ -137,14 +137,15 @@ export const tunables = {
 
   /**
    * The play screen's layouts (`src/ui/layout.ts`), picked by its size: the
-   * browser viewport less the bottom safe area (100dvh less the home
-   * indicator), in CSS px, not the device screen. At least `wideMinWidth`
-   * wide and `wideMinHeight` tall, it has two columns: the tablet layout in
-   * portrait, the laptop layout in landscape (tablets in landscape too).
-   * Short of either, a portrait screen gets a phone layout by its height and
-   * a landscape one the rotate hint. Starting points until the design pass
-   * measures the acceptance devices: Safari leaves about 660–750 px on a
-   * current iPhone and about 553 px on an SE.
+   * browser viewport less the safe areas (100dvh less the home indicator,
+   * and the status bar when standalone), in CSS px, not the device screen.
+   * At least `wideMinWidth` wide and `wideMinHeight` tall, it has two
+   * columns: the tablet layout in portrait, the laptop layout in landscape
+   * (tablets in landscape too). Short of either, a portrait screen gets a
+   * phone layout by its height and a landscape one the rotate hint.
+   * Starting points until the design pass measures the acceptance devices:
+   * Safari leaves about 660–750 px on a current iPhone and about 553 px on
+   * an SE.
    */
   layouts: {
     /**

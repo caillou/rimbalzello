@@ -7,6 +7,9 @@
   flex-direction: column;
   height: 100dvh;
   overflow: hidden;
+  /* Standalone from the home screen, the page runs under the translucent
+     status bar: the top inset keeps the header clear of it. */
+  padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
   /* An instrument, not a page: no text selection, callouts or double-tap zoom. */
   user-select: none;

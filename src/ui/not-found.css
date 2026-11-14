@@ -3,8 +3,11 @@
 @import './base.css';
 @import './blog.css';
 
+/* The insets, as on the about view: standalone from the home screen, the
+   page runs under the translucent status bar. */
 body {
-  padding: 0 20px;
+  padding: env(safe-area-inset-top) max(20px, env(safe-area-inset-right)) env(safe-area-inset-bottom)
+    max(20px, env(safe-area-inset-left));
 }
 
 h1 {

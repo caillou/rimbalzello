@@ -1,4 +1,5 @@
 import { expect, test, type Page } from './fixtures.ts';
+import { expectPng } from './png.ts';
 
 // The lock screen's tile (media-session.ts), as the page hands it to the
 // browser. What a phone makes of it is checked on the device.
@@ -23,16 +24,7 @@ test('the lock-screen artwork loads: a PNG of the size it declares', async ({ pa
   expect(artwork.length).toBeGreaterThan(0);
   for (const { src, sizes, type } of artwork) {
     expect(type).toBe('image/png');
-    const response = await page.request.get(src);
-    expect(response.status(), src).toBe(200);
-    expect(response.headers()['content-type'], src).toBe('image/png');
-    const size = await page.evaluate(async (src) => {
-      const image = new Image();
-      image.src = src;
-      await image.decode();
-      return `${image.naturalWidth}x${image.naturalHeight}`;
-    }, src);
-    expect(size, src).toBe(sizes);
+    await expectPng(page, src, sizes);
   }
 });
 
