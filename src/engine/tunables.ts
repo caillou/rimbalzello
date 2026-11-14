@@ -171,17 +171,25 @@ export const tunables = {
     /**
      * The laptop layout in a window larger than it was designed for: every
      * size in the layout grows by min(width / designSize.width, height /
-     * designSize.height), never below 1 and at most maxZoom, so a large
-     * screen reads from a distance. A window with the sound folded never
-     * zooms. The layout must fit unzoomed at designSize (the 1280×800 e2e
-     * test); then it fits at any zoom. When the right column grows, raise
-     * designSize.height with soundSectionsMinHeight.
+     * designSize.height), so a large screen reads from a distance. The size
+     * is the browser window's outer size less its toolbar, as measured, which
+     * browser zoom leaves alone in Chrome and Safari, so Cmd + enlarges the
+     * layout further. Never below 1, at most maxZoom, and never more than
+     * the play screen holds: the layout needs fitWidth ×
+     * soundSectionsMinHeight at zoom 1 (the 1024×700 e2e test), and then
+     * fits at any zoom. A window with the sound folded never zooms. When the
+     * right column grows, raise soundSectionsMinHeight and designSize.height.
      */
     laptopZoom: {
       /** The design.md laptop, 1280×800. */
       designSize: { width: 1280, height: 800 },
       /** About 2: a 4K window does not get giant text. */
       maxZoom: 2,
+      /**
+       * 1024: an iPad in landscape, the narrowest unfolded laptop window the
+       * e2e tests check; narrower ones (down to wideMinWidth) stay at zoom 1.
+       */
+      fitWidth: 1024,
     },
     /**
      * The shortest the pad gets above the compact layout, and so the phone

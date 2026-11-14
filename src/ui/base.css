@@ -49,7 +49,7 @@
 
   /* What the play screen's stylesheets multiply their px sizes by. App sets
      it on the play screen from layout.ts: above 1 only in the laptop layout
-     on a window larger than 1280×800. */
+     in a browser window larger than 1280×800, less its toolbar. */
   --zoom: 1;
 }
 

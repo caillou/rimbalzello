@@ -33,11 +33,41 @@ function shadowDestination() {
   });
 }
 
-/** Every spec imports `test` from here, so the silence option reaches it. */
-export const test = base.extend<SilenceOptions>({
+export interface BrowserWindowOptions {
+  /**
+   * The browser window's outer size, `outerWidth × outerHeight`, in whole px.
+   * Unset, it is the viewport's, following its resizes, which the laptop zoom
+   * reads as no toolbar and no browser zoom: today's zoom. Each engine's
+   * headless mode reports its own outer size (the viewport's, a fixed
+   * window's or 0), so every spec gets this pin. A test emulates Cmd + at
+   * 110 % in a 1760×1180 window with 80 px of toolbar by a 1600×1000
+   * viewport (1760×1100 ÷ 1.1) and this at 1760×1180.
+   */
+  browserWindow: { width: number; height: number } | undefined;
+}
+
+// outerWidth and outerHeight are replaceable attributes on window, so an own
+// getter shadows them in every engine.
+function pinBrowserWindow(outer: BrowserWindowOptions['browserWindow']) {
+  for (const [name, inner, pinned] of [
+    ['outerWidth', 'innerWidth', outer?.width],
+    ['outerHeight', 'innerHeight', outer?.height],
+  ] as const) {
+    Object.defineProperty(window, name, {
+      configurable: true,
+      enumerable: true,
+      get: () => Math.round(pinned ?? window[inner]),
+    });
+  }
+}
+
+/** Every spec imports `test` from here, so the silence and window options reach it. */
+export const test = base.extend<SilenceOptions & BrowserWindowOptions>({
   silenceOutput: [false, { option: true }],
-  context: async ({ context, silenceOutput }, use) => {
+  browserWindow: [undefined, { option: true }],
+  context: async ({ context, silenceOutput, browserWindow }, use) => {
     if (silenceOutput) await context.addInitScript(shadowDestination);
+    await context.addInitScript(pinBrowserWindow, browserWindow);
     await use(context);
   },
 });

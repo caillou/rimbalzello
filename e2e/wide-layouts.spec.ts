@@ -27,6 +27,24 @@ async function box(locator: Locator) {
   return { ...found, right: found.x + found.width, bottom: found.y + found.height };
 }
 
+/**
+ * The step display, the strips, tempo, the loop strip and `sound` (the
+ * sound sections, or the drum tabs when folded) right of the pad. Returns the pad's box.
+ */
+async function expectRightOfPad(page: Page, sound: Locator) {
+  const pad = await box(page.locator('[data-control="pad"]'));
+  for (const part of [
+    page.getByRole('group', { name: 'step display' }),
+    page.getByRole('slider', { name: 'chaos' }),
+    tempo(page),
+    page.getByRole('group', { name: 'loop' }),
+    sound,
+  ]) {
+    expect((await box(part)).x, `${part.toString()} right of the pad`).toBeGreaterThanOrEqual(pad.right);
+  }
+  return pad;
+}
+
 async function start(page: Page) {
   await page.goto('./');
   await page.getByRole('button', { name: '▶ tap to play' }).click();
@@ -34,8 +52,11 @@ async function start(page: Page) {
 }
 
 // 1024×768, an iPad in landscape, has the narrowest right column (520 px).
-// 1440×900 and 1920×1080 zoom the layout, by 1.125 and 1.35.
+// 1440×900 and 1920×1080 zoom the layout, by 1.125 and 1.35. 1024×700 is the
+// smallest window the laptop zoom's fit cap assumes the layout fits in
+// (tunables.layouts.laptopZoom: fitWidth × soundSectionsMinHeight).
 for (const viewport of [
+  { width: 1024, height: 700 },
   { width: 1280, height: 800 },
   { width: 1440, height: 900 },
   { width: 1920, height: 1080 },
@@ -47,16 +68,7 @@ for (const viewport of [
 
     test('pad on the left, everything else on the right, tempo too, within the layout rules', async ({ page }) => {
       await start(page);
-      const pad = await box(page.locator('[data-control="pad"]'));
-      for (const part of [
-        page.getByRole('group', { name: 'step display' }),
-        page.getByRole('slider', { name: 'chaos' }),
-        tempo(page),
-        page.getByRole('group', { name: 'loop' }),
-        page.getByRole('region', { name: DRUM_NAMES.hh }),
-      ]) {
-        expect((await box(part)).x, `${part.toString()} right of the pad`).toBeGreaterThanOrEqual(pad.right);
-      }
+      await expectRightOfPad(page, page.getByRole('region', { name: DRUM_NAMES.hh }));
       await expectTempoShown(page);
       await expectLayoutRules(page);
     });
@@ -81,16 +93,7 @@ for (const viewport of [
       page,
     }) => {
       await start(page);
-      const pad = await box(page.locator('[data-control="pad"]'));
-      for (const part of [
-        page.getByRole('group', { name: 'step display' }),
-        page.getByRole('slider', { name: 'chaos' }),
-        tempo(page),
-        page.getByRole('group', { name: 'loop' }),
-        page.getByRole('tablist', { name: 'sound' }),
-      ]) {
-        expect((await box(part)).x, `${part.toString()} right of the pad`).toBeGreaterThanOrEqual(pad.right);
-      }
+      const pad = await expectRightOfPad(page, page.getByRole('tablist', { name: 'sound' }));
       await expectTempoShown(page);
 
       for (const drum of DRUMS) {
@@ -379,6 +382,36 @@ test.describe('a laptop window made larger, then smaller again', () => {
     await expect(chaosLabel(page)).toHaveCSS('font-size', '15px');
   });
 });
+
+// Browser zoom on a laptop window: Playwright can't press Cmd +, so each row
+// sets the viewport to the page's size in CSS px at that zoom and pins the
+// outer window (e2e/fixtures.ts). The layout's zoom comes from the outer
+// window less its toolbar, and is capped by the play screen ÷ 1024×700
+// (tunables.layouts.laptopZoom). On screen the label is its CSS size times
+// the browser zoom.
+for (const row of [
+  // 110 % in a 1760×1180 window, 80 px of toolbar: 1100 ÷ 800 = 1.375, 22.7 px
+  // on screen, where the play screen alone gives 1.25, 20.6 px.
+  { zoom: '110 %', viewport: { width: 1600, height: 1000 }, outer: { width: 1760, height: 1180 }, label: 20.625 },
+  // 125 % in a 1920×1130 window: the window wants 1.3125, the play screen
+  // holds 840 ÷ 700 = 1.2, 22.5 px on screen, where the play screen alone
+  // gives 1.05, 19.7 px.
+  { zoom: '125 %', viewport: { width: 1536, height: 840 }, outer: { width: 1920, height: 1130 }, label: 18 },
+]) {
+  test.describe(`a ${row.outer.width}×${row.outer.height} laptop window at ${row.zoom} browser zoom`, () => {
+    test.use({ viewport: row.viewport, browserWindow: row.outer });
+
+    test('Cmd + makes the layout larger, as far as the page holds it, within the layout rules', async ({ page }) => {
+      await start(page);
+      await expect
+        .poll(async () => parseFloat(await chaosLabel(page).evaluate((label) => getComputedStyle(label).fontSize)))
+        .toBeCloseTo(row.label, 1);
+      await expectRightOfPad(page, page.getByRole('region', { name: DRUM_NAMES.hh }));
+      await expectTempoShown(page);
+      await expectLayoutRules(page);
+    });
+  });
+}
 
 test.describe('a portrait monitor at 1440×2560', () => {
   test.use({ viewport: { width: 1440, height: 2560 } });
