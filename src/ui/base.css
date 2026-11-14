@@ -76,6 +76,12 @@ body {
   font-weight: var(--weight-normal);
 }
 
+/* iOS bounces even an unscrollable root, and only the root's value reaches
+   the viewport. Also ends Chrome's pull-to-refresh in a tab. */
+html {
+  overscroll-behavior: none;
+}
+
 h1,
 h2,
 h3,
