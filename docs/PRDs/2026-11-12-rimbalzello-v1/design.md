@@ -8,17 +8,17 @@ The review round in `reviews/` changed the step resolution, the layouts, mutes, 
 
 | File | What it shows | Status |
 | --- | --- | --- |
-| `designs/06-laptop-shortcuts-shown.png` | Laptop (1280×800) with keycap hints shown | outdated, pending design pass: old tempo and help keys, no tempo row, map nodes drawn inset; steps now in four beats |
-| `designs/07-laptop-shortcuts-hidden.png` | Laptop, default state, hints hidden | outdated, pending design pass: as 06, steps too |
+| `designs/06-laptop-shortcuts-shown.png` | Laptop (1280×800) with keycap hints shown | outdated, pending design pass: old tempo and help keys, no tempo row, map nodes drawn inset |
+| `designs/07-laptop-shortcuts-hidden.png` | Laptop, default state, hints hidden | outdated, pending design pass: as 06 |
 | `designs/08-about.png` | About view | current |
 | `designs/09-404.png` | 404 page | current |
-| `designs/v2-01-phone.png` | Phone in Safari (393×659): mix / fx tabs, mutes on step labels, X/Y readout | current, but without the `tempo` tab after `fx`; steps now in four beats |
-| `designs/v2-02-phone-compact.png` | Compact (SE in Safari, 375×553): slim header, step display inside the pad | current, but steps now in four beats |
-| `designs/v2-03-phone-sound.png` | Sound mode on a phone: drum tabs, sliders in two columns | current, but steps now in four beats |
+| `designs/v2-01-phone.png` | Phone in Safari (393×659): mix / fx tabs, mutes on step labels, X/Y readout | current, but without the `tempo` tab after `fx` |
+| `designs/v2-02-phone-compact.png` | Compact (SE in Safari, 375×553): slim header, step display inside the pad | current |
+| `designs/v2-03-phone-sound.png` | Sound mode on a phone: drum tabs, sliders in two columns | current |
 | `designs/v2-04-phone-tempo.png` | The former tempo panel: bpm, swing 56 %, tap tempo | outdated: the `tempo` tab holds the same three rows with bpm and swing as strips, not − and +, and without the `## tempo` heading and `← play` |
-| `designs/v2-05-phone-tap-to-play.png` | First launch: `▶ tap to play` over the dimmed pad | current, but steps now in four beats |
-| `designs/v2-06-phone-help.png` | Help open: two-finger undo, tap labels to mute | current, but steps now in four beats |
-| `designs/v2-07-tablet.png` | Tablet portrait (820×1106): pad on top, two columns below | current, but with `bd` `sd` `hh` where the strips and drum tabs now write the names out; steps now in four beats |
+| `designs/v2-05-phone-tap-to-play.png` | First launch: `▶ tap to play` over the dimmed pad | current |
+| `designs/v2-06-phone-help.png` | Help open: two-finger undo, tap labels to mute | current |
+| `designs/v2-07-tablet.png` | Tablet portrait (820×1106): pad on top, two columns below | current, but with `bd` `sd` `hh` where the strips and drum tabs now write the names out |
 | pending | Rotate hint | screenshots pending |
 
 ## Visual language
@@ -62,7 +62,7 @@ Top to bottom, filling the viewport exactly:
 
 1. **Header**: `# rimbalzello` left; `− 128 bpm +` and `stop`/`play` (italic, underlined) right. Tapping the bpm readout opens the `tempo` tab. The title is not a link.
 2. **Pad**: takes all remaining height. Dark field, thin crosshair through the position, a faint ring around it, the position as a yellow square, and the X/Y readout (0–100). The pad keeps clear of the left 16 px of the screen.
-3. **Step display**: three lines, `bd`, `sd`, `hh`, 32 characters each, one bar, in four beats of 8 with a small gap (a quarter of the text size) between beats: `x` in the drum's colour for a hit, bold for an accent, `·` in grey for a rest. The bold is the screen's bold weight (see Font) and stays on a muted line and under the highlight. Current step highlighted. The drum labels are the mute toggles (see Mutes).
+3. **Step display**: three lines, `bd`, `sd`, `hh`, 32 characters each, one bar: `x` in the drum's colour for a hit, bold for an accent, `·` in grey for a rest. The bold is the screen's bold weight (see Font) and stays on a muted line and under the highlight. Current step highlighted. The drum labels are the mute toggles (see Mutes).
 4. **Loop strip**.
 5. **Tabs**: `mix` (the bd, sd and hh density strips), `fx` (chaos, drift and drive) and `tempo` (see Tempo). Each tab holds three 44 px rows, so the pad keeps its size when the tab changes.
 6. **Bottom bar**: `→ sound`, `set anchor`, `↺ return on bar`.
@@ -96,7 +96,7 @@ Not a v1 layout. A wide viewport that is tall enough gets the tablet layout; oth
 
 About 700 px wide or more. Portrait: pad on top (takes the remaining height), below it two columns: step display and all six strips on the left; loop strip and sound drum tabs on the right (see `v2-07-tablet.png`); then the tempo row across both columns. Landscape: pad on the left, everything else on the right, like the laptop. Drum tabs are the only tabs on a tablet.
 
-The strips and the drum tabs write the drum names out; the six strip labels share the width of the longest, `snare drum`, so the tracks line up. The step display keeps `bd` `sd` `hh`: it shares a half-width column with its 32 steps and their beat gaps (299 px at 15 px), which leaves about 19–86 px for the label beside the steps. The label is a button reaching 16 px further, into the side padding, so where less than 28 px is left the text drops to 14 px and the label keeps 44 px (see Keyboard for the keycaps). `snare drum` with its gap needs 102 px, which only the 12.9″ iPad in portrait has. So on an iPad at 820 or 834 px the step display's `bd` sits right above the `bass drum` strip, in the same order and colours. Turning the tablet to landscape gives the laptop layout, whose step display writes the names out.
+The strips and the drum tabs write the drum names out; the six strip labels share the width of the longest, `snare drum`, so the tracks line up. The step display keeps `bd` `sd` `hh`: it shares a half-width column with its 32 steps (288 px at 15 px), which leaves 30–97 px for a label, and `snare drum` with its gap needs 102. Only the 12.9″ iPad in portrait would fit it. So on an iPad at 820 or 834 px the step display's `bd` sits right above the `bass drum` strip, in the same order and colours. Turning the tablet to landscape gives the laptop layout, whose step display writes the names out.
 
 ## Laptops
 
@@ -122,7 +122,7 @@ Designed for the US layout. Keys bind by physical position (`event.code`), so th
 | shift + arrows | fine nudge |
 | `?` or `h` | show / hide keycap hints |
 
-Keycap hints are hidden by default; `?`, `h` or `// help` toggles them, and the choice is remembered on the device. When shown, the pad's corner reads `nudge ←↑↓→  shift fine`. They show on the tablet and laptop layouts of a screen without touch; elsewhere `// help` opens the help box. In a tablet layout under about 750 px wide, the step display's text drops from 15 to 14 px while they show, and under about 710 px to 13 px, so the `q` `w` `e` keycaps fit beside their drum labels. `?` also works by the character it types, so it works where a layout puts it elsewhere (on a Swiss keyboard, shift and the key right of 0).
+Keycap hints are hidden by default; `?`, `h` or `// help` toggles them, and the choice is remembered on the device. When shown, the pad's corner reads `nudge ←↑↓→  shift fine`. They show on the tablet and laptop layouts of a screen without touch; elsewhere `// help` opens the help box. In a tablet layout under about 730 px wide, the step display's text drops from 15 to 14 px while they show, so the `q` `w` `e` keycaps fit beside their drum labels. `?` also works by the character it types, so it works where a layout puts it elsewhere (on a Swiss keyboard, shift and the key right of 0).
 
 Keys play wherever focus is, except in a text input and for the keys a focused control uses itself: space presses a focused button (a focused loop zone holds), and the arrows move a focused strip. A click or drag leaves no focus on a button or strip, so a focused control is one reached with Tab, and its focus ring shows where space and the arrows go. Keys play nothing while about is open or the rotate hint shows. Letting go of Cmd lets go of every held key, since macOS drops the keyup of a key released while Cmd is down.
 

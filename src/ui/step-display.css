@@ -1,6 +1,5 @@
-/* Three text lines of 32 steps under the pad, in four beats of 8. Each drum
-   label is a mute toggle reaching from the screen's left edge: 60 px wide and
-   one line tall. */
+/* Three text lines of 32 steps under the pad. Each drum label is a mute
+   toggle reaching from the screen's left edge: 60 px wide and one line tall. */
 .step-display {
   flex-shrink: 0;
   padding: calc(6px * var(--zoom)) calc(16px * var(--zoom)) calc(2px * var(--zoom));
@@ -32,18 +31,6 @@
 .step-line {
   color: var(--text-tertiary);
   white-space: pre;
-}
-
-/* A gap before each beat but the first: a margin on the cell, so the line
-   keeps its 32 cells and its text, and the played step's block stays one
-   character wide. Steps count from 0, `nth-child` from 1: the 9th, 17th and
-   25th cells are steps 8, 16 and 24. A quarter of the text size, so it follows
-   every step font size and the zoom. Not wider: on a 360 px phone it leaves
-   the mute labels 44.75 px, against the 44 px rule, and on the narrowest
-   tablets the text already steps down to fit it (wide-layouts.css,
-   keycaps.css). */
-.step-line > :nth-child(8n + 9) {
-  margin-left: 0.25em;
 }
 
 .step-row[data-drum='bd'] .hit {

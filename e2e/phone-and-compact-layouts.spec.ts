@@ -38,7 +38,7 @@ const VIEWPORTS = [
   { width: 393, height: 659 },
   { width: 393, height: 750 },
   // A 360 px Android phone, the narrowest phone layout: the mute labels keep
-  // 44 px beside 32 steps and their beat gaps, but barely.
+  // 44 px beside the 32 steps.
   { width: 360, height: 680 },
   // A shorter phone, and an SE in Safari: the compact layout.
   { width: 393, height: 600 },
