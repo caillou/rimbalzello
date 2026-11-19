@@ -71,6 +71,9 @@ export function LoopStrip(props: LoopStripProps) {
     holder = undefined;
   }
 
+  // `props.playing()` is current in these handlers: no pointer or key event
+  // on the strip plays or stops before they read it (space on a focused zone
+  // holds; it does not play).
   function down(event: PointerEvent) {
     if (holder || (event.pointerType === 'mouse' && event.button !== 0)) return;
     holder = { id: event.pointerId, steps: undefined, inert: !props.playing() };

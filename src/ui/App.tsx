@@ -133,9 +133,17 @@ export function App() {
   // then, and `tap to resume` when the browser refuses to resume audio while playing.
   const [audio, setAudio] = createSignal<AudioSessionState>('locked');
   const session = createAudioSession({ onChange: setAudio });
+  // Signals render; handlers decide on plain state (`transport.playing`,
+  // `held`), since a signal can still read its old value in the handler that
+  // set it (Solid 2 applies writes at the next flush).
   const [playing, setPlaying] = createSignal(false);
-  /** The loop held now, from the loop strip or keys 1–4. */
+  /** The loop held now, from the loop strip or keys 1–4: `held` decides, `loop` renders. */
+  let held: LoopSteps | undefined;
   const [loop, setLoop] = createSignal<LoopSteps>();
+  function setHeld(steps: LoopSteps | undefined) {
+    held = steps;
+    setLoop(steps);
+  }
   // The keyboard bindings, played through `playKey` below.
   const keyboard = createKeyboard();
 
@@ -175,20 +183,20 @@ export function App() {
     // down, holds nothing until it lifts and touches or presses again.
     keyboard.forgetLoopKeys();
     loopHolds.strip = loopHolds.keys = undefined;
-    setLoop(undefined);
+    setHeld(undefined);
   }
 
   // The looper works only while playing, and stop ends the loop.
   function holdLoop(steps: LoopSteps) {
-    if (!playing()) return;
+    if (!transport.playing) return;
     scheduler?.hold(steps);
-    setLoop(steps);
+    setHeld(steps);
   }
 
   function releaseLoop() {
-    if (loop() === undefined) return;
+    if (held === undefined) return;
     scheduler?.release();
-    setLoop(undefined);
+    setHeld(undefined);
   }
 
   function holdLoopFrom(source: keyof typeof loopHolds, steps: LoopSteps) {
@@ -277,12 +285,12 @@ export function App() {
   function playKey(intent: KeyIntent) {
     switch (intent.type) {
       case 'play-stop':
-        return playing() ? stop() : play();
+        return transport.playing ? stop() : play();
       case 'tempo':
         return changeTempo(intent.direction);
       // A loop key pressed while stopped holds nothing, also once play starts.
       case 'loop':
-        return playing() ? holdLoopFrom('keys', intent.steps) : keyboard.forgetLoopKeys();
+        return transport.playing ? holdLoopFrom('keys', intent.steps) : keyboard.forgetLoopKeys();
       case 'loop-end':
         return releaseLoopFrom('keys');
       case 'set-anchor':
@@ -404,7 +412,7 @@ export function App() {
           <PressButton class="tempo-button" label="tempo up" repeat onPress={() => changeTempo(1)}>
             +<Keycap>.</Keycap>
           </PressButton>
-          <button type="button" class="text-button play-stop" onClick={() => (playing() ? stop() : play())}>
+          <button type="button" class="text-button play-stop" onClick={() => (transport.playing ? stop() : play())}>
             {playing() ? 'stop' : 'play'}
             <Keycap>space</Keycap>
           </button>

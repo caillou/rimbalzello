@@ -12,11 +12,12 @@ export interface FingerAt {
  * A finger on a control, as a synthetic touch pointer: landing, moving or
  * lifting at `at` along the control's track (or the control itself), `dx` px
  * further, halfway down the control. Synthetic, because Playwright's touch
- * has no moves.
+ * has no moves. `pointercancel` and `lostpointercapture` cut the touch short,
+ * as a system gesture does.
  */
 export function finger(
   control: Locator,
-  type: 'pointerdown' | 'pointermove' | 'pointerup',
+  type: 'pointerdown' | 'pointermove' | 'pointerup' | 'pointercancel' | 'lostpointercapture',
   { at = 0.5, dx = 0, pointerId = 41 }: FingerAt = {},
 ) {
   return control.evaluate(

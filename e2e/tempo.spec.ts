@@ -67,6 +67,36 @@ for (const input of ['mouse', 'touch'] as const) {
   });
 }
 
+for (const input of ['mouse', 'touch'] as const) {
+  const cut = input === 'mouse' ? 'the mouse slides off it' : 'the system cancels the touch';
+  test(`holding + in the header by ${input} stops stepping when ${cut}`, async ({ page }) => {
+    await page.clock.install({ time: 0 });
+    await page.goto('./');
+    await page.clock.pauseAt(1000);
+    const plus = button(page, 'tempo up');
+    const start = await bpm(page);
+
+    if (input === 'touch') await finger(plus, 'pointerdown');
+    else {
+      await plus.hover();
+      await page.mouse.down();
+    }
+    await page.clock.runFor(1000);
+    const held = await bpm(page);
+    expect(held).toBeGreaterThan(start + 2);
+
+    if (input === 'touch') await finger(plus, 'pointercancel');
+    else {
+      // Down, off the header, with the button still pressed.
+      const box = (await plus.boundingBox())!;
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height + 100, { steps: 4 });
+    }
+    await page.clock.runFor(2000);
+    expect(await bpm(page)).toBe(held);
+    if (input === 'mouse') await page.mouse.up();
+  });
+}
+
 for (const { name, min, max, unit } of [
   { name: 'bpm', min: 60, max: 200, unit: '' },
   { name: 'swing', min: 50, max: 75, unit: '%' },

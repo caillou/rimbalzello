@@ -33,7 +33,15 @@ export interface AboutRoute {
 }
 
 export function createAboutRoute(store: SetupStore): AboutRoute {
-  const [open, setOpen] = createSignal(isAboutPath(location.pathname));
+  // `shown` decides, `open` renders: a signal can still read its old value in
+  // the handler that set it (Solid 2), and a second close in the same tick
+  // must not push a second history entry.
+  let shown = isAboutPath(location.pathname);
+  const [open, setOpen] = createSignal(shown);
+  function setShown(value: boolean) {
+    shown = value;
+    setOpen(value);
+  }
   const setupHash = () => `#${encodeSetup(store.setup())}`;
   /** Set while a step back to the play screen is under way, so a second close doesn't step past it. */
   let steppingBack = false;
@@ -47,9 +55,9 @@ export function createAboutRoute(store: SetupStore): AboutRoute {
   function onPopState() {
     steppingBack = false;
     const about = isAboutPath(location.pathname);
-    if (about === open()) return;
+    if (about === shown) return;
     history.replaceState(history.state, '', location.pathname + location.search + setupHash());
-    setOpen(about);
+    setShown(about);
   }
   window.addEventListener('popstate', onPopState);
   onCleanup(() => window.removeEventListener('popstate', onPopState));
@@ -57,12 +65,12 @@ export function createAboutRoute(store: SetupStore): AboutRoute {
   return {
     open,
     show() {
-      if (open()) return;
+      if (shown) return;
       history.pushState(OPENED_FROM_PLAY, '', ABOUT_PATH + location.search + setupHash());
-      setOpen(true);
+      setShown(true);
     },
     close() {
-      if (!open() || steppingBack) return;
+      if (!shown || steppingBack) return;
       if (openedFromPlay(history.state)) {
         // Step back to the play screen's entry, as the back button does,
         // rather than piling up entries.
@@ -71,7 +79,7 @@ export function createAboutRoute(store: SetupStore): AboutRoute {
       } else {
         // Visited directly: go on to the play screen, as the link does without JavaScript.
         history.pushState(null, '', PLAY_PATH + location.search + setupHash());
-        setOpen(false);
+        setShown(false);
       }
     },
   };

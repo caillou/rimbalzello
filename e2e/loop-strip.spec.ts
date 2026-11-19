@@ -37,6 +37,8 @@ async function finger(page: Page, name: string) {
     slideTo: async (at: { clientX: number; clientY: number }) =>
       landed.dispatchEvent('pointermove', { ...touch, ...at }),
     lift: async () => landed.dispatchEvent('pointerup', { ...touch, ...(await centre(landed)) }),
+    /** A system gesture takes the touch. */
+    cancel: async () => landed.dispatchEvent('pointercancel', { ...touch, ...(await centre(landed)) }),
   };
 }
 
@@ -116,6 +118,16 @@ test('lifting the finger releases the loop', async ({ page }) => {
   await expect.poll(() => heldZones(page)).toEqual(['1/4']);
   await touch.lift();
   await expect.poll(() => heldZones(page)).toEqual([]);
+});
+
+test('a touch the system cancels releases the loop, and the next touch holds again', async ({ page }) => {
+  const touch = await finger(page, '1/4');
+  await expect.poll(() => heldZones(page)).toEqual(['1/4']);
+  await touch.cancel();
+  await expect.poll(() => heldZones(page)).toEqual([]);
+
+  await finger(page, '1/8');
+  await expect.poll(() => heldZones(page)).toEqual(['1/8']);
 });
 
 /** The step the step display highlights as played, or -1 while none is. */

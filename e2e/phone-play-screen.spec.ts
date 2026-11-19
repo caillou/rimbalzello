@@ -77,6 +77,30 @@ test('touched, a strip moves by the drag, wherever it starts; a tap does not cha
   expect(Math.abs((await valueOf(chaos)) - start)).toBeLessThanOrEqual(1);
 });
 
+test('a strip drag cut short by the system lets the next touch drag the strip', async ({ page }) => {
+  await page.getByRole('tab', { name: 'fx', exact: true }).click();
+  const chaos = strip(page, 'chaos');
+
+  // A system gesture takes the touch (pointercancel), or the strip loses it (lostpointercapture).
+  for (const [cut, pointerId] of [
+    ['pointercancel', 51],
+    ['lostpointercapture', 53],
+  ] as const) {
+    await finger(chaos, 'pointerdown', { pointerId });
+    await finger(chaos, 'pointermove', { dx: 20, pointerId });
+    await finger(chaos, cut, { dx: 20, pointerId });
+    const before = await valueOf(chaos);
+
+    const next = pointerId + 1;
+    await finger(chaos, 'pointerdown', { at: 0.2, pointerId: next });
+    for (let step = 1; step <= 8; step++) {
+      await finger(chaos, 'pointermove', { at: 0.2, dx: (60 * step) / 8, pointerId: next });
+    }
+    await finger(chaos, 'pointerup', { at: 0.2, dx: 60, pointerId: next });
+    expect(await valueOf(chaos), `after ${cut}`).toBeGreaterThan(before + 10);
+  }
+});
+
 test('a tap on the pad moves the position there; a two-finger tap undoes it', async ({ page }) => {
   const before = await readout(page);
   const pad = page.locator('[data-control="pad"]');
@@ -108,6 +132,22 @@ test('a tap on the pad moves the position there; a two-finger tap undoes it', as
     pointer('pointerup', 22, 0.3, 0.8);
   });
   await expect.poll(() => readout(page)).toEqual(before);
+});
+
+test('a pad drag cut short by the system stays where it got to; the next touch moves the position', async ({
+  page,
+}) => {
+  const pad = page.locator('[data-control="pad"]');
+
+  // Across the middle of the pad, until a system gesture takes the touch.
+  await finger(pad, 'pointerdown', { at: 0.2, pointerId: 51 });
+  for (const at of [0.3, 0.4, 0.5]) await finger(pad, 'pointermove', { at, pointerId: 51 });
+  await finger(pad, 'pointercancel', { at: 0.5, pointerId: 51 });
+  await expect.poll(() => readout(page)).toEqual({ x: 50, y: 50 });
+
+  await finger(pad, 'pointerdown', { at: 0.8, pointerId: 52 });
+  await finger(pad, 'pointerup', { at: 0.8, pointerId: 52 });
+  await expect.poll(() => readout(page)).toEqual({ x: 80, y: 50 });
 });
 
 test('every control is reachable by Tab and shows a focus ring', async ({ page, browserName }) => {
