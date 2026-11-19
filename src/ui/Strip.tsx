@@ -179,8 +179,8 @@ export function Strip(props: StripProps) {
       onPointerDown={down}
       onPointerMove={move}
       onPointerUp={end}
-      on:pointercancel={end}
-      on:lostpointercapture={end}
+      onPointerCancel={end}
+      onLostPointerCapture={end}
       onKeyDown={key}
     >
       <span id={labelId} class="strip-label">

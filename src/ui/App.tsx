@@ -1,5 +1,5 @@
-import { createSignal, For, Match, onCleanup, onMount, Show, Switch } from 'solid-js';
-import { Portal } from 'solid-js/web';
+import { Portal } from '@solidjs/web';
+import { createSignal, For, Match, onCleanup, onSettled, Show, Switch } from 'solid-js';
 import { createAudioSession, type AudioSessionState } from '../engine/audio-session';
 import { createNativeKit, type Kit } from '../engine/kit';
 import { createLockScreen } from '../engine/media-session';
@@ -232,7 +232,7 @@ export function App() {
   // stylesheets multiply their sizes by `--zoom`.
   const { layout, soundFolded, stacked, zoom, observe } = createLayout();
   let screen!: HTMLElement;
-  onMount(() => observe(screen));
+  onSettled(() => observe(screen));
   const wide = () => isWide(layout());
   const [stripTab, setStripTab] = createSignal<StripTab>('mix');
   // Where the drums' names are written out: drum-names.ts.
@@ -497,8 +497,7 @@ export function App() {
         </button>
         <button
           type="button"
-          class="bar-button return-button"
-          classList={{ pending: returnPending() }}
+          class={['bar-button', 'return-button', { pending: returnPending() }]}
           aria-description={returnPending() ? 'pending' : undefined}
           onClick={returnOnBar}
         >

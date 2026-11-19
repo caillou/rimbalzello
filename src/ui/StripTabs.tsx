@@ -4,7 +4,8 @@
 // 44 px rows, so the pad keeps its size when the tab changes. A tall phone
 // window stacks the three groups instead (StripGroups).
 
-import { createUniqueId, For, type Accessor, type JSX } from 'solid-js';
+import type { JSX } from '@solidjs/web';
+import { createUniqueId, For, type Accessor } from 'solid-js';
 import './tabs.css';
 import './strip-tabs.css';
 
@@ -33,7 +34,7 @@ export function StripTabs(props: StripTabsProps) {
                 role="tab"
                 id={tabId(tab)}
                 class="tab"
-                aria-selected={props.active() === tab}
+                aria-selected={props.active() === tab ? 'true' : 'false'}
                 onClick={() => props.onSelect(tab)}
               >
                 {tab}

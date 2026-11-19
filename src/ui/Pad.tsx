@@ -5,7 +5,8 @@
 // DOM once per frame, outside Solid's update cycle. The laptop layout also
 // marks the 25 map nodes.
 
-import { For, onCleanup, onMount, Show, type JSX } from 'solid-js';
+import type { JSX } from '@solidjs/web';
+import { For, onSettled, Show } from 'solid-js';
 import { BYTE_RANGE } from '../engine/setup';
 import type { SetupStore } from '../engine/setup-store';
 import { toDisplay } from './display';
@@ -145,7 +146,7 @@ export function Pad(props: PadProps) {
     frame ||= requestAnimationFrame(draw);
   }
 
-  onMount(() => {
+  onSettled(() => {
     // A change of layout resizes the pad, so the covered edge is read here too.
     const resize = new ResizeObserver(() => {
       width = pad.clientWidth;
@@ -155,11 +156,11 @@ export function Pad(props: PadProps) {
     });
     resize.observe(pad);
     const unsubscribe = props.store.subscribe(redraw);
-    onCleanup(() => {
+    return () => {
       resize.disconnect();
       unsubscribe();
       cancelAnimationFrame(frame);
-    });
+    };
   });
 
   return (
@@ -170,7 +171,7 @@ export function Pad(props: PadProps) {
       onPointerDown={down}
       onPointerMove={move}
       onPointerUp={up}
-      on:pointercancel={cancel}
+      onPointerCancel={cancel}
     >
       <Show when={props.mapNodes}>
         <For each={MAP_NODES}>

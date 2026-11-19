@@ -3,7 +3,8 @@
 // technology act through the click they send. With `repeat` it acts again
 // and again while held, after a delay (the header's − and + for tempo).
 
-import { onCleanup, type JSX } from 'solid-js';
+import type { JSX } from '@solidjs/web';
+import { onCleanup } from 'solid-js';
 import { tunables } from '../engine/tunables';
 
 export interface PressButtonProps {
@@ -60,9 +61,9 @@ export function PressButton(props: PressButtonProps) {
       aria-label={props.label}
       onPointerDown={down}
       onPointerUp={up}
-      on:pointercancel={up}
+      onPointerCancel={up}
       // A mouse slid off the button lets go; a finger stays captured until it lifts.
-      on:pointerleave={up}
+      onPointerLeave={up}
       // A press that never ended in a click must not swallow the next key press.
       onKeyDown={() => (pressed = false)}
       onClick={click}

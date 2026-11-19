@@ -34,7 +34,7 @@ export function DrumTabs(props: DrumTabsProps) {
                 role="tab"
                 id={tabId(drum)}
                 class="tab"
-                aria-selected={active() === drum}
+                aria-selected={active() === drum ? 'true' : 'false'}
                 style={{ '--colour': `var(--${drum})` }}
                 onClick={() => setActive(drum)}
               >

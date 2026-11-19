@@ -3,7 +3,8 @@
 // same rows the tabs hold (stacked.css, imported by App). Rendered by the
 // same function as StripTabs' panels, so the rows are identical.
 
-import { createUniqueId, For, type JSX } from 'solid-js';
+import type { JSX } from '@solidjs/web';
+import { createUniqueId, For } from 'solid-js';
 import { STRIP_TABS, type StripTab } from './StripTabs';
 
 export interface StripGroupsProps {

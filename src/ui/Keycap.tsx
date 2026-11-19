@@ -3,7 +3,7 @@
 // control's own name. keycaps.css shows it only while the play screen shows
 // keycap hints.
 
-import type { JSX } from 'solid-js';
+import type { JSX } from '@solidjs/web';
 import './keycaps.css';
 
 export function Keycap(props: { children: JSX.Element }) {

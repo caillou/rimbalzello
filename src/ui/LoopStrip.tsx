@@ -5,7 +5,7 @@
 // is down. A finger or key that went down while stopped, or stayed down
 // through a stop, holds nothing until it lifts: the player must touch again.
 
-import { createEffect, createUniqueId, For, type Accessor } from 'solid-js';
+import { createEffect, createUniqueId, For, untrack, type Accessor } from 'solid-js';
 import type { LoopSteps } from '../engine/transport';
 import { Keycap } from './Keycap';
 import './loop-strip.css';
@@ -46,9 +46,12 @@ export function LoopStrip(props: LoopStripProps) {
   let holder: Holder | undefined;
 
   // Stop ends the loop, and the finger or key still down stays inert.
-  createEffect(() => {
-    if (!props.playing() && holder) holder.inert = true;
-  });
+  createEffect(
+    () => props.playing(),
+    (playing) => {
+      if (!playing && holder) holder.inert = true;
+    },
+  );
 
   function zoneAt(x: number, y: number): LoopSteps | undefined {
     const index = zones.findIndex((zone) => {
@@ -114,14 +117,14 @@ export function LoopStrip(props: LoopStripProps) {
       <span id={labelId} class="loop-label">
         loop
       </span>
-      <div class="loop-zones" onPointerDown={down} onPointerMove={move} onPointerUp={up} on:pointercancel={up}>
+      <div class="loop-zones" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
         <For each={ZONES}>
           {(zone, index) => (
             <button
               type="button"
               class="loop-zone"
               aria-pressed={props.held() === zone.steps ? 'true' : 'false'}
-              ref={(element) => (zones[index()] = element)}
+              ref={(element) => (zones[untrack(index)] = element)}
               onKeyDown={(event) => keyDown(zone.steps, event)}
               onKeyUp={keyUp}
               onBlur={blur}

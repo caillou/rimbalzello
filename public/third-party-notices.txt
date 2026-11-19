@@ -34,7 +34,8 @@ Source: https://github.com/pichenettes/eurorack/tree/master/peaks
 Solid
 -----
 
-The user interface runs on Solid (solid-js), bundled into the app.
+The user interface runs on Solid (solid-js, @solidjs/signals and @solidjs/web),
+bundled into the app.
 
 MIT License
 

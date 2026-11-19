@@ -5,7 +5,7 @@
 // frame, outside Solid's update cycle. The drum labels are the mute toggles,
 // `bd` `sd` `hh` or the full names (drum-names.ts).
 
-import { createEffect, For, onCleanup, type Accessor } from 'solid-js';
+import { createEffect, For, type Accessor } from 'solid-js';
 import { hitsAt, PATTERN_STEPS, type PatternInput } from '../engine/pattern';
 import { DRUMS, type Drum } from '../engine/setup';
 import type { Mutes, SetupSnapshot } from '../engine/setup-store';
@@ -89,27 +89,33 @@ export function StepDisplay(props: StepDisplayProps) {
   }
 
   // Stopped: the setup's pattern, nothing highlighted.
-  createEffect(() => {
-    if (props.playing()) return;
-    const { x, y, density } = props.setup();
-    render({ x, y, density, perturbation });
-    highlight(-1);
-  });
+  createEffect(
+    () => (props.playing() ? undefined : props.setup()),
+    (setup) => {
+      if (!setup) return;
+      const { x, y, density } = setup;
+      render({ x, y, density, perturbation });
+      highlight(-1);
+    },
+  );
 
   // Playing: the step heard now.
-  createEffect(() => {
-    if (!props.playing()) return;
-    let frame = requestAnimationFrame(function follow() {
-      const step = props.heard();
-      if (step) {
-        perturbation = step.pattern.perturbation;
-        render(step.pattern);
-        highlight(step.played, step.playhead);
-      }
-      frame = requestAnimationFrame(follow);
-    });
-    onCleanup(() => cancelAnimationFrame(frame));
-  });
+  createEffect(
+    () => props.playing(),
+    (playing) => {
+      if (!playing) return;
+      let frame = requestAnimationFrame(function follow() {
+        const step = props.heard();
+        if (step) {
+          perturbation = step.pattern.perturbation;
+          render(step.pattern);
+          highlight(step.played, step.playhead);
+        }
+        frame = requestAnimationFrame(follow);
+      });
+      return () => cancelAnimationFrame(frame);
+    },
+  );
 
   // A change of layout changes only the labels' text. The rows stay: their
   // lines are filled once and redrawn only when the pattern changes.
@@ -125,7 +131,7 @@ export function StepDisplay(props: StepDisplayProps) {
           // The mute toggle's name holds the label it shows.
           const label = () => (props.fullNames() ? DRUM_NAMES[drum] : drum);
           return (
-            <div class="step-row" data-drum={drum} classList={{ muted: props.mutes()[drum] }}>
+            <div class={['step-row', { muted: props.mutes()[drum] }]} data-drum={drum}>
               <button
                 type="button"
                 class="step-label"

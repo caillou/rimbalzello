@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import type { Plugin } from 'vite';
-import solid from 'vite-plugin-solid';
+import solid from '@solidjs/vite-plugin';
 import { defineConfig } from 'vitest/config';
 import { repositoryUrl } from './src/repository.ts';
 import { creditsHtml } from './src/ui/about-credits.ts';
@@ -61,7 +61,8 @@ export default defineConfig({
   },
   test: {
     include: ['src/**/*.test.ts'],
-    // vite-plugin-solid defaults tests to jsdom; engine tests need no DOM.
+    // No test needs a DOM. Naming `node` also has the Solid plugin resolve
+    // Solid's server build for tests that import it (layout.test.ts).
     environment: 'node',
   },
 });

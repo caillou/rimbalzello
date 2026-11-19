@@ -1,5 +1,5 @@
 import js from '@eslint/js';
-import solid from 'eslint-plugin-solid/configs/typescript';
+import solid from 'eslint-plugin-solid/configs/v2';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
@@ -19,7 +19,7 @@ export default defineConfig(
         'error',
         {
           patterns: [
-            { group: ['solid-js', 'solid-js/*'], message: 'The engine never imports Solid.' },
+            { group: ['solid-js', 'solid-js/*', '@solidjs/*'], message: 'The engine never imports Solid.' },
             { group: ['**/ui', '**/ui/*'], message: 'The engine never imports UI code.' },
           ],
         },

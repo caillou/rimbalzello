@@ -3,7 +3,7 @@
 // play`, `×` and `esc` close it. The credits are the same HTML the build
 // prerenders into /about/, whose markup this view repeats around them.
 
-import { onCleanup, onMount, Show } from 'solid-js';
+import { onSettled, Show } from 'solid-js';
 import { commitHash } from '../build-info';
 import { repositoryUrl } from '../repository';
 import { creditsHtml } from './about-credits';
@@ -31,17 +31,16 @@ export function About(props: AboutProps) {
     if (event.key === 'Escape') props.onClose();
   }
 
-  onMount(() => {
+  onSettled(() => {
     document.title = 'about · rimbalzello';
     window.addEventListener('keydown', onKeyDown);
     view.focus();
-  });
-
-  onCleanup(() => {
-    document.title = 'rimbalzello';
-    window.removeEventListener('keydown', onKeyDown);
-    // Once the play screen is no longer inert.
-    if (opener instanceof HTMLElement) queueMicrotask(() => opener.focus());
+    return () => {
+      document.title = 'rimbalzello';
+      window.removeEventListener('keydown', onKeyDown);
+      // Once the play screen is no longer inert.
+      if (opener instanceof HTMLElement) queueMicrotask(() => opener.focus());
+    };
   });
 
   return (
