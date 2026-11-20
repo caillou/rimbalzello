@@ -238,7 +238,12 @@ describe('looper', () => {
     const step = stepLength(setup.bpm);
     let now = 0;
     let queued: TimedStep[] = [];
-    const wake = () => queued.push(...transport.stepsBefore(now + lookahead));
+    const late: TimedStep[] = [];
+    const wake = () => {
+      const steps = transport.stepsBefore(now + lookahead);
+      late.push(...steps.filter((s) => s.time < now));
+      queued.push(...steps);
+    };
     const changed = () => {
       queued = queued.filter((s) => s.time <= now);
       wake();
@@ -247,6 +252,8 @@ describe('looper', () => {
     wake();
     return {
       transport,
+      /** The steps queued after the time they sound: the scheduler counts them late. */
+      late,
       /** Runs the clock on to `steps` steps after play start. */
       to(steps: number) {
         while (now < steps * step) {
@@ -444,16 +451,124 @@ describe('looper', () => {
     }
   });
 
-  it('lands looped steps on the swung slot of the playhead, not of the step they play', () => {
+  describe('swing', () => {
     // Swing 56 % at 120 bpm puts the off-beat 16th 15 ms late, the 32nds beside it 7.5 ms.
-    const player = createPlayer(plain({ bpm: 120, swing: 56 }));
-    const step = stepLength(120);
-    player.to(4.5);
-    player.hold(1);
-    player.to(9);
+    // Steps are queued about four steps ahead, so a loop change hands swung steps out again.
+    const swung = plain({ bpm: 120, swing: 56 });
+    const swingMs = (s: TimedStep) => [0, 7.5, 15, 7.5][s.playhead % 4];
+    /** How far each step lands off the straight 32nd grid, in ms: `steps` are heard from playhead step `from`. */
+    const offGrid = (steps: TimedStep[], from: number) => steps.map((s, n) => (s.time - (from + n) * stepLength(120)) * 1000);
+    /** Matchers for values in ms, to a microsecond. */
+    const closeToMs = (values: (number | undefined)[]) => values.map((value) => expect.closeTo(value ?? NaN, 6));
 
-    const steps = player.heard(5, 9);
-    expect(played(steps)).toEqual([0, 0, 0, 0]);
-    expect(steps.map((s, n) => (s.time - (5 + n) * step) * 1000)).toEqual([7.5, 15, 7.5, 0].map((ms) => expect.closeTo(ms, 6)));
+    it('keeps the swing of the playhead slot on a 1/8 loop', () => {
+      const player = createPlayer(swung, { lookahead: 0.25 });
+      player.to(4.5);
+      player.hold(4);
+      player.to(13);
+
+      const steps = player.heard(5, 13);
+      expect(played(steps)).toEqual([1, 2, 3, 0, 1, 2, 3, 0]);
+      expect(offGrid(steps, 5)).toEqual(closeToMs([7.5, 15, 7.5, 0, 7.5, 15, 7.5, 0]));
+    });
+
+    it.each([
+      { size: '1/16', steps: 2, plays: [9, 8, 9, 8, 9, 8, 9, 8] },
+      { size: '1/32', steps: 1, plays: [8, 8, 8, 8, 8, 8, 8, 8] },
+    ] as const)('plays a held $size loop on the straight 32nd grid, the swung steps already queued included', ({ steps, plays }) => {
+      const player = createPlayer(swung, { lookahead: 0.25 });
+      player.to(12.5);
+      expect(offGrid(player.heard(13, 17), 13), 'queued swung').toEqual(closeToMs([7.5, 15, 7.5, 0]));
+      player.hold(steps);
+      player.to(21);
+
+      const looped = player.heard(13, 21);
+      expect(played(looped)).toEqual(plays);
+      expect(offGrid(looped, 13)).toEqual(closeToMs(Array(8).fill(0)));
+      expect(player.late).toEqual([]);
+    });
+
+    it.each([
+      { slot: 1, at: 17.5 },
+      // Between step 18's straight time and where swing would put it: it has sounded and does not sound again.
+      { slot: 2, at: 18.1 },
+    ])('swings again from the step after a release on slot $slot, none late', ({ at }) => {
+      const player = createPlayer(swung, { lookahead: 0.25 });
+      player.to(12.5);
+      player.hold(1);
+      player.to(at);
+      player.release();
+      player.to(at + 8);
+
+      const from = Math.ceil(at);
+      const after = player.heard(from, from + 6);
+      expect(offGrid(player.heard(from - 1, from), from - 1), 'the step heard at release').toEqual(closeToMs([0]));
+      expect(played(after)).toEqual(after.map((s) => s.playhead));
+      expect(offGrid(after, from)).toEqual(closeToMs(after.map(swingMs)));
+      expect(player.late).toEqual([]);
+    });
+
+    it('straightens the queued steps on a slide from 1/4 to 1/16, and swings them again on the slide back', () => {
+      const player = createPlayer(swung, { lookahead: 0.25 });
+      player.to(9.5);
+      player.hold(8);
+      player.to(13.5);
+      player.hold(2);
+      player.to(18.5);
+      player.hold(8);
+      player.to(25);
+
+      const steps = player.heard(10, 25);
+      expect(played(steps)).toEqual([10, 11, 12, 13, 8, 9, 8, 9, 8, 11, 12, 13, 14, 15, 8]);
+      expect(offGrid(steps, 10)).toEqual(closeToMs([15, 7.5, 0, 7.5, 0, 0, 0, 0, 0, 7.5, 0, 7.5, 15, 7.5, 0]));
+      expect(player.late).toEqual([]);
+    });
+
+    it('hands out no late step when a hold would straighten a step not yet handed out, at a slow, heavy swing', () => {
+      // At 60 bpm and 75 % step 10 sounds a whole step late, past the lookahead: it is not handed out yet at 10.1.
+      // Played straight it would already be late, so it keeps its swing.
+      const player = createPlayer(plain({ bpm: 60, swing: 75 }));
+      player.to(10.1);
+      player.hold(1);
+      player.to(16);
+
+      expect(player.heard(10, 11)[0]?.time).toBeCloseTo(11 * stepLength(60), 9);
+      expect(player.late).toEqual([]);
+    });
+
+    it('keeps the swing of the steps before the loop start', () => {
+      // The speakers run a step ahead of the clock, a stand-in for a grace of more than one step (see above): step 7
+      // is heard at 6.5 and is still to sound. The beat's last step counts for the next beat, so the loop starts at
+      // 8 and step 7 plays on as itself, swung.
+      const player = createPlayer(swung, { lookahead: 0.25, latency: -1 });
+      player.to(6.5);
+      player.hold(1);
+      player.to(12);
+
+      const steps = player.heard(7, 12);
+      expect(played(steps)).toEqual([7, 8, 8, 8, 8]);
+      expect(offGrid(steps, 7)).toEqual(closeToMs([7.5, 0, 0, 0, 0]));
+    });
+
+    it('keeps the step times in order and none late at 75 % swing, where a swung off-beat 16th meets a straight 32nd', () => {
+      // At 75 % the off-beat 16th sounds a whole step late, at the next step's grid time.
+      const player = createPlayer(plain({ bpm: 120, swing: 75 }), { lookahead: 0.25 });
+      player.to(9.25);
+      player.hold(8);
+      // Step 14 has passed its grid time but not its swung time: it keeps that and meets step 15, now straight.
+      player.to(14.5);
+      player.hold(2);
+      player.to(18.5);
+      player.release();
+      player.to(25);
+
+      const steps = player.heard(12, 25);
+      expect(offGrid(steps, 12).map((off) => off / (stepLength(120) * 1000))).toEqual(
+        [0, 0.5, 1, 0, 0, 0, 0, 0.5, 0, 0.5, 1, 0.5, 0].map((late) => expect.closeTo(late, 9)),
+      );
+      const times = steps.map((s) => s.time);
+      expect(times).toEqual(times.toSorted((a, b) => a - b));
+      expect(player.late).toEqual([]);
+    });
   });
 });

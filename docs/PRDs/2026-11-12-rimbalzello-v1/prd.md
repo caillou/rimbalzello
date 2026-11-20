@@ -182,7 +182,7 @@ Where `prd.md` and `design.md` disagree, `prd.md` wins for behaviour and `design
 - Swing delays the off-beat 16ths, steps 2, 6, 10, … (step mod 4 = 2). Swing p is a percentage, 50 % = straight, range 50–75 % in 1 % steps, default 56 %. The delay is d = (p − 0.5) × 2 × the length of a 16th, so it scales with tempo. At 120 bpm, 56 % is about 15 ms. If 56 % sounds wrong by ear, 54 % and 58 % are the fallbacks.
 - The 32nd steps between straight and delayed 16ths (step mod 4 = 1 or 3) shift by d/2, so they stay halfway between their neighbours.
 - Swing applies to all drums equally. Swing and chaos are separate controls (in Grids, swing reuses the chaos knob).
-- Swing follows the playhead, not the played step, so looped hits land on the same swung grid.
+- Swing follows the playhead, not the played step, so looped hits land on the same swung grid. The 1/16 and 1/32 loops are the exception: they play straight, so their retriggers stay even. The swing setting does not change, and swing comes back from the next step boundary on release or on a slide to 1/8 or 1/4.
 
 ### Tempo
 
@@ -238,7 +238,7 @@ What stays live inside a loop:
     - Mutes apply at once.
     - Sound, drift and drive apply at once. Every retrigger is a new hit and draws its own drift.
 12. Chaos re-rolls when the playhead crosses step 0. A looped step 0 does not re-roll.
-13. Swing follows the playhead slot a hit lands in, not the played step. For 1/4 and 1/8 the two slots are the same.
+13. Swing follows the playhead slot a hit lands in, not the played step. For 1/4 and 1/8 the two slots are the same. 1/16 and 1/32 play straight, without swing (see Steps, bars and swing).
 14. A pending return lands when the playhead crosses step 0, even while a loop is held. The loop keeps running and reads the restored setup.
 15. Tempo changes apply to the playhead, and the loop follows.
 

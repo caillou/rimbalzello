@@ -37,11 +37,14 @@ export interface Hit {
 
 /** One step the transport hands out: when it sounds and what it plays. */
 export interface TimedStep {
-  /** The playhead step, 0–31. Bar lines, chaos, return and swing follow it. */
+  /** The playhead step, 0–31. Bar lines, chaos, return and swing follow it; see `time` for the loops that play straight. */
   playhead: number;
   /** The step whose hits play: the playhead step while no loop is held. */
   played: number;
-  /** When the step sounds, in clock seconds, swing included. */
+  /**
+   * When the step sounds, in clock seconds, swing included, except from the
+   * next step boundary while a 1/16 or 1/32 loop is held.
+   */
   time: number;
   /**
    * The pattern the step reads, as the pattern generator's input: the
@@ -108,7 +111,10 @@ export interface Transport {
    * The steps due before `until`, in time order. Each step is handed out
    * once: the next call continues after the last step already returned.
    * After `hold` and `release` the steps after their `now` come again first,
-   * with the same playhead, time and pattern, and replace the earlier ones.
+   * with the same playhead and pattern, and replace the earlier ones. Their
+   * time follows the loop held now (short loops play straight), except that a
+   * step whose straight time has passed by that `now` keeps its swing, so none
+   * comes late. The same goes for the first new step after the change.
    */
   stepsBefore(until: number): TimedStep[];
   /**
@@ -163,6 +169,16 @@ function swingDelay(playhead: number, swing: number, stepLength: number): number
   return slot === 0 ? 0 : slot === 2 ? delay : delay / 2;
 }
 
+/**
+ * Short loops play straight: from its start, a held loop of 2 steps or fewer
+ * (1/16, 1/32) puts the step at `count` on the straight 32nd grid, so its
+ * retriggers stay even. Longer loops, and the steps before a loop's start,
+ * keep the swing of the playhead slot. The setup's swing does not change.
+ */
+function playsStraight(loop: Loop | null, count: number): boolean {
+  return loop !== null && count >= loop.start && loop.steps <= 2;
+}
+
 function glidePosition({ from, to, steps }: Glide): Position {
   const done = Math.min(1, steps / tunables.glideSteps);
   return { x: from.x + (to.x - from.x) * done, y: from.y + (to.y - from.y) * done };
@@ -178,9 +194,17 @@ interface Loop {
   steps: LoopSteps;
 }
 
-/** A step handed out, and the playhead it belongs to counted from play start without wrapping. */
+/**
+ * A step handed out, the playhead it belongs to counted from play start
+ * without wrapping, and what its time is made of, so a loop change can
+ * straighten or swing it again.
+ */
 interface Handed {
   count: number;
+  /** When the playhead reaches the step on the straight 32nd grid, in clock seconds. */
+  grid: number;
+  /** The swing delay of its playhead slot, in seconds, whether it is played straight or not. */
+  delay: number;
   step: TimedStep;
 }
 
@@ -238,6 +262,8 @@ export function createTransport({ setup: initial, seed }: TransportOptions): Tra
   let handed: Handed[] = [];
   /** Steps taken out of `handed` by a loop change, to hand out again before any new step. */
   let toHandAgain: Handed[] = [];
+  /** The `now` of the last loop change: a step whose straight time is at or before it keeps its swing. */
+  let loopChangedAt = -Infinity;
 
   /**
    * The step whose hits play when the playhead is at step `count`, counted
@@ -277,10 +303,27 @@ export function createTransport({ setup: initial, seed }: TransportOptions): Tra
     return (heardEntry(heard) ?? handed[0])?.count ?? next;
   }
 
-  /** The steps handed out that sound after `now` are handed out again, before any new step. */
+  /**
+   * When a step sounds under the loop held now. A step plays straight only
+   * when its straight time lies after the loop change that straightened it:
+   * moved to or before that change's `now`, it would come late, so it keeps
+   * its swing, whether it was handed out already or not.
+   */
+  function timeOf({ count, grid, delay }: Omit<Handed, 'step'>): number {
+    return playsStraight(loop, count) && grid > loopChangedAt ? grid : grid + delay;
+  }
+
+  /**
+   * A loop change at `now`: the steps handed out that sound after it are
+   * handed out again, before any new step, at their time under the loop held
+   * now. At a steady tempo the times stay in order, since a swing delay is
+   * never more than a step (see `retime` for tempo jumps).
+   */
   function handOutAgainAfter(now: number): void {
     const from = handed.findIndex((entry) => entry.step.time > now);
     if (from !== -1) toHandAgain = [...handed.splice(from), ...toHandAgain];
+    loopChangedAt = now;
+    for (const entry of toHandAgain) entry.step = { ...entry.step, time: timeOf(entry) };
   }
 
   /**
@@ -327,6 +370,7 @@ export function createTransport({ setup: initial, seed }: TransportOptions): Tra
       playing = true;
       handed = [];
       toHandAgain = [];
+      loopChangedAt = -Infinity;
       next = 0;
       sinceStep = 0;
       sinceTime = time;
@@ -362,9 +406,9 @@ export function createTransport({ setup: initial, seed }: TransportOptions): Tra
     },
     stepsBefore(until) {
       const steps: TimedStep[] = [];
-      // Steps handed out again after a loop change keep their playhead, time
-      // and pattern (chaos, return and glide follow the playhead), and play
-      // the step the loop reads now.
+      // Steps handed out again after a loop change keep their playhead and
+      // pattern (chaos, return and glide follow the playhead), and play the
+      // step the loop reads now, at the time the change gave them.
       while (playing && toHandAgain[0] && toHandAgain[0].step.time < until) {
         const entry = toHandAgain.shift()!;
         entry.step = { ...entry.step, ...playedHits(entry.count, entry.step.pattern), returned: false };
@@ -376,9 +420,11 @@ export function createTransport({ setup: initial, seed }: TransportOptions): Tra
         const playhead = next % PATTERN_STEPS;
         retime(setup.bpm);
         const grid = sinceTime + (next - sinceStep) * stepLength;
-        // Swing follows the playhead slot, whatever step the looper plays.
-        // Step 0 is never swung, so a return landing there cannot move it.
-        const time = grid + swingDelay(playhead, setup.swing, stepLength);
+        // Swing follows the playhead slot, whatever step the looper plays,
+        // except on a short loop, which plays straight. Step 0 is never
+        // swung, so a return landing there cannot move it.
+        const delay = swingDelay(playhead, setup.swing, stepLength);
+        const time = timeOf({ count: next, grid, delay });
         if (time >= until) break;
 
         // A pending return lands as the playhead crosses step 0 (play start
@@ -392,7 +438,7 @@ export function createTransport({ setup: initial, seed }: TransportOptions): Tra
         if (playhead === 0) chaosBytes = { bd: random(), sd: random(), hh: random() };
         glide.steps++;
         const step = stepAt(next, time, landing !== null);
-        handed.push({ count: next, step });
+        handed.push({ count: next, grid, delay, step });
         if (handed.length > PATTERN_STEPS) handed.shift();
         steps.push(step);
         next++;
