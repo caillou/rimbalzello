@@ -19,8 +19,8 @@
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.3.0",
-    "@solidjs/web": "^2.0.1",
-    "solid-js": "^2.0.1"
+    "@solidjs/web": "^2.0.3",
+    "solid-js": "^2.0.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
